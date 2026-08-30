@@ -20,6 +20,7 @@ const DEFAULT_LOCAL_STATE = {
       title: "Kasa Tipinizi Seçin",
       description: "Tezgah altınızın alanına ve estetik tercihinize en uygun kasa modelini belirleyin.",
       icon: "Layers",
+      guideText: "Mutfak dolabınızda dar alan varsa 'Kapalı Kasa' veya 'Slim Cam' kasa; geniş dolaplar ve en ekonomik bütçe için 'Açık Kasa' tercih edebilirsiniz.",
       isActive: true,
     },
     {
@@ -31,6 +32,7 @@ const DEFAULT_LOCAL_STATE = {
       title: "Filtre Paketinizi Seçin",
       description: "İçme suyunuzun mineral zenginliğini, pH alkali seviyesini ve membran arıtma kalitesini belirleyin.",
       icon: "Droplets",
+      guideText: "Tekirdağ'ın yüksek kireçli şebeke suyu için en az 5 aşamalı NSF onaylı membran ve doğal mineral filtreli set tavsiye edilir.",
       isActive: true,
     },
     {
@@ -42,6 +44,7 @@ const DEFAULT_LOCAL_STATE = {
       title: "Sistem Beynini Seçin",
       description: "Su tasarrufu, otomatik yıkama ve mutfak dolabını su basmasına karşı koruyan emniyet sistemini belirleyin.",
       icon: "Cpu",
+      guideText: "Mutfak dolabında su kaçağı riskini sıfırlamak, membran ömrünü uzatmak ve suyun saflık (TDS) değerini anlık görmek için 'Akıllı Dijital Beyin' önerilir.",
       isActive: true,
     },
     {
@@ -53,7 +56,7 @@ const DEFAULT_LOCAL_STATE = {
       title: "Basınç Pompa Tercihiniz",
       description: "Bulunduğunuz kat ve şebeke suyu basıncınıza göre pompalı veya pompasız sistemi belirleyin.",
       icon: "Zap",
-      guideText: "Tekirdağ'da 3. kat ve üzeri dairelerde şebeke basıncı düştüğü için 'Pompalı' model önerilir. Giriş katlar için pompasız yeterlidir.",
+      guideText: "Tekirdağ'da 3. kat ve üzeri dairelerde şebeke basıncı düştüğü için 'Pompalı' model önerilir. Giriş katlar için pompasız yeterlidir. Emin değilseniz uzmanımız montajda ücretsiz ölçüm yapacaktır.",
       isActive: true,
     },
     {
@@ -65,6 +68,7 @@ const DEFAULT_LOCAL_STATE = {
       title: "Depolama Tankı Kapasitesi",
       description: "Hanedeki kişi sayısına ve günlük yemek/içme suyu tüketim hacminize uygun antibakteriyel tankı seçin.",
       icon: "Cylinder",
+      guideText: "1-3 kişilik çekirdek aileler için 8L Eko Tank; kalabalık aileler ve yemek pişirmede bol arıtılmış su kullananlar için 12L Paslanmaz Platinum Tank önerilir.",
       isActive: true,
     },
     {
@@ -76,6 +80,7 @@ const DEFAULT_LOCAL_STATE = {
       title: "Arıtma Musluğunuzu Seçin",
       description: "Evye tasarımınıza uygun şık ve gıda uyumlu paslanmaz çelik arıtma musluğu belirleyin.",
       icon: "Pipette",
+      guideText: "Mutfak tezgahınızın delinmesini istemiyorsanız '3 Yollu Lüks Batarya'; klasik ve dayanıklı tezgah üstü kullanım için paslanmaz kuğu musluk önerilir.",
       isActive: true,
     },
   ],
@@ -405,7 +410,19 @@ export function AppConvexProvider({ children }) {
   const [localData, setLocalData] = useState(() => {
     try {
       const saved = localStorage.getItem("lotus_admin_data");
-      return saved ? JSON.parse(saved) : DEFAULT_LOCAL_STATE;
+      if (!saved) return DEFAULT_LOCAL_STATE;
+      const parsed = JSON.parse(saved);
+      // Ensure all steps have guideText merged from defaults
+      if (parsed.steps) {
+        parsed.steps = parsed.steps.map((s) => {
+          const def = DEFAULT_LOCAL_STATE.steps.find((d) => d.key === s.key);
+          return {
+            ...s,
+            guideText: s.guideText || def?.guideText || "",
+          };
+        });
+      }
+      return parsed;
     } catch {
       return DEFAULT_LOCAL_STATE;
     }

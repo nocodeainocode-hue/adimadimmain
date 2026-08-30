@@ -1114,8 +1114,14 @@ export default function Wizard({ config }) {
                   </p>
 
                   {currentStep.guideText && (
-                    <div className="mb-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 text-xs text-amber-900 dark:text-amber-200">
-                      <strong>💡 Uzman Tavsiyesi:</strong> {currentStep.guideText}
+                    <div className="mb-5 rounded-2xl bg-amber-500/10 border-2 border-amber-400/40 p-4 sm:p-4.5 text-xs sm:text-sm text-amber-950 dark:text-amber-100 shadow-sm flex items-start gap-3">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-bold text-base shadow-xs">
+                        💡
+                      </span>
+                      <div>
+                        <strong className="font-bold text-amber-900 dark:text-amber-200 block mb-0.5">Uzman Tavsiyesi:</strong>
+                        <span className="leading-relaxed text-amber-950/90 dark:text-amber-100">{currentStep.guideText}</span>
+                      </div>
                     </div>
                   )}
 
