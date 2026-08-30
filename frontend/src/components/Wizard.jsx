@@ -1039,35 +1039,107 @@ export default function Wizard({ config }) {
               {flow === "filter" && step === 1 && recommendedSet && (
                 <div className="max-w-2xl mx-auto text-center">
                   <Badge className="bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 text-xs font-bold mb-3">
-                    Önerilen Orijinal Filtre Seti
+                    ✨ Cihazınıza %100 Uyumlu Orijinal Filtre Paketi
                   </Badge>
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">{recommendedSet.name}</h3>
-                  <p className="text-muted-foreground text-sm mt-1 mb-6">{recommendedSet.desc}</p>
-                  
-                  <div className="rounded-2xl border border-border bg-card p-6 shadow-md text-left mb-6">
-                    <div className="flex items-baseline justify-between mb-4 border-b border-border pb-3">
-                      <span className="text-xs font-bold text-muted-foreground uppercase">Değişim Paketi</span>
-                      <span className="font-display font-bold text-2xl text-[hsl(var(--brand-plum))]">{recommendedSet.price}</span>
-                    </div>
-                    <div className="space-y-2">
-                      {recommendedSet.includes?.map((inc, i) => (
-                        <div key={i} className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-foreground">
-                          <Check className="h-4 w-4 text-emerald-600 shrink-0" />
-                          <span>{inc}</span>
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground mb-2">
+                    {recommendedSet.name}
+                  </h3>
+                  <p className="text-muted-foreground text-sm max-w-lg mx-auto mb-6">
+                    {recommendedSet.desc}
+                  </p>
+
+                  <div className="rounded-3xl border border-border bg-card overflow-hidden shadow-lg text-left mb-6">
+                    {/* HD Filtre Seti Görseli */}
+                    {recommendedSet.img && (
+                      <div className="relative h-56 sm:h-64 w-full bg-neutral-900 overflow-hidden">
+                        <img
+                          src={recommendedSet.img}
+                          alt={recommendedSet.name}
+                          className="h-full w-full object-cover object-center"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                        <div className="absolute bottom-3.5 left-4 right-4 text-white flex items-center justify-between">
+                          <span className="text-xs font-semibold drop-shadow">
+                            {recommendedSet.subtitle}
+                          </span>
+                          <Badge className="bg-emerald-600 text-white font-bold text-[11px] border-0 shadow">
+                            Orijinal NSF Sertifikalı
+                          </Badge>
                         </div>
-                      ))}
+                      </div>
+                    )}
+
+                    <div className="p-6 sm:p-7">
+                      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-border/80 pb-4 mb-5">
+                        <div>
+                          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">
+                            Tavsiye Edilen Değişim Paketi
+                          </span>
+                          <span className="text-xs text-emerald-600 font-semibold mt-0.5 block">
+                            Tekirdağ / {district} için Yerinde Değişim Dahil
+                          </span>
+                        </div>
+                        <div className="text-left sm:text-right">
+                          <span className="font-display font-black text-3xl text-[hsl(var(--brand-plum))] font-mono">
+                            {recommendedSet.price}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Paket İçeriği */}
+                      <div className="mb-5">
+                        <h4 className="font-bold text-xs uppercase tracking-wider text-foreground mb-3 flex items-center gap-1.5">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                          Paket İçeriği & Değiştirilecek Parçalar
+                        </h4>
+                        <div className="space-y-2">
+                          {recommendedSet.includes?.map((inc, i) => (
+                            <div key={i} className="flex items-start gap-2 text-xs sm:text-sm font-medium text-foreground bg-muted/40 p-2.5 rounded-xl border border-border/60">
+                              <Check className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span>{inc}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Avantajlar */}
+                      {recommendedSet.benefits && (
+                        <div className="mb-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-4">
+                          <h4 className="font-bold text-xs uppercase tracking-wider text-emerald-800 dark:text-emerald-300 mb-2 flex items-center gap-1.5">
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Bu Değişim ile Neler Kazanacaksınız?
+                          </h4>
+                          <div className="space-y-1.5">
+                            {recommendedSet.benefits.map((b, i) => (
+                              <div key={i} className="flex items-center gap-2 text-xs font-semibold text-emerald-950 dark:text-emerald-100">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                <span>{b}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <a
+                        href={buildWaLink(
+                          waNumber,
+                          `Merhaba, Tekirdağ / ${district} bölgesindeyim. ${recommendedSet.name} için filtre değişim randevusu ve yerinde montaj talebinde bulunmak istiyorum.`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-whatsapp inline-flex items-center justify-center gap-2 rounded-xl h-14 px-6 text-base font-bold w-full shadow-lg transition-all"
+                      >
+                        <MessageCircle className="h-5 w-5" /> WhatsApp ile Filtre Değişim Randevusu Al
+                      </a>
                     </div>
-                    <a
-                      href={buildWaLink(waNumber, `Merhaba, ${recommendedSet.name} hakkında filtre değişim randevusu ve montaj teklifi almak istiyorum.`)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-whatsapp mt-6 inline-flex items-center justify-center gap-2 rounded-xl h-12 px-5 text-sm font-bold w-full shadow"
-                    >
-                      <MessageCircle className="h-4 w-4" /> WhatsApp ile Filtre Randevusu Al
-                    </a>
                   </div>
 
-                  <CallbackForm flowType="filter" itemName={recommendedSet.name} city={city} district={district} />
+                  <CallbackForm
+                    flowType="filter"
+                    itemName={recommendedSet.name}
+                    city={city}
+                    district={district}
+                  />
                 </div>
               )}
 
