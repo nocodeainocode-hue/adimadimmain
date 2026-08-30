@@ -1067,11 +1067,24 @@ export default function Wizard({ config }) {
                   <p className="text-muted-foreground text-sm sm:text-base mb-6">Hızlı arıza tespiti ve yerinde teknik servis yönlendirmesi.</p>
                   <div className="space-y-3">
                     {config.faultGuides.map((f) => (
-                      <OptionCard key={f.id} selected={faultType === f.id} onClick={() => setFaultType(f.id)} title={f.title} hint={f.solution} />
+                      <OptionCard
+                        key={f.id}
+                        selected={faultType === f.id}
+                        onClick={() => setFaultType(f.id)}
+                        title={f.title || f.label}
+                        hint={f.body}
+                        icon={Wrench}
+                        testId={`wizard-fault-${f.id}`}
+                      />
                     ))}
                   </div>
                   <div className="mt-8 flex justify-end">
-                    <button type="button" disabled={!faultType} onClick={() => go(1, 1)} className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 font-bold disabled:opacity-40">
+                    <button
+                      type="button"
+                      disabled={!faultType}
+                      onClick={() => go(1, 1)}
+                      className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 font-bold disabled:opacity-40"
+                    >
                       Çözüm & Servis Çağır <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
@@ -1080,22 +1093,68 @@ export default function Wizard({ config }) {
 
               {flow === "fault" && step === 1 && selectedFault && (
                 <div className="max-w-2xl mx-auto text-center">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 mb-3 shadow-sm">
-                    <Wrench className="h-6 w-6" />
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 mb-3 shadow-sm border border-amber-400/30">
+                    <Wrench className="h-7 w-7" />
                   </div>
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">{selectedFault.title}</h3>
-                  <div className="mt-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-5 text-left text-sm text-amber-950 dark:text-amber-200">
-                    <strong>💡 Uzman Tavsiyesi:</strong> {selectedFault.solution}
+                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-2">
+                    <span>Teknik Teşhis & İlk Müdahale Rehberi</span>
                   </div>
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">
+                    {selectedFault.title || selectedFault.label}
+                  </h3>
+
+                  {/* 💡 Uzman Tavsiyesi & Arıza Teşhis Kutusu */}
+                  <div className="mt-5 rounded-2xl bg-amber-500/10 border-2 border-amber-400/40 p-5 text-left text-xs sm:text-sm text-amber-950 dark:text-amber-100 shadow-sm space-y-3">
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-bold text-base shadow-xs">
+                        💡
+                      </span>
+                      <div>
+                        <strong className="font-bold text-amber-900 dark:text-amber-200 block text-sm">
+                          Uzman Tavsiyesi & Arıza Nedeni:
+                        </strong>
+                        <p className="mt-1 leading-relaxed text-amber-950/90 dark:text-amber-100 font-medium">
+                          {selectedFault.body || selectedFault.solution}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* İlk Müdahale Adımları (tips) */}
+                    {selectedFault.tips && selectedFault.tips.length > 0 && (
+                      <div className="pt-3 border-t border-amber-400/30 space-y-2">
+                        <span className="block font-bold text-xs uppercase tracking-wider text-amber-900 dark:text-amber-200">
+                          🛠️ Servis Gelene Kadar Yapılması Gerekenler:
+                        </span>
+                        <div className="space-y-1.5">
+                          {selectedFault.tips.map((tip, idx) => (
+                            <div key={idx} className="flex items-start gap-2 text-xs font-medium text-amber-950 dark:text-amber-100">
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                              <span>{tip}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <a
-                    href={buildWaLink(waNumber, `Merhaba, arıtma cihazımda '${selectedFault.title}' sorunu var. Tekirdağ için acil servis randevusu almak istiyorum.`)}
+                    href={buildWaLink(
+                      waNumber,
+                      `Merhaba, Tekirdağ / ${district} bölgesindeyim. Arıtma cihazımda '${selectedFault.title || selectedFault.label}' sorunu yaşıyorum. Teknik servis desteği ve arıza randevusu almak istiyorum.`
+                    )}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-whatsapp mt-6 inline-flex items-center justify-center gap-2 rounded-xl h-12 px-5 text-sm font-bold w-full shadow"
                   >
                     <MessageCircle className="h-4 w-4" /> WhatsApp ile Yetkili Servis Çağır
                   </a>
-                  <CallbackForm flowType="fault" itemName={`Arıza Servisi: ${selectedFault.title}`} city={city} district={district} />
+
+                  <CallbackForm
+                    flowType="fault"
+                    itemName={`Arıza Servisi: ${selectedFault.title || selectedFault.label}`}
+                    city={city}
+                    district={district}
+                  />
                 </div>
               )}
 
