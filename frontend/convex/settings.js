@@ -474,6 +474,142 @@ export const seedDefaultData = mutation({
       await ctx.db.insert("builderOptions", opt);
     }
 
-    return { success: true, stepsCount: stepsData.length, optionsCount: optionsData.length };
+    // 5. Arıza Rehberi Verilerini Ekle
+    const existingFaults = await ctx.db.query("faultGuides").collect();
+    for (const f of existingFaults) await ctx.db.delete(f._id);
+
+    const faultGuidesData = [
+      {
+        faultId: "damla",
+        label: "Su damlatıyor",
+        title: "Cihazınız su damlatıyor",
+        body: "Musluk veya cihaz gövdesinden gelen damlama, genellikle gevşeyen bir bağlantı, aşınmış bir conta ya da dolmuş bir tahliye hattından kaynaklanır. Çoğu zaman basit bir bağlantı sıkımı veya conta değişimi ile çözülür.",
+        tips: [
+          "Cihazın besleme (giriş) vanasını kapatın.",
+          "Damlamanın musluktan mı yoksa gövdeden mi geldiğini not edin.",
+          "Zemine bir bez/kap koyarak su birikmesini önleyin.",
+        ],
+        order: 1,
+        isActive: true,
+      },
+      {
+        faultId: "az_akis",
+        label: "Su çok az akıyor",
+        title: "Sudaki akış çok azaldı",
+        body: "Debinin düşmesi çoğunlukla tıkanmış filtreler, tankta basınç kaybı veya membranın ömrünü tamamlaması ile ilgilidir. Genellikle filtre/membran değişimi veya tank basınç ayarı ile normale döner.",
+        tips: [
+          "Filtrelerin en son ne zaman değiştiğini hatırlamaya çalışın.",
+          "Musluğu birkaç dakika açık tutup akışın değişip değişmediğine bakın.",
+          "Cihaz modelini biliyorsanız not alın.",
+        ],
+        order: 2,
+        isActive: true,
+      },
+      {
+        faultId: "sizinti",
+        label: "Sızıntı var",
+        title: "Cihaz altında veya hortumda su birikiyor",
+        body: "Gözle görülür su birikintisi, genellikle hızlı bağlantı rekorlarının o-ring aşınmasından, yüksek şebeke basıncından veya çatlamış bir filtre kabından kaynaklanır. Hızlı müdahale önemlidir.",
+        tips: [
+          "Ana besleme vanasını derhal kapatın.",
+          "Varsa pompalı modellerde fişi prizden çekin.",
+          "Hortum giriş-çıkış noktalarını kurulayıp sızıntının kaynağını tespit edin.",
+        ],
+        order: 3,
+        isActive: true,
+      },
+      {
+        faultId: "tat_koku",
+        label: "Tatta / kokuda gariplik",
+        title: "Suyun tadı veya kokusu değişti",
+        body: "Su tadındaki acılaşma, klor kokusu veya tat kaybı; karbon filtrelerin doygunluğa ulaşması, membranın yıpranması ya da tank içinde suyun beklemesinden kaynaklanır.",
+        tips: [
+          "En son ne zaman filtre değiştiğini kontrol edin (önerilen: 6–12 ay).",
+          "Depodaki suyu tamamen tahliye edip yeni su dolumunu bekleyin.",
+          "Sorun devam ediyorsa filtre/membran yenileme zamanı gelmiştir.",
+        ],
+        order: 4,
+        isActive: true,
+      },
+      {
+        faultId: "ses",
+        label: "Anormal ses geliyor",
+        title: "Cihazdan tıkırtı, uğultu veya titreme sesi geliyor",
+        body: "Sesli çalışma çoğunlukla booster pompanın hava yapması, diyafram aşınması, montaj şasesinin gevşemesi ya da düşük su basıncı kaynaklıdır.",
+        tips: [
+          "Giriş suyu vanasının tam açık olduğundan emin olun.",
+          "Cihazın duvara veya dolap kapağına temas edip titreşim yapmadığını kontrol edin.",
+          "Ses pompadan geliyorsa cihazı dinlendirip tekrar gözlemleyin.",
+        ],
+        order: 5,
+        isActive: true,
+      },
+      {
+        faultId: "diger",
+        label: "Başka bir sorun",
+        title: "Farklı bir arıza veya sorunuz mu var?",
+        body: "Yukarıdaki başlıklara uymayan her türlü teknik soru, basınç problemi, montaj yeri değişikliği veya periyodik bakım talebi için doğrudan ustalarımızla görüşebilirsiniz.",
+        tips: [
+          "Cihazın markasını ve modelini öğrenin.",
+          "Yaşadığınız sorunu kısaca not edin.",
+          "Tekirdağ içi aynı gün yerinde servis imkanından yararlanın.",
+        ],
+        order: 6,
+        isActive: true,
+      },
+    ];
+
+    for (const fault of faultGuidesData) {
+      await ctx.db.insert("faultGuides", fault);
+    }
+
+    return {
+      success: true,
+      stepsCount: stepsData.length,
+      optionsCount: optionsData.length,
+      faultsCount: faultGuidesData.length,
+    };
   },
 });
+
+// Arıza Rehberi Query & Mutations
+export const getFaultGuides = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("faultGuides")
+      .withIndex("by_order")
+      .collect();
+  },
+});
+
+export const updateFaultGuide = mutation({
+  args: {
+    _id: v.optional(v.id("faultGuides")),
+    faultId: v.string(),
+    label: v.string(),
+    title: v.string(),
+    body: v.string(),
+    tips: v.array(v.string()),
+    order: v.number(),
+    isActive: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const { _id, ...data } = args;
+    if (_id) {
+      await ctx.db.patch(_id, data);
+      return _id;
+    } else {
+      return await ctx.db.insert("faultGuides", data);
+    }
+  },
+});
+
+export const deleteFaultGuide = mutation({
+  args: { id: v.id("faultGuides") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+    return true;
+  },
+});
+

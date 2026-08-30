@@ -608,10 +608,20 @@ export default function Wizard({ config }) {
     return config.filterSets.set5;
   }, [lastChanged, config]);
 
-  const selectedFault = useMemo(
-    () => config.faultGuides.find((f) => f.id === faultType) || null,
-    [faultType, config]
-  );
+  // Dynamic Fault Guides from Convex / LocalData
+  const activeFaultGuides = useMemo(() => {
+    return (localData?.faultGuides || config?.faultGuides || []).filter(
+      (f) => f.isActive !== false
+    );
+  }, [localData, config]);
+
+  const selectedFault = useMemo(() => {
+    return (
+      activeFaultGuides.find(
+        (f) => f._id === faultType || f.faultId === faultType || f.id === faultType
+      ) || null
+    );
+  }, [faultType, activeFaultGuides]);
 
   const stepKey = `${flow || "entry"}-${step}`;
 
@@ -1066,15 +1076,14 @@ export default function Wizard({ config }) {
                   <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Cihazınızda hangi sorun yaşanıyor?</h3>
                   <p className="text-muted-foreground text-sm sm:text-base mb-6">Hızlı arıza tespiti ve yerinde teknik servis yönlendirmesi.</p>
                   <div className="space-y-3">
-                    {config.faultGuides.map((f) => (
+                    {activeFaultGuides.map((f) => (
                       <OptionCard
-                        key={f.id}
-                        selected={faultType === f.id}
-                        onClick={() => setFaultType(f.id)}
+                        key={f._id || f.faultId || f.id}
+                        selected={faultType === (f.faultId || f.id || f._id)}
+                        onClick={() => setFaultType(f.faultId || f.id || f._id)}
                         title={f.title || f.label}
-                        hint={f.body}
                         icon={Wrench}
-                        testId={`wizard-fault-${f.id}`}
+                        testId={`wizard-fault-${f.faultId || f.id || f._id}`}
                       />
                     ))}
                   </div>

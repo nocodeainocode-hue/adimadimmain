@@ -37,6 +37,17 @@ export default defineSchema({
     .index("by_stepKey", ["stepKey"])
     .index("by_order", ["order"]),
 
+  // Arıza Rehberi & Çözüm / Uzman Tavsiyeleri
+  faultGuides: defineTable({
+    faultId: v.string(),
+    label: v.string(),
+    title: v.string(),
+    body: v.string(),
+    tips: v.array(v.string()),
+    order: v.number(),
+    isActive: v.boolean(),
+  }).index("by_order", ["order"]),
+
   // Gelen Müşteri Talepleri ve Siparişler
   leads: defineTable({
     fullName: v.string(),

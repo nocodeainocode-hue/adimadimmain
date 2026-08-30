@@ -351,6 +351,92 @@ const DEFAULT_LOCAL_STATE = {
     discountRate: 0.2,
     discountBadgeText: "🎁 Formu Doldur %20 İndirim Kazan",
   },
+  faultGuides: [
+    {
+      _id: "fault_damla",
+      faultId: "damla",
+      label: "Su damlatıyor",
+      title: "Cihazınız su damlatıyor",
+      body: "Musluk veya cihaz gövdesinden gelen damlama, genellikle gevşeyen bir bağlantı, aşınmış bir conta ya da dolmuş bir tahliye hattından kaynaklanır. Çoğu zaman basit bir bağlantı sıkımı veya conta değişimi ile çözülür.",
+      tips: [
+        "Cihazın besleme (giriş) vanasını kapatın.",
+        "Damlamanın musluktan mı yoksa gövdeden mi geldiğini not edin.",
+        "Zemine bir bez/kap koyarak su birikmesini önleyin.",
+      ],
+      order: 1,
+      isActive: true,
+    },
+    {
+      _id: "fault_az_akis",
+      faultId: "az_akis",
+      label: "Su çok az akıyor",
+      title: "Sudaki akış çok azaldı",
+      body: "Debinin düşmesi çoğunlukla tıkanmış filtreler, tankta basınç kaybı veya membranın ömrünü tamamlaması ile ilgilidir. Genellikle filtre/membran değişimi veya tank basınç ayarı ile normale döner.",
+      tips: [
+        "Filtrelerin en son ne zaman değiştiğini hatırlamaya çalışın.",
+        "Musluğu birkaç dakika açık tutup akışın değişip değişmediğine bakın.",
+        "Cihaz modelini biliyorsanız not alın.",
+      ],
+      order: 2,
+      isActive: true,
+    },
+    {
+      _id: "fault_sizinti",
+      faultId: "sizinti",
+      label: "Sızıntı var (Cihaz altında su birikiyor)",
+      title: "Cihaz altında veya hortumda su birikiyor",
+      body: "Gözle görülür su birikintisi, genellikle hızlı bağlantı rekorlarının o-ring aşınmasından, yüksek şebeke basıncından veya çatlamış bir filtre kabından kaynaklanır. Hızlı müdahale önemlidir.",
+      tips: [
+        "Ana besleme vanasını derhal kapatın.",
+        "Varsa pompalı modellerde fişi prizden çekin.",
+        "Hortum giriş-çıkış noktalarını kurulayıp sızıntının kaynağını tespit edin.",
+      ],
+      order: 3,
+      isActive: true,
+    },
+    {
+      _id: "fault_tat_koku",
+      faultId: "tat_koku",
+      label: "Tatta / kokuda gariplik",
+      title: "Suyun tadı veya kokusu değişti",
+      body: "Su tadındaki acılaşma, klor kokusu veya tat kaybı; karbon filtrelerin doygunluğa ulaşması, membranın yıpranması ya da tank içinde suyun beklemesinden kaynaklanır.",
+      tips: [
+        "En son ne zaman filtre değiştiğini kontrol edin (önerilen: 6–12 ay).",
+        "Depodaki suyu tamamen tahliye edip yeni su dolumunu bekleyin.",
+        "Sorun devam ediyorsa filtre/membran yenileme zamanı gelmiştir.",
+      ],
+      order: 4,
+      isActive: true,
+    },
+    {
+      _id: "fault_ses",
+      faultId: "ses",
+      label: "Anormal ses geliyor",
+      title: "Cihazdan tıkırtı, uğultu veya titreme sesi geliyor",
+      body: "Sesli çalışma çoğunlukla booster pompanın hava yapması, diyafram aşınması, montaj şasesinin gevşemesi ya da düşük su basıncı kaynaklıdır.",
+      tips: [
+        "Giriş suyu vanasının tam açık olduğundan emin olun.",
+        "Cihazın duvara veya dolap kapağına temas edip titreşim yapmadığını kontrol edin.",
+        "Ses pompadan geliyorsa cihazı dinlendirip tekrar gözlemleyin.",
+      ],
+      order: 5,
+      isActive: true,
+    },
+    {
+      _id: "fault_diger",
+      faultId: "diger",
+      label: "Başka bir sorun",
+      title: "Farklı bir arıza veya sorunuz mu var?",
+      body: "Yukarıdaki başlıklara uymayan her türlü teknik soru, basınç problemi, montaj yeri değişikliği veya periyodik bakım talebi için doğrudan ustalarımızla görüşebilirsiniz.",
+      tips: [
+        "Cihazın markasını ve modelini öğrenin.",
+        "Yaşadığınız sorunu kısaca not edin.",
+        "Tekirdağ içi aynı gün yerinde servis imkanından yararlanın.",
+      ],
+      order: 6,
+      isActive: true,
+    },
+  ],
   leads: [
     {
       _id: "lead_demo_1",
@@ -421,6 +507,10 @@ export function AppConvexProvider({ children }) {
             guideText: s.guideText || def?.guideText || "",
           };
         });
+      }
+      // Ensure faultGuides are present
+      if (!parsed.faultGuides || parsed.faultGuides.length === 0) {
+        parsed.faultGuides = DEFAULT_LOCAL_STATE.faultGuides;
       }
       return parsed;
     } catch {
@@ -538,6 +628,23 @@ export function AppConvexProvider({ children }) {
     }));
   };
 
+  const updateLocalFault = (fault) => {
+    setLocalData((prev) => {
+      const exists = (prev.faultGuides || []).some((f) => f._id === fault._id || f.faultId === fault.faultId);
+      const updatedFaults = exists
+        ? (prev.faultGuides || []).map((f) => (f._id === fault._id || f.faultId === fault.faultId ? { ...f, ...fault } : f))
+        : [...(prev.faultGuides || []), { ...fault, _id: "fault_" + Date.now() }];
+      return { ...prev, faultGuides: updatedFaults };
+    });
+  };
+
+  const deleteLocalFault = (faultId) => {
+    setLocalData((prev) => ({
+      ...prev,
+      faultGuides: (prev.faultGuides || []).filter((f) => f._id !== faultId),
+    }));
+  };
+
   const resetLocalToDefault = () => {
     setLocalData(DEFAULT_LOCAL_STATE);
   };
@@ -553,6 +660,8 @@ export function AppConvexProvider({ children }) {
     deleteLocalStep,
     updateLocalOption,
     deleteLocalOption,
+    updateLocalFault,
+    deleteLocalFault,
     updateLocalSettings,
     addLocalLead,
     updateLocalLeadStatus,

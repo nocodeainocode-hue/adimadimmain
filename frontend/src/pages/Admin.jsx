@@ -35,6 +35,7 @@ import {
   Unlock,
   LogOut,
   KeyRound,
+  AlertTriangle,
 } from "lucide-react";
 import { useLocalData } from "@/lib/convex";
 import { toast } from "sonner";
@@ -51,6 +52,8 @@ export default function AdminPage() {
     deleteLocalStep,
     updateLocalOption,
     deleteLocalOption,
+    updateLocalFault,
+    deleteLocalFault,
     updateLocalSettings,
     updateLocalLeadStatus,
     resetLocalToDefault,
@@ -62,7 +65,7 @@ export default function AdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState("finans"); // "finans" | "steps" | "options" | "leads" | "settings"
+  const [activeTab, setActiveTab] = useState("finans"); // "finans" | "steps" | "options" | "faults" | "leads" | "settings"
   const [selectedStepFilter, setSelectedStepFilter] = useState("all");
   const [leadStatusFilter, setLeadStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,6 +76,9 @@ export default function AdminPage() {
 
   const [editingOption, setEditingOption] = useState(null);
   const [isOptionModalOpen, setIsOptionModalOpen] = useState(false);
+
+  const [editingFault, setEditingFault] = useState(null);
+  const [isFaultModalOpen, setIsFaultModalOpen] = useState(false);
 
   // Settings Local Form State
   const [settingsForm, setSettingsForm] = useState(localData.settings);
@@ -117,6 +123,18 @@ export default function AdminPage() {
     });
   }, [localData.options, selectedStepFilter, searchTerm]);
 
+  // Filtered Faults
+  const filteredFaults = useMemo(() => {
+    return (localData.faultGuides || []).filter((fault) => {
+      const matchSearch =
+        !searchTerm ||
+        fault.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        fault.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        fault.body.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchSearch;
+    });
+  }, [localData.faultGuides, searchTerm]);
+
   // Filtered Leads
   const filteredLeads = useMemo(() => {
     return (localData.leads || []).filter((lead) => {
@@ -156,6 +174,19 @@ export default function AdminPage() {
     setEditingOption(null);
   };
 
+  // Fault Handlers
+  const handleSaveFault = (e) => {
+    e.preventDefault();
+    if (!editingFault.title || !editingFault.label) {
+      toast.error("Lütfen arıza başlığını doldurun.");
+      return;
+    }
+    updateLocalFault(editingFault);
+    toast.success("Arıza rehberi başarıyla kaydedildi!");
+    setIsFaultModalOpen(false);
+    setEditingFault(null);
+  };
+
   // Handle Admin Login
   const handleLoginSubmit = (e) => {
     e.preventDefault();
@@ -187,7 +218,7 @@ export default function AdminPage() {
               Lotus Yönetici Girişi
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
-              Fiyatlandırma, adım motoru, kârlılık takibi ve siparişleri yönetmek için giriş yapın.
+              Fiyatlandırma, adım motoru, arıza rehberi ve siparişleri yönetmek için giriş yapın.
             </p>
           </div>
 
@@ -351,7 +382,18 @@ export default function AdminPage() {
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
             }`}
           >
-            <Package className="h-4 w-4" /> Parçalar, Fiyatlar & Modallar ({localData.options.length})
+            <Package className="h-4 w-4" /> Parçalar & Modallar ({localData.options.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab("faults")}
+            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+              activeTab === "faults"
+                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+            }`}
+          >
+            <Wrench className="h-4 w-4" /> Arıza Rehberi & Çözümler ({(localData.faultGuides || []).length})
           </button>
 
           <button
@@ -516,6 +558,7 @@ export default function AdminPage() {
                     title: "Yeni Adım Başlığı",
                     description: "Kullanıcıya bu adımda ne seçeceğini açıklayan metin.",
                     icon: "Layers",
+                    guideText: "Bu adım için uzman tavsiyesi ve yönlendirme metni.",
                     isActive: true,
                   });
                   setIsStepModalOpen(true);
@@ -768,7 +811,125 @@ export default function AdminPage() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 4: GELEN SİPARİŞLER & TALEPLER (LEADS)                */}
+        {/* TAB 4: ARIZA REHBERİ & ÇÖZÜMLER (UZMAN TAVSİYELERİ)        */}
+        {/* ========================================================= */}
+        {activeTab === "faults" && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-display font-bold text-xl text-slate-900">Arıza Rehberi & Uzman Tavsiyeleri</h2>
+                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                  Arıza tiplerini, arıza seçildiğinde çıkan 💡 Uzman Tavsiyesi metnini ve ilk müdahale adımlarını buradan yönetin.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingFault({
+                    faultId: `fault_${Date.now()}`,
+                    label: "Yeni Arıza Tipi",
+                    title: "Arıza Başlığı & Detayı",
+                    body: "Bu arızanın teknik sebebi ve uzman tavsiyesi açıklaması.",
+                    tips: [
+                      "Ana besleme vanasını kapatın.",
+                      "Cihazın fişini prizden çekin.",
+                    ],
+                    order: (localData.faultGuides || []).length + 1,
+                    isActive: true,
+                  });
+                  setIsFaultModalOpen(true);
+                }}
+                className="inline-flex items-center gap-2 btn-champagne px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:scale-[1.02] transition-all shrink-0"
+              >
+                <Plus className="h-4 w-4" /> Yeni Arıza Rehberi Ekle
+              </button>
+            </div>
+
+            {/* Faults Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredFaults.map((fault) => (
+                <div
+                  key={fault._id || fault.faultId}
+                  className={`rounded-2xl border p-5 bg-white shadow-xs transition-all flex flex-col justify-between ${
+                    fault.isActive ? "border-slate-200" : "border-slate-200 opacity-60 bg-slate-100"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-xs font-bold">
+                        {fault.label}
+                      </Badge>
+                      <button
+                        onClick={() => updateLocalFault({ ...fault, isActive: !fault.isActive })}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                          fault.isActive
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-slate-100 text-slate-500 border-slate-200"
+                        }`}
+                      >
+                        {fault.isActive ? "Aktif" : "Pasif"}
+                      </button>
+                    </div>
+
+                    <h4 className="font-display font-bold text-base sm:text-lg text-slate-900">{fault.title}</h4>
+
+                    {/* 💡 Uzman Tavsiyesi Metni */}
+                    <div className="mt-3 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-950 space-y-1">
+                      <strong className="block text-amber-900 font-bold">💡 Uzman Tavsiyesi & Neden:</strong>
+                      <p className="leading-relaxed text-slate-700">{fault.body}</p>
+                    </div>
+
+                    {/* 🛠️ İlk Müdahale Maddeleri */}
+                    {fault.tips && fault.tips.length > 0 && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-100">
+                        <span className="block text-[11px] font-bold text-slate-700 uppercase mb-1.5">
+                          🛠️ Servis Gelene Kadar Yapılacaklar ({fault.tips.length} Adım):
+                        </span>
+                        <div className="space-y-1">
+                          {fault.tips.map((tip, idx) => (
+                            <div key={idx} className="flex items-start gap-1.5 text-xs text-slate-600">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                              <span>{tip}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingFault({
+                          ...fault,
+                          tips: fault.tips || [],
+                        });
+                        setIsFaultModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1 text-xs text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-semibold transition-all"
+                    >
+                      <Edit className="h-3.5 w-3.5" /> Düzenle
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`"${fault.title}" arıza kaydını silmek istediğinize emin misiniz?`)) {
+                          deleteLocalFault(fault._id);
+                          toast.success("Arıza rehberi silindi.");
+                        }
+                      }}
+                      className="inline-flex items-center gap-1 text-xs text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-lg transition-all"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* TAB 5: GELEN SİPARİŞLER & TALEPLER (LEADS)                */}
         {/* ========================================================= */}
         {activeTab === "leads" && (
           <div className="space-y-6 animate-in fade-in duration-200">
@@ -946,7 +1107,7 @@ export default function AdminPage() {
         )}
 
         {/* ========================================================= */}
-        {/* TAB 5: GENEL AYARLAR                                      */}
+        {/* TAB 6: GENEL AYARLAR                                      */}
         {/* ========================================================= */}
         {activeTab === "settings" && (
           <div className="max-w-2xl bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-xs animate-in fade-in duration-200">
@@ -1099,10 +1260,10 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-slate-700 font-bold mb-1">Özel Rehber Kutusu Metni (İsteğe Bağlı)</label>
+                <label className="block text-slate-700 font-bold mb-1">Özel Rehber / Uzman Tavsiyesi Metni</label>
                 <input
                   type="text"
-                  placeholder="Örn: 3. kat ve üzeri için pompalı model önerilir..."
+                  placeholder="Örn: Mutfak dolabınızda dar alan varsa kapalı kasa önerilir..."
                   value={editingStep.guideText || ""}
                   onChange={(e) => setEditingStep({ ...editingStep, guideText: e.target.value })}
                   className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
@@ -1357,6 +1518,135 @@ export default function AdminPage() {
                   className="inline-flex items-center gap-1.5 btn-champagne px-5 py-2 rounded-xl font-bold shadow-xs"
                 >
                   <Save className="h-4 w-4" /> Parçayı & Modalı Kaydet
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* MODAL 3: ARIZA REHBERİ & UZMAN TAVSİYESİ EDİTÖRÜ           */}
+      {/* ========================================================= */}
+      {isFaultModalOpen && editingFault && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-display font-bold text-xl text-slate-900">
+                  {editingFault._id ? "Arıza Rehberini & Çözümü Düzenle" : "Yeni Arıza Rehberi Oluştur"}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Arıza başlığı, 💡 Uzman Tavsiyesi açıklaması ve ilk müdahale adımları.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFaultModalOpen(false)}
+                className="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveFault} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Arıza Seçim Butonu Başlığı (Kısa)</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: Sızıntı var"
+                    value={editingFault.label}
+                    onChange={(e) => setEditingFault({ ...editingFault, label: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Detaylı Arıza Başlığı</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: Cihaz altında veya hortumda su birikiyor"
+                    value={editingFault.title}
+                    onChange={(e) => setEditingFault({ ...editingFault, title: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* 💡 Uzman Tavsiyesi & Arıza Nedeni Açıklaması */}
+              <div>
+                <label className="block text-amber-900 font-bold mb-1">
+                  💡 Uzman Tavsiyesi & Arıza Nedeni (Seçimden sonraki sayfada görünecektir)
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Gözle görülür su birikintisi, genellikle hızlı bağlantı rekorlarının o-ring aşınmasından kaynaklanır..."
+                  value={editingFault.body}
+                  onChange={(e) => setEditingFault({ ...editingFault, body: e.target.value })}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none leading-relaxed"
+                />
+              </div>
+
+              {/* 🛠️ Servis Gelene Kadar Yapılacaklar (tips) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-700 font-bold">🛠️ Servis Gelene Kadar Yapılması Gereken İlk Adımlar</label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setEditingFault({
+                        ...editingFault,
+                        tips: [...(editingFault.tips || []), "Yeni ilk müdahale adımı"],
+                      })
+                    }
+                    className="text-[11px] text-[hsl(var(--brand-plum))] hover:underline inline-flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="h-3 w-3" /> Adım Ekle
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {(editingFault.tips || []).map((tip, tIdx) => (
+                    <div key={tIdx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={tip}
+                        onChange={(e) => {
+                          const updated = [...editingFault.tips];
+                          updated[tIdx] = e.target.value;
+                          setEditingFault({ ...editingFault, tips: updated });
+                        }}
+                        className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-slate-900 text-xs w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = editingFault.tips.filter((_, i) => i !== tIdx);
+                          setEditingFault({ ...editingFault, tips: updated });
+                        }}
+                        className="text-rose-600 hover:text-rose-700 p-1.5 rounded-lg bg-rose-50 border border-rose-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsFaultModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 bg-slate-100 font-semibold"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-1.5 btn-champagne px-5 py-2 rounded-xl font-bold shadow-xs"
+                >
+                  <Save className="h-4 w-4" /> Arıza Rehberini Kaydet
                 </button>
               </div>
             </form>
