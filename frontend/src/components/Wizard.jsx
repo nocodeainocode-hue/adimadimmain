@@ -589,10 +589,26 @@ export default function Wizard({ config }) {
     }
   };
 
+  // Dynamic Catalog Devices & Filter Sets from Convex / LocalData
+  const activeCatalogDevices = useMemo(() => {
+    return (localData?.devices || config?.devices || []).filter((d) => d.isActive !== false);
+  }, [localData, config]);
+
+  const activeFilterSets = useMemo(() => {
+    return localData?.filterSets || Object.values(config?.filterSets || {});
+  }, [localData, config]);
+
   const fetchDevices = (b, c) => {
     setDevLoading(true);
-    const recs = getRecommendedDevices(b, c);
-    setDevices(recs && recs.length > 0 ? recs : config.devices || []);
+    let recs = activeCatalogDevices.filter((d) => {
+      const matchBudget = !b || (d.budgetTags && d.budgetTags.includes(b));
+      const matchConsumption = !c || (d.consumptionTags && d.consumptionTags.includes(c));
+      return matchBudget && matchConsumption;
+    });
+    if (recs.length === 0 && b) {
+      recs = activeCatalogDevices.filter((d) => d.budgetTags && d.budgetTags.includes(b));
+    }
+    setDevices(recs && recs.length > 0 ? recs : activeCatalogDevices);
     setDevLoading(false);
   };
 
@@ -604,9 +620,12 @@ export default function Wizard({ config }) {
   // Filter set recommendation logic
   const recommendedSet = useMemo(() => {
     if (!lastChanged) return null;
-    if (lastChanged === "6ay") return config.filterSets.set3;
-    return config.filterSets.set5;
-  }, [lastChanged, config]);
+    const matchKey = lastChanged === "6ay" ? "6ay" : "1yil";
+    const found = activeFilterSets.find(
+      (fs) => fs.matchKey === matchKey || fs.id === (matchKey === "6ay" ? "set3" : "set5") || fs.setId === (matchKey === "6ay" ? "set3" : "set5")
+    );
+    return found || activeFilterSets[0] || null;
+  }, [lastChanged, activeFilterSets]);
 
   // Dynamic Fault Guides from Convex / LocalData
   const activeFaultGuides = useMemo(() => {

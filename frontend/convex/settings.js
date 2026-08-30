@@ -563,11 +563,213 @@ export const seedDefaultData = mutation({
       await ctx.db.insert("faultGuides", fault);
     }
 
+    // 6. Hazır Cihaz Kataloğu Verilerini Ekle
+    const existingDevices = await ctx.db.query("catalogDevices").collect();
+    for (const d of existingDevices) await ctx.db.delete(d._id);
+
+    const devicesData = [
+      {
+        deviceId: "lotus-eco-plus",
+        name: "Lotus Eco Plus 5",
+        price: "8.900 ₺",
+        costPrice: 4200,
+        salePrice: 8900,
+        tagline: "Ekonomik, güvenilir 5 aşamalı ters ozmoz sistemi",
+        budgetTags: ["eko"],
+        consumptionTags: ["az", "orta"],
+        capacity: "1-3 kişilik hane",
+        warranty: "2 Yıl Garanti",
+        img: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=800&q=80",
+        features: [
+          "5 aşamalı RO filtrasyon",
+          "Antibakteriyel 8L basınç tankı",
+          "Paslanmaz çelik döner musluk",
+          "Kompakt tezgah altı tasarım",
+        ],
+        order: 1,
+        isActive: true,
+      },
+      {
+        deviceId: "lotus-compact",
+        name: "Lotus Compact Slim",
+        price: "14.500 ₺",
+        costPrice: 6500,
+        salePrice: 14500,
+        tagline: "Dar dolaplara özel, şık kapalı kasa tasarımı",
+        budgetTags: ["orta"],
+        consumptionTags: ["az", "orta"],
+        capacity: "2-4 kişilik hane",
+        warranty: "3 Yıl Garanti",
+        img: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
+        features: [
+          "6 aşamalı mineral zenginleştirici",
+          "Ultra kompakt kapalı hijyen kabini",
+          "Sessiz çalışma & kaçak emniyeti",
+          "Hızlı filtre değişim mekanizması",
+        ],
+        order: 2,
+        isActive: true,
+      },
+      {
+        deviceId: "lotus-smart-ro",
+        name: "Lotus Smart RO-7",
+        price: "18.900 ₺",
+        costPrice: 8800,
+        salePrice: 18900,
+        tagline: "7 aşamalı arıtma + dahili basınç pompası",
+        budgetTags: ["orta", "premium"],
+        consumptionTags: ["orta", "yuksek"],
+        capacity: "3-5 kişilik hane",
+        warranty: "3 Yıl Garanti",
+        img: "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80",
+        features: [
+          "7 aşamalı filtrasyon",
+          "NSF onaylı ithal membran",
+          "24V sessiz booster pompa",
+          "Basınç regülatörü ve sızıntı emniyeti",
+        ],
+        order: 3,
+        isActive: true,
+      },
+      {
+        deviceId: "lotus-premium-pro",
+        name: "Lotus Premium Pro",
+        price: "24.900 ₺",
+        costPrice: 11500,
+        salePrice: 24900,
+        tagline: "Yüksek performans + alkali & detoks teknolojisi",
+        budgetTags: ["premium"],
+        consumptionTags: ["az", "orta", "yuksek"],
+        capacity: "4-5 kişilik hane",
+        warranty: "5 Yıl Garanti",
+        img: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=800&q=80",
+        features: [
+          "8 aşamalı ileri filtrasyon",
+          "Alkali + mineral + detoks filtre",
+          "pH 9+ antioksidan zenginleştirici",
+          "Dijital filtre takip göstergesi",
+        ],
+        order: 4,
+        isActive: true,
+      },
+      {
+        deviceId: "lotus-maxflow",
+        name: "Lotus MaxFlow Direct",
+        price: "29.900 ₺",
+        costPrice: 14000,
+        salePrice: 29900,
+        tagline: "Tanksız, doğrudan akış — yoğun kullanım için",
+        budgetTags: ["premium"],
+        consumptionTags: ["orta", "yuksek"],
+        capacity: "5+ kişilik hane / ofis",
+        warranty: "5 Yıl Garanti",
+        img: "https://images.unsplash.com/photo-1527661591475-527312dd65f5?auto=format&fit=crop&w=800&q=80",
+        features: [
+          "Tanksız direkt taze su akışı",
+          "800 GPD yüksek kapasiteli membran",
+          "Anlık TDS su kalitesi göstergesi",
+          "Kompakt ve zarif tezgah altı tasarım",
+        ],
+        order: 5,
+        isActive: true,
+      },
+      {
+        deviceId: "lotus-elite-smart",
+        name: "Lotus Elite Smart Touch",
+        price: "34.900 ₺",
+        costPrice: 16500,
+        salePrice: 34900,
+        tagline: "Dokunmatik akıllı batarya, UV arıtma ve mineral optimizasyonu",
+        budgetTags: ["premium"],
+        consumptionTags: ["az", "orta", "yuksek"],
+        capacity: "Her haneye uygun ultra lüks",
+        warranty: "5 Yıl Garanti",
+        img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+        features: [
+          "9 aşamalı moleküler filtrasyon",
+          "Dokunmatik dijital akıllı batarya",
+          "Entegre UV LED bakteri & virüs yok edici",
+          "Ömür boyu servis & filtre takip garantisi",
+        ],
+        order: 6,
+        isActive: true,
+      },
+    ];
+
+    for (const dev of devicesData) {
+      await ctx.db.insert("catalogDevices", dev);
+    }
+
+    // 7. Filtre Paketleri Verilerini Ekle
+    const existingFilterSets = await ctx.db.query("filterSets").collect();
+    for (const fs of existingFilterSets) await ctx.db.delete(fs._id);
+
+    const filterSetsData = [
+      {
+        setId: "set3",
+        name: "3'lü Orijinal Ön Filtre Bakım Seti",
+        subtitle: "Sediment (Tortu) + Granül Aktif Karbon + Blok Karbon",
+        recommendedFor: "Son değişim ~6 ay önce",
+        matchKey: "6ay",
+        price: "950 ₺",
+        costPrice: 450,
+        salePrice: 950,
+        img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
+        desc: "Şebeke suyundaki çamur, pas, klor ve kimyasalları temizleyerek ana membranı koruyan 3'lü ön bakım paketi.",
+        includes: [
+          "1. Aşama: 5 Mikron Tortu & Sediment Filtresi",
+          "2. Aşama: GAC Granül Aktif Karbon Klor Filtresi",
+          "3. Aşama: CTO Blok Karbon Koku & Tat Filtresi",
+          "Ücretsiz Hijyen Dezenfeksiyon & TDS Ölçümü",
+        ],
+        benefits: [
+          "İlk 3 kademe ön arıtma tamamen yenilenir",
+          "Klor ve kötü koku %99 oranında giderilir",
+          "Ana RO membranın ömrünü 2 kat uzatır",
+        ],
+        order: 1,
+        isActive: true,
+      },
+      {
+        setId: "set5",
+        name: "5'li Tam Kapsamlı Orijinal Filtre Seti",
+        subtitle: "3 Ön Filtre + İthal RO Membran + Doğal Mineral & Tatlandırıcı",
+        recommendedFor: "Son değişim ~1 yıl önce veya bilinmiyor",
+        matchKey: "1yil",
+        price: "1.850 ₺",
+        costPrice: 850,
+        salePrice: 1850,
+        img: "https://images.unsplash.com/photo-1563170351-be82bc888aa4?auto=format&fit=crop&w=800&q=80",
+        desc: "Tüm filtrelerin ve ana membranın sıfırlandığı, suyu tatlı memba lezzetine ve ideal mineral dengesine kavuşturan komple set.",
+        includes: [
+          "1. Aşama: 5 Mikron Tortu & Sediment Filtresi",
+          "2. Aşama: GAC Granül Aktif Karbon Filtresi",
+          "3. Aşama: CTO Blok Karbon Filtresi",
+          "4. Aşama: NSF Onaylı 80 GPD İthal RO Membran",
+          "5. Aşama: Post Karbon Hindistan Cevizi Tatlandırıcı",
+          "Ücretsiz Tank Basınç Ayarı & Kaçak Kontrolü",
+        ],
+        benefits: [
+          "Tüm filtrasyon kademeleri fabrika çıkışı gibi yenilenir",
+          "Mikroskobik virüs, kireç ve ağır metaller %99.2 arıtılır",
+          "Doğal mineral takviyesiyle tatlı memba suyu lezzeti",
+        ],
+        order: 2,
+        isActive: true,
+      },
+    ];
+
+    for (const fs of filterSetsData) {
+      await ctx.db.insert("filterSets", fs);
+    }
+
     return {
       success: true,
       stepsCount: stepsData.length,
       optionsCount: optionsData.length,
       faultsCount: faultGuidesData.length,
+      devicesCount: devicesData.length,
+      filterSetsCount: filterSetsData.length,
     };
   },
 });
@@ -612,4 +814,101 @@ export const deleteFaultGuide = mutation({
     return true;
   },
 });
+
+// Hazır Cihaz Kataloğu Query & Mutations
+export const getCatalogDevices = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("catalogDevices")
+      .withIndex("by_order")
+      .collect();
+  },
+});
+
+export const updateCatalogDevice = mutation({
+  args: {
+    _id: v.optional(v.id("catalogDevices")),
+    deviceId: v.string(),
+    name: v.string(),
+    price: v.string(),
+    costPrice: v.optional(v.number()),
+    salePrice: v.optional(v.number()),
+    tagline: v.string(),
+    budgetTags: v.array(v.string()),
+    consumptionTags: v.array(v.string()),
+    capacity: v.string(),
+    warranty: v.string(),
+    img: v.string(),
+    features: v.array(v.string()),
+    order: v.number(),
+    isActive: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const { _id, ...data } = args;
+    if (_id) {
+      await ctx.db.patch(_id, data);
+      return _id;
+    } else {
+      return await ctx.db.insert("catalogDevices", data);
+    }
+  },
+});
+
+export const deleteCatalogDevice = mutation({
+  args: { id: v.id("catalogDevices") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+    return true;
+  },
+});
+
+// Filtre Paketleri Query & Mutations
+export const getFilterSets = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db
+      .query("filterSets")
+      .withIndex("by_order")
+      .collect();
+  },
+});
+
+export const updateFilterSet = mutation({
+  args: {
+    _id: v.optional(v.id("filterSets")),
+    setId: v.string(),
+    name: v.string(),
+    subtitle: v.string(),
+    recommendedFor: v.string(),
+    matchKey: v.string(),
+    price: v.string(),
+    costPrice: v.optional(v.number()),
+    salePrice: v.optional(v.number()),
+    img: v.string(),
+    desc: v.string(),
+    includes: v.array(v.string()),
+    benefits: v.array(v.string()),
+    order: v.number(),
+    isActive: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const { _id, ...data } = args;
+    if (_id) {
+      await ctx.db.patch(_id, data);
+      return _id;
+    } else {
+      return await ctx.db.insert("filterSets", data);
+    }
+  },
+});
+
+export const deleteFilterSet = mutation({
+  args: { id: v.id("filterSets") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+    return true;
+  },
+});
+
 

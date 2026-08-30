@@ -437,6 +437,204 @@ const DEFAULT_LOCAL_STATE = {
       isActive: true,
     },
   ],
+  devices: [
+    {
+      _id: "dev_lotus_eco_plus",
+      id: "lotus-eco-plus",
+      deviceId: "lotus-eco-plus",
+      name: "Lotus Eco Plus 5",
+      price: "8.900 ₺",
+      costPrice: 4200,
+      salePrice: 8900,
+      tagline: "Ekonomik, güvenilir 5 aşamalı ters ozmoz sistemi",
+      budgetTags: ["eko"],
+      consumptionTags: ["az", "orta"],
+      capacity: "1-3 kişilik hane",
+      warranty: "2 Yıl Garanti",
+      img: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=800&q=80",
+      features: [
+        "5 aşamalı RO filtrasyon",
+        "Antibakteriyel 8L basınç tankı",
+        "Paslanmaz çelik döner musluk",
+        "Kompakt tezgah altı tasarım",
+      ],
+      order: 1,
+      isActive: true,
+    },
+    {
+      _id: "dev_lotus_compact",
+      id: "lotus-compact",
+      deviceId: "lotus-compact",
+      name: "Lotus Compact Slim",
+      price: "14.500 ₺",
+      costPrice: 6500,
+      salePrice: 14500,
+      tagline: "Dar dolaplara özel, şık kapalı kasa tasarımı",
+      budgetTags: ["orta"],
+      consumptionTags: ["az", "orta"],
+      capacity: "2-4 kişilik hane",
+      warranty: "3 Yıl Garanti",
+      img: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
+      features: [
+        "6 aşamalı mineral zenginleştirici",
+        "Ultra kompakt kapalı hijyen kabini",
+        "Sessiz çalışma & kaçak emniyeti",
+        "Hızlı filtre değişim mekanizması",
+      ],
+      order: 2,
+      isActive: true,
+    },
+    {
+      _id: "dev_lotus_smart_ro",
+      id: "lotus-smart-ro",
+      deviceId: "lotus-smart-ro",
+      name: "Lotus Smart RO-7",
+      price: "18.900 ₺",
+      costPrice: 8800,
+      salePrice: 18900,
+      tagline: "7 aşamalı arıtma + dahili basınç pompası",
+      budgetTags: ["orta", "premium"],
+      consumptionTags: ["orta", "yuksek"],
+      capacity: "3-5 kişilik hane",
+      warranty: "3 Yıl Garanti",
+      img: "https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=800&q=80",
+      features: [
+        "7 aşamalı filtrasyon",
+        "NSF onaylı ithal membran",
+        "24V sessiz booster pompa",
+        "Basınç regülatörü ve sızıntı emniyeti",
+      ],
+      order: 3,
+      isActive: true,
+    },
+    {
+      _id: "dev_lotus_premium_pro",
+      id: "lotus-premium-pro",
+      deviceId: "lotus-premium-pro",
+      name: "Lotus Premium Pro",
+      price: "24.900 ₺",
+      costPrice: 11500,
+      salePrice: 24900,
+      tagline: "Yüksek performans + alkali & detoks teknolojisi",
+      budgetTags: ["premium"],
+      consumptionTags: ["az", "orta", "yuksek"],
+      capacity: "4-5 kişilik hane",
+      warranty: "5 Yıl Garanti",
+      img: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?auto=format&fit=crop&w=800&q=80",
+      features: [
+        "8 aşamalı ileri filtrasyon",
+        "Alkali + mineral + detoks filtre",
+        "pH 9+ antioksidan zenginleştirici",
+        "Dijital filtre takip göstergesi",
+      ],
+      order: 4,
+      isActive: true,
+    },
+    {
+      _id: "dev_lotus_maxflow",
+      id: "lotus-maxflow",
+      deviceId: "lotus-maxflow",
+      name: "Lotus MaxFlow Direct",
+      price: "29.900 ₺",
+      costPrice: 14000,
+      salePrice: 29900,
+      tagline: "Tanksız, doğrudan akış — yoğun kullanım için",
+      budgetTags: ["premium"],
+      consumptionTags: ["orta", "yuksek"],
+      capacity: "5+ kişilik hane / ofis",
+      warranty: "5 Yıl Garanti",
+      img: "https://images.unsplash.com/photo-1527661591475-527312dd65f5?auto=format&fit=crop&w=800&q=80",
+      features: [
+        "Tanksız direkt taze su akışı",
+        "800 GPD yüksek kapasiteli membran",
+        "Anlık TDS su kalitesi göstergesi",
+        "Kompakt ve zarif tezgah altı tasarım",
+      ],
+      order: 5,
+      isActive: true,
+    },
+    {
+      _id: "dev_lotus_elite_smart",
+      id: "lotus-elite-smart",
+      deviceId: "lotus-elite-smart",
+      name: "Lotus Elite Smart Touch",
+      price: "34.900 ₺",
+      costPrice: 16500,
+      salePrice: 34900,
+      tagline: "Dokunmatik akıllı batarya, UV arıtma ve mineral optimizasyonu",
+      budgetTags: ["premium"],
+      consumptionTags: ["az", "orta", "yuksek"],
+      capacity: "Her haneye uygun ultra lüks",
+      warranty: "5 Yıl Garanti",
+      img: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+      features: [
+        "9 aşamalı moleküler filtrasyon",
+        "Dokunmatik dijital akıllı batarya",
+        "Entegre UV LED bakteri & virüs yok edici",
+        "Ömür boyu servis & filtre takip garantisi",
+      ],
+      order: 6,
+      isActive: true,
+    },
+  ],
+  filterSets: [
+    {
+      _id: "fs_set3",
+      id: "set3",
+      setId: "set3",
+      name: "3'lü Orijinal Ön Filtre Bakım Seti",
+      subtitle: "Sediment (Tortu) + Granül Aktif Karbon + Blok Karbon",
+      recommendedFor: "Son değişim ~6 ay önce",
+      matchKey: "6ay",
+      price: "950 ₺",
+      costPrice: 450,
+      salePrice: 950,
+      img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
+      desc: "Şebeke suyundaki çamur, pas, klor ve kimyasalları temizleyerek ana membranı koruyan 3'lü ön bakım paketi.",
+      includes: [
+        "1. Aşama: 5 Mikron Tortu & Sediment Filtresi",
+        "2. Aşama: GAC Granül Aktif Karbon Klor Filtresi",
+        "3. Aşama: CTO Blok Karbon Koku & Tat Filtresi",
+        "Ücretsiz Hijyen Dezenfeksiyon & TDS Ölçümü",
+      ],
+      benefits: [
+        "İlk 3 kademe ön arıtma tamamen yenilenir",
+        "Klor ve kötü koku %99 oranında giderilir",
+        "Ana RO membranın ömrünü 2 kat uzatır",
+      ],
+      order: 1,
+      isActive: true,
+    },
+    {
+      _id: "fs_set5",
+      id: "set5",
+      setId: "set5",
+      name: "5'li Tam Kapsamlı Orijinal Filtre Seti",
+      subtitle: "3 Ön Filtre + İthal RO Membran + Doğal Mineral & Tatlandırıcı",
+      recommendedFor: "Son değişim ~1 yıl önce veya bilinmiyor",
+      matchKey: "1yil",
+      price: "1.850 ₺",
+      costPrice: 850,
+      salePrice: 1850,
+      img: "https://images.unsplash.com/photo-1563170351-be82bc888aa4?auto=format&fit=crop&w=800&q=80",
+      desc: "Tüm filtrelerin ve ana membranın sıfırlandığı, suyu tatlı memba lezzetine ve ideal mineral dengesine kavuşturan komple set.",
+      includes: [
+        "1. Aşama: 5 Mikron Tortu & Sediment Filtresi",
+        "2. Aşama: GAC Granül Aktif Karbon Filtresi",
+        "3. Aşama: CTO Blok Karbon Filtresi",
+        "4. Aşama: NSF Onaylı 80 GPD İthal RO Membran",
+        "5. Aşama: Post Karbon Hindistan Cevizi Tatlandırıcı",
+        "Ücretsiz Tank Basınç Ayarı & Kaçak Kontrolü",
+      ],
+      benefits: [
+        "Tüm filtrasyon kademeleri fabrika çıkışı gibi yenilenir",
+        "Mikroskobik virüs, kireç ve ağır metaller %99.2 arıtılır",
+        "Doğal mineral takviyesiyle tatlı memba suyu lezzeti",
+      ],
+      order: 2,
+      isActive: true,
+    },
+  ],
   leads: [
     {
       _id: "lead_demo_1",
@@ -511,6 +709,14 @@ export function AppConvexProvider({ children }) {
       // Ensure faultGuides are present
       if (!parsed.faultGuides || parsed.faultGuides.length === 0) {
         parsed.faultGuides = DEFAULT_LOCAL_STATE.faultGuides;
+      }
+      // Ensure devices are present
+      if (!parsed.devices || parsed.devices.length === 0) {
+        parsed.devices = DEFAULT_LOCAL_STATE.devices;
+      }
+      // Ensure filterSets are present
+      if (!parsed.filterSets || parsed.filterSets.length === 0) {
+        parsed.filterSets = DEFAULT_LOCAL_STATE.filterSets;
       }
       return parsed;
     } catch {
@@ -645,6 +851,40 @@ export function AppConvexProvider({ children }) {
     }));
   };
 
+  const updateLocalDevice = (device) => {
+    setLocalData((prev) => {
+      const exists = (prev.devices || []).some((d) => d._id === device._id || d.deviceId === device.deviceId || d.id === device.id);
+      const updatedDevices = exists
+        ? (prev.devices || []).map((d) => (d._id === device._id || d.deviceId === device.deviceId || d.id === device.id ? { ...d, ...device } : d))
+        : [...(prev.devices || []), { ...device, _id: "dev_" + Date.now(), id: device.deviceId || `dev_${Date.now()}` }];
+      return { ...prev, devices: updatedDevices };
+    });
+  };
+
+  const deleteLocalDevice = (deviceId) => {
+    setLocalData((prev) => ({
+      ...prev,
+      devices: (prev.devices || []).filter((d) => d._id !== deviceId && d.deviceId !== deviceId && d.id !== deviceId),
+    }));
+  };
+
+  const updateLocalFilterSet = (filterSet) => {
+    setLocalData((prev) => {
+      const exists = (prev.filterSets || []).some((fs) => fs._id === filterSet._id || fs.setId === filterSet.setId || fs.id === filterSet.id);
+      const updatedFilterSets = exists
+        ? (prev.filterSets || []).map((fs) => (fs._id === filterSet._id || fs.setId === filterSet.setId || fs.id === filterSet.id ? { ...fs, ...filterSet } : fs))
+        : [...(prev.filterSets || []), { ...filterSet, _id: "fs_" + Date.now(), id: filterSet.setId || `fs_${Date.now()}` }];
+      return { ...prev, filterSets: updatedFilterSets };
+    });
+  };
+
+  const deleteLocalFilterSet = (filterSetId) => {
+    setLocalData((prev) => ({
+      ...prev,
+      filterSets: (prev.filterSets || []).filter((fs) => fs._id !== filterSetId && fs.setId !== filterSetId && fs.id !== filterSetId),
+    }));
+  };
+
   const resetLocalToDefault = () => {
     setLocalData(DEFAULT_LOCAL_STATE);
   };
@@ -660,6 +900,10 @@ export function AppConvexProvider({ children }) {
     deleteLocalStep,
     updateLocalOption,
     deleteLocalOption,
+    updateLocalDevice,
+    deleteLocalDevice,
+    updateLocalFilterSet,
+    deleteLocalFilterSet,
     updateLocalFault,
     deleteLocalFault,
     updateLocalSettings,

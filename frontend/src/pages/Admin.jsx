@@ -36,6 +36,8 @@ import {
   LogOut,
   KeyRound,
   AlertTriangle,
+  Droplets,
+  ShoppingCart,
 } from "lucide-react";
 import { useLocalData } from "@/lib/convex";
 import { toast } from "sonner";
@@ -52,6 +54,10 @@ export default function AdminPage() {
     deleteLocalStep,
     updateLocalOption,
     deleteLocalOption,
+    updateLocalDevice,
+    deleteLocalDevice,
+    updateLocalFilterSet,
+    deleteLocalFilterSet,
     updateLocalFault,
     deleteLocalFault,
     updateLocalSettings,
@@ -65,7 +71,8 @@ export default function AdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState("finans"); // "finans" | "steps" | "options" | "faults" | "leads" | "settings"
+  // Tab State
+  const [activeTab, setActiveTab] = useState("finans"); // "finans" | "steps" | "options" | "devices" | "filterSets" | "faults" | "leads" | "settings"
   const [selectedStepFilter, setSelectedStepFilter] = useState("all");
   const [leadStatusFilter, setLeadStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,6 +83,12 @@ export default function AdminPage() {
 
   const [editingOption, setEditingOption] = useState(null);
   const [isOptionModalOpen, setIsOptionModalOpen] = useState(false);
+
+  const [editingDevice, setEditingDevice] = useState(null);
+  const [isDeviceModalOpen, setIsDeviceModalOpen] = useState(false);
+
+  const [editingFilterSet, setEditingFilterSet] = useState(null);
+  const [isFilterSetModalOpen, setIsFilterSetModalOpen] = useState(false);
 
   const [editingFault, setEditingFault] = useState(null);
   const [isFaultModalOpen, setIsFaultModalOpen] = useState(false);
@@ -113,7 +126,7 @@ export default function AdminPage() {
 
   // Filtered Options
   const filteredOptions = useMemo(() => {
-    return localData.options.filter((opt) => {
+    return (localData.options || []).filter((opt) => {
       const matchStep = selectedStepFilter === "all" || opt.stepKey === selectedStepFilter;
       const matchSearch =
         !searchTerm ||
@@ -122,6 +135,29 @@ export default function AdminPage() {
       return matchStep && matchSearch;
     });
   }, [localData.options, selectedStepFilter, searchTerm]);
+
+  // Filtered Devices
+  const filteredDevices = useMemo(() => {
+    return (localData.devices || []).filter((dev) => {
+      const matchSearch =
+        !searchTerm ||
+        dev.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dev.tagline?.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchSearch;
+    });
+  }, [localData.devices, searchTerm]);
+
+  // Filtered Filter Sets
+  const filteredFilterSets = useMemo(() => {
+    return (localData.filterSets || []).filter((fs) => {
+      const matchSearch =
+        !searchTerm ||
+        fs.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        fs.subtitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        fs.desc?.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchSearch;
+    });
+  }, [localData.filterSets, searchTerm]);
 
   // Filtered Faults
   const filteredFaults = useMemo(() => {
@@ -148,7 +184,7 @@ export default function AdminPage() {
     });
   }, [localData.leads, leadStatusFilter, searchTerm]);
 
-  // Step Handlers
+  // Handlers
   const handleSaveStep = (e) => {
     e.preventDefault();
     if (!editingStep.key || !editingStep.title) {
@@ -161,7 +197,6 @@ export default function AdminPage() {
     setEditingStep(null);
   };
 
-  // Option Handlers
   const handleSaveOption = (e) => {
     e.preventDefault();
     if (!editingOption.name || !editingOption.stepKey) {
@@ -174,7 +209,30 @@ export default function AdminPage() {
     setEditingOption(null);
   };
 
-  // Fault Handlers
+  const handleSaveDevice = (e) => {
+    e.preventDefault();
+    if (!editingDevice.name) {
+      toast.error("Lütfen cihaz adını doldurun.");
+      return;
+    }
+    updateLocalDevice(editingDevice);
+    toast.success("Hazır model başarıyla kaydedildi!");
+    setIsDeviceModalOpen(false);
+    setEditingDevice(null);
+  };
+
+  const handleSaveFilterSet = (e) => {
+    e.preventDefault();
+    if (!editingFilterSet.name) {
+      toast.error("Lütfen filtre seti adını doldurun.");
+      return;
+    }
+    updateLocalFilterSet(editingFilterSet);
+    toast.success("Filtre paketi başarıyla kaydedildi!");
+    setIsFilterSetModalOpen(false);
+    setEditingFilterSet(null);
+  };
+
   const handleSaveFault = (e) => {
     e.preventDefault();
     if (!editingFault.title || !editingFault.label) {
@@ -187,7 +245,7 @@ export default function AdminPage() {
     setEditingFault(null);
   };
 
-  // Handle Admin Login
+  // Login handler
   const handleLoginSubmit = (e) => {
     e.preventDefault();
     setLoginLoading(true);
@@ -200,16 +258,14 @@ export default function AdminPage() {
     }
   };
 
-  // If not authenticated, render Light Login Screen
+  // Login Screen
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
-        {/* Soft Background Accents */}
         <div className="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-amber-200/40 blur-[90px] pointer-events-none" />
         <div className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-purple-200/40 blur-[90px] pointer-events-none" />
 
         <div className="relative max-w-md w-full rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xl space-y-6">
-          {/* Top Logo & Title */}
           <div className="text-center">
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] font-black text-2xl mb-3 shadow-md">
               <Lock className="h-7 w-7" />
@@ -218,7 +274,7 @@ export default function AdminPage() {
               Lotus Yönetici Girişi
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
-              Fiyatlandırma, adım motoru, arıza rehberi ve siparişleri yönetmek için giriş yapın.
+              Tüm adımları, modelleri, filtre paketlerini, arıza rehberini ve siparişleri yönetmek için giriş yapın.
             </p>
           </div>
 
@@ -266,7 +322,6 @@ export default function AdminPage() {
             </button>
           </form>
 
-          {/* Demo Credentials Box */}
           <div className="pt-2 border-t border-slate-100 text-center">
             <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
               <span className="block font-bold text-slate-800">🔑 Varsayılan Yönetici Bilgileri:</span>
@@ -312,7 +367,6 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Global Quick Action & User Auth */}
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => {
@@ -328,7 +382,6 @@ export default function AdminPage() {
 
           <div className="h-4 w-px bg-slate-200 hidden sm:block" />
 
-          {/* Logged in User & Logout */}
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-600 hidden md:inline font-mono font-medium">
               {adminUser?.email || "admin@lotussuaritma.com"}
@@ -350,66 +403,88 @@ export default function AdminPage() {
 
       {/* Main Layout */}
       <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs - All 4 Flows + Finance & Settings */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200 text-sm">
           <button
             onClick={() => setActiveTab("finans")}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
               activeTab === "finans"
                 ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
             }`}
           >
-            <TrendingUp className="h-4 w-4" /> Kârlılık & Finans
+            <TrendingUp className="h-4 w-4" /> Finans & Kâr
           </button>
 
           <button
             onClick={() => setActiveTab("steps")}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
               activeTab === "steps"
                 ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
             }`}
           >
-            <Layers className="h-4 w-4" /> Konfigüratör Adımları ({localData.steps.length})
+            <Layers className="h-4 w-4" /> 1. Konfigüratör Adımları ({localData.steps.length})
           </button>
 
           <button
             onClick={() => setActiveTab("options")}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
               activeTab === "options"
                 ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
             }`}
           >
-            <Package className="h-4 w-4" /> Parçalar & Modallar ({localData.options.length})
+            <Package className="h-4 w-4" /> 2. Parçalar & Fiyatlar ({localData.options.length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab("devices")}
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+              activeTab === "devices"
+                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+            }`}
+          >
+            <ShoppingCart className="h-4 w-4" /> 3. Hazır Cihaz Modelleri ({(localData.devices || []).length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab("filterSets")}
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+              activeTab === "filterSets"
+                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+            }`}
+          >
+            <Droplets className="h-4 w-4" /> 4. Filtre Paketleri ({(localData.filterSets || []).length})
           </button>
 
           <button
             onClick={() => setActiveTab("faults")}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
               activeTab === "faults"
                 ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
             }`}
           >
-            <Wrench className="h-4 w-4" /> Arıza Rehberi & Çözümler ({(localData.faultGuides || []).length})
+            <Wrench className="h-4 w-4" /> 5. Arıza Rehberi ({(localData.faultGuides || []).length})
           </button>
 
           <button
             onClick={() => setActiveTab("leads")}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
               activeTab === "leads"
                 ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
             }`}
           >
-            <MessageSquare className="h-4 w-4" /> Gelen Sipariş & Talepler ({(localData.leads || []).length})
+            <MessageSquare className="h-4 w-4" /> Gelen Siparişler ({(localData.leads || []).length})
           </button>
 
           <button
             onClick={() => setActiveTab("settings")}
-            className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
               activeTab === "settings"
                 ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
@@ -419,22 +494,17 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* ========================================================= */}
-        {/* TAB 1: KÂRLILIK & FİNANS DASHBOARD                        */}
-        {/* ========================================================= */}
+        {/* TAB 1: KÂRLILIK & FİNANS */}
         {activeTab === "finans" && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
                   Toplam Ciro (Satış)
                 </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-display font-black text-2xl sm:text-3xl text-slate-900 font-mono">
-                    {stats.totalRevenue.toLocaleString("tr-TR")} ₺
-                  </span>
-                </div>
+                <span className="font-display font-black text-2xl sm:text-3xl text-slate-900 font-mono">
+                  {stats.totalRevenue.toLocaleString("tr-TR")} ₺
+                </span>
                 <span className="text-[11px] text-emerald-600 mt-2 block font-semibold">
                   {stats.totalLeads} toplam müşteri talebinden
                 </span>
@@ -444,11 +514,9 @@ export default function AdminPage() {
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
                   Toplam Parça Maliyeti (Alış)
                 </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-display font-black text-2xl sm:text-3xl text-rose-600 font-mono">
-                    {stats.totalCost.toLocaleString("tr-TR")} ₺
-                  </span>
-                </div>
+                <span className="font-display font-black text-2xl sm:text-3xl text-rose-600 font-mono">
+                  {stats.totalCost.toLocaleString("tr-TR")} ₺
+                </span>
                 <span className="text-[11px] text-slate-500 mt-2 block font-medium">
                   Toptan alış & montaj donanımları
                 </span>
@@ -458,11 +526,9 @@ export default function AdminPage() {
                 <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider block mb-1">
                   Tahmini Net Kâr
                 </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-display font-black text-2xl sm:text-3xl text-emerald-700 font-mono">
-                    +{stats.totalEstimatedProfit.toLocaleString("tr-TR")} ₺
-                  </span>
-                </div>
+                <span className="font-display font-black text-2xl sm:text-3xl text-emerald-700 font-mono">
+                  +{stats.totalEstimatedProfit.toLocaleString("tr-TR")} ₺
+                </span>
                 <span className="text-[11px] text-emerald-700 mt-2 block font-bold">
                   Alış & indirim sonrası net kazanç
                 </span>
@@ -472,28 +538,17 @@ export default function AdminPage() {
                 <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider block mb-1">
                   Ortalama Kâr Marjı
                 </span>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-display font-black text-2xl sm:text-3xl text-amber-700 font-mono">
-                    %{stats.overallMargin}
-                  </span>
-                </div>
+                <span className="font-display font-black text-2xl sm:text-3xl text-amber-700 font-mono">
+                  %{stats.overallMargin}
+                </span>
                 <span className="text-[11px] text-amber-800 mt-2 block font-bold">
                   Ciro üzerinden net kârlılık
                 </span>
               </div>
             </div>
 
-            {/* Parça Bazında Kârlılık Özeti Tablosu */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="font-display font-bold text-lg text-slate-900">Parça Bazında Alış vs Satış Kâr Tablosu</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Her parçanın toptan alış fiyatı, müşteriye satış fiyatı ve parça başına net kârı.
-                  </p>
-                </div>
-              </div>
-
+              <h3 className="font-display font-bold text-lg text-slate-900 mb-4">Parça Bazında Alış vs Satış Kâr Tablosu</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm">
                   <thead>
@@ -536,9 +591,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* TAB 2: KONFİGÜRATÖR ADIMLARI (DİNAMİK ADIM MOTORU)          */}
-        {/* ========================================================= */}
+        {/* TAB 2: KONFİGÜRATÖR ADIMLARI */}
         {activeTab === "steps" && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -569,10 +622,9 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Steps List Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {localData.steps.map((s) => {
-                const optCount = localData.options.filter((o) => o.stepKey === s.key).length;
+                const optCount = (localData.options || []).filter((o) => o.stepKey === s.key).length;
                 return (
                   <div
                     key={s._id || s.key}
@@ -585,18 +637,16 @@ export default function AdminPage() {
                         <Badge className="bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold">
                           {s.badge}
                         </Badge>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => updateLocalStep({ ...s, isActive: !s.isActive })}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
-                              s.isActive
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : "bg-slate-100 text-slate-500 border-slate-200"
-                            }`}
-                          >
-                            {s.isActive ? "Aktif" : "Pasif"}
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => updateLocalStep({ ...s, isActive: !s.isActive })}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-all ${
+                            s.isActive
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : "bg-slate-100 text-slate-500 border-slate-200"
+                          }`}
+                        >
+                          {s.isActive ? "Aktif" : "Pasif"}
+                        </button>
                       </div>
 
                       <h4 className="font-display font-bold text-lg text-slate-900">{s.title}</h4>
@@ -624,7 +674,7 @@ export default function AdminPage() {
                         </button>
                         <button
                           onClick={() => {
-                            if (window.confirm(`"${s.title}" adımını ve altındaki tüm seçenekleri silmek istiyor musunuz?`)) {
+                            if (window.confirm(`"${s.title}" adımını silmek istiyor musunuz?`)) {
                               deleteLocalStep(s._id);
                               toast.success("Adım silindi.");
                             }
@@ -642,12 +692,9 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* TAB 3: PARÇALAR, FİYATLAR & MODALLAR                      */}
-        {/* ========================================================= */}
+        {/* TAB 3: PARÇALAR, FİYATLAR & MODALLAR */}
         {activeTab === "options" && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Filter & Action Toolbar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <div className="relative">
@@ -687,7 +734,7 @@ export default function AdminPage() {
                     desc: "Kısa tanıtım açıklaması",
                     img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
                     longDesc: "Büyük görsel modalında görüntülenecek detaylı tanıtım ve kullanım açıklaması.",
-                    specs: ["Özellik 1: Yüksek Dayanım", "Boyut: Standart", "Kullanım: Tezgah Altı"],
+                    specs: ["Özellik 1: Yüksek Dayanım", "Boyut: Standart"],
                     highlights: ["1 Numaralı Dayanıklılık", "Sıfır Bakım Masrafı"],
                     order: localData.options.length + 1,
                     isActive: true,
@@ -700,7 +747,6 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Options Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredOptions.map((opt) => {
                 const step = localData.steps.find((s) => s.key === opt.stepKey);
@@ -715,7 +761,6 @@ export default function AdminPage() {
                     }`}
                   >
                     <div>
-                      {/* Image & Badges */}
                       <div className="relative h-36 w-full rounded-xl overflow-hidden mb-3 border border-slate-200 bg-slate-100">
                         <img src={opt.img} alt={opt.name} className="h-full w-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
@@ -734,7 +779,6 @@ export default function AdminPage() {
                       <h4 className="font-display font-bold text-base text-slate-900">{opt.name}</h4>
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{opt.desc}</p>
 
-                      {/* Profit Metrics Box */}
                       <div className="mt-3 p-3 rounded-xl bg-slate-50 border border-slate-200 grid grid-cols-3 gap-2 text-center">
                         <div>
                           <span className="block text-[10px] text-slate-500 uppercase font-semibold">Alış (Maliyet)</span>
@@ -755,15 +799,8 @@ export default function AdminPage() {
                           </span>
                         </div>
                       </div>
-
-                      {/* Modal Details Summary */}
-                      <div className="mt-2.5 text-[11px] text-slate-500 flex items-center justify-between font-medium">
-                        <span>Teknik Özellik: {opt.specs?.length || 0} madde</span>
-                        <span>Avantaj: {opt.highlights?.length || 0} madde</span>
-                      </div>
                     </div>
 
-                    {/* Actions */}
                     <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
                       <button
                         onClick={() => updateLocalOption({ ...opt, isActive: !opt.isActive })}
@@ -810,9 +847,243 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* TAB 4: ARIZA REHBERİ & ÇÖZÜMLER (UZMAN TAVSİYELERİ)        */}
-        {/* ========================================================= */}
+        {/* TAB 4: HAZIR CİHAZ & MODEL KATALOĞU (SATIN ALMA AKIŞI) */}
+        {activeTab === "devices" && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-display font-bold text-xl text-slate-900">Hazır Cihaz Kataloğu & Modeller</h2>
+                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                  "Cihaz Satın Almak İstiyorum" akışında önerilen hazır arıtma modellerini, fiyatlarını, özelliklerini ve görsellerini yönetin.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingDevice({
+                    deviceId: `device_${Date.now()}`,
+                    name: "Yeni Lotus Cihaz Modeli",
+                    price: "12.500 ₺",
+                    costPrice: 5500,
+                    salePrice: 12500,
+                    tagline: "Kompakt ve yüksek verimli yeni model",
+                    budgetTags: ["orta"],
+                    consumptionTags: ["az", "orta"],
+                    capacity: "3-4 kişilik hane",
+                    warranty: "3 Yıl Garanti",
+                    img: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=800&q=80",
+                    features: ["5 aşamalı RO filtrasyon", "Antibakteriyel tank", "Paslanmaz musluk"],
+                    order: (localData.devices || []).length + 1,
+                    isActive: true,
+                  });
+                  setIsDeviceModalOpen(true);
+                }}
+                className="inline-flex items-center gap-2 btn-champagne px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:scale-[1.02] transition-all shrink-0"
+              >
+                <Plus className="h-4 w-4" /> Yeni Cihaz Modeli Ekle
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredDevices.map((dev) => (
+                <div
+                  key={dev._id || dev.deviceId || dev.id}
+                  className={`rounded-2xl border p-4 bg-white shadow-xs transition-all flex flex-col justify-between ${
+                    dev.isActive !== false ? "border-slate-200" : "border-slate-200 opacity-60 bg-slate-100"
+                  }`}
+                >
+                  <div>
+                    <div className="relative h-40 w-full rounded-xl overflow-hidden mb-3 border border-slate-200 bg-slate-100">
+                      <img src={dev.img} alt={dev.name} className="h-full w-full object-cover" />
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-[hsl(var(--brand-plum))] text-white font-bold text-[10px] shadow">
+                          {dev.warranty || "2 Yıl Garanti"}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="flex items-baseline justify-between mb-1">
+                      <h4 className="font-display font-bold text-base text-slate-900">{dev.name}</h4>
+                      <span className="font-mono font-bold text-base text-[hsl(var(--brand-plum))]">
+                        {dev.price}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-3">{dev.tagline}</p>
+
+                    <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                      {dev.features?.map((f, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 text-xs text-slate-600">
+                          <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          <span>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <button
+                      onClick={() => updateLocalDevice({ ...dev, isActive: dev.isActive === false ? true : false })}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+                        dev.isActive !== false
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-slate-100 text-slate-500 border-slate-200"
+                      }`}
+                    >
+                      {dev.isActive !== false ? "Satışta Aktif" : "Pasif"}
+                    </button>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setEditingDevice({
+                            ...dev,
+                            features: dev.features || [],
+                            budgetTags: dev.budgetTags || ["orta"],
+                            consumptionTags: dev.consumptionTags || ["orta"],
+                          });
+                          setIsDeviceModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 text-xs text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-semibold transition-all"
+                      >
+                        <Edit className="h-3.5 w-3.5" /> Düzenle
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`"${dev.name}" cihazını silmek istediğinize emin misiniz?`)) {
+                            deleteLocalDevice(dev._id || dev.deviceId || dev.id);
+                            toast.success("Cihaz silindi.");
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-lg transition-all"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: FİLTRE DEĞİŞİM PAKETLERİ */}
+        {activeTab === "filterSets" && (
+          <div className="space-y-6 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="font-display font-bold text-xl text-slate-900">Filtre Değişim Paketleri</h2>
+                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                  "Filtre Değiştirmek İstiyorum" akışında önerilen filtre setlerini, görsellerini, fiyatlarını ve içeriklerini yönetin.
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingFilterSet({
+                    setId: `set_${Date.now()}`,
+                    name: "Yeni Filtre Seti Paketi",
+                    subtitle: "Ön Filtreler + Membran",
+                    recommendedFor: "Periyodik Değişim",
+                    matchKey: "1yil",
+                    price: "1.250 ₺",
+                    img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
+                    desc: "Detaylı filtre seti açıklaması.",
+                    includes: ["1. Aşama Sediment", "2. Aşama Blok Karbon", "3. Aşama Membran"],
+                    benefits: ["Klor ve kireç arıtımı", "Taze tatlı su"],
+                    order: (localData.filterSets || []).length + 1,
+                    isActive: true,
+                  });
+                  setIsFilterSetModalOpen(true);
+                }}
+                className="inline-flex items-center gap-2 btn-champagne px-4 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:scale-[1.02] transition-all shrink-0"
+              >
+                <Plus className="h-4 w-4" /> Yeni Filtre Paketi Ekle
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredFilterSets.map((fs) => (
+                <div
+                  key={fs._id || fs.setId || fs.id}
+                  className={`rounded-2xl border p-5 bg-white shadow-xs transition-all flex flex-col justify-between ${
+                    fs.isActive !== false ? "border-slate-200" : "border-slate-200 opacity-60 bg-slate-100"
+                  }`}
+                >
+                  <div>
+                    <div className="relative h-44 w-full rounded-xl overflow-hidden mb-3 border border-slate-200 bg-slate-100">
+                      <img src={fs.img} alt={fs.name} className="h-full w-full object-cover" />
+                      <div className="absolute top-2 left-2">
+                        <Badge className="bg-emerald-600 text-white font-bold text-[10px]">
+                          {fs.recommendedFor}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="flex items-baseline justify-between mb-1">
+                      <h4 className="font-display font-bold text-base sm:text-lg text-slate-900">{fs.name}</h4>
+                      <span className="font-mono font-bold text-lg text-[hsl(var(--brand-plum))]">
+                        {fs.price}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-3">{fs.desc}</p>
+
+                    <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                      <span className="block text-[11px] font-bold text-slate-700 uppercase">Paket İçeriği:</span>
+                      {fs.includes?.map((inc, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5 text-xs text-slate-600">
+                          <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                          <span>{inc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                    <button
+                      onClick={() => updateLocalFilterSet({ ...fs, isActive: fs.isActive === false ? true : false })}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+                        fs.isActive !== false
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-slate-100 text-slate-500 border-slate-200"
+                      }`}
+                    >
+                      {fs.isActive !== false ? "Aktif" : "Pasif"}
+                    </button>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setEditingFilterSet({
+                            ...fs,
+                            includes: fs.includes || [],
+                            benefits: fs.benefits || [],
+                          });
+                          setIsFilterSetModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 text-xs text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-semibold transition-all"
+                      >
+                        <Edit className="h-3.5 w-3.5" /> Düzenle
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (window.confirm(`"${fs.name}" paketini silmek istediğinize emin misiniz?`)) {
+                            deleteLocalFilterSet(fs._id || fs.setId || fs.id);
+                            toast.success("Filtre paketi silindi.");
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 p-1.5 rounded-lg transition-all"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: ARIZA REHBERİ & ÇÖZÜMLER */}
         {activeTab === "faults" && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -845,7 +1116,6 @@ export default function AdminPage() {
               </button>
             </div>
 
-            {/* Faults Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredFaults.map((fault) => (
                 <div
@@ -873,13 +1143,11 @@ export default function AdminPage() {
 
                     <h4 className="font-display font-bold text-base sm:text-lg text-slate-900">{fault.title}</h4>
 
-                    {/* 💡 Uzman Tavsiyesi Metni */}
                     <div className="mt-3 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-950 space-y-1">
                       <strong className="block text-amber-900 font-bold">💡 Uzman Tavsiyesi & Neden:</strong>
                       <p className="leading-relaxed text-slate-700">{fault.body}</p>
                     </div>
 
-                    {/* 🛠️ İlk Müdahale Maddeleri */}
                     {fault.tips && fault.tips.length > 0 && (
                       <div className="mt-3 pt-2.5 border-t border-slate-100">
                         <span className="block text-[11px] font-bold text-slate-700 uppercase mb-1.5">
@@ -928,12 +1196,9 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* TAB 5: GELEN SİPARİŞLER & TALEPLER (LEADS)                */}
-        {/* ========================================================= */}
+        {/* TAB 7: GELEN SİPARİŞLER (LEADS) */}
         {activeTab === "leads" && (
           <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Filter toolbar */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <div className="relative">
@@ -966,7 +1231,6 @@ export default function AdminPage() {
               </span>
             </div>
 
-            {/* Leads List */}
             <div className="space-y-4">
               {filteredLeads.length === 0 ? (
                 <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl bg-white">
@@ -989,7 +1253,6 @@ export default function AdminPage() {
                       key={lead._id}
                       className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col lg:flex-row gap-5 justify-between"
                     >
-                      {/* Customer & Location */}
                       <div className="space-y-2 lg:max-w-xs">
                         <div className="flex items-center gap-2">
                           <span className="font-display font-bold text-base text-slate-900">{lead.fullName}</span>
@@ -1026,7 +1289,6 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        {/* Status Changer */}
                         <div className="pt-2">
                           <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Durumu Güncelle</label>
                           <select
@@ -1046,7 +1308,6 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {/* Selected Custom Build Parts & Profit Summary */}
                       <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
                         <div>
                           <span className="text-[11px] font-bold text-[hsl(var(--brand-plum))] uppercase tracking-wider block mb-2">
@@ -1066,11 +1327,10 @@ export default function AdminPage() {
                               ))}
                             </div>
                           ) : (
-                            <p className="text-xs text-slate-600">{lead.itemName || "Lotus Su Arıtma Cihaz Talebi"}</p>
+                            <p className="text-xs text-slate-600 font-medium">{lead.itemName || "Lotus Su Arıtma Cihaz Talebi"}</p>
                           )}
                         </div>
 
-                        {/* Financial Bar of This Order */}
                         <div className="mt-4 pt-3 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
                           <div>
                             <span className="block text-[10px] text-slate-500">Liste Tutarı</span>
@@ -1106,9 +1366,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* TAB 6: GENEL AYARLAR                                      */}
-        {/* ========================================================= */}
+        {/* TAB 8: GENEL AYARLAR */}
         {activeTab === "settings" && (
           <div className="max-w-2xl bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-xs animate-in fade-in duration-200">
             <div>
@@ -1203,9 +1461,7 @@ export default function AdminPage() {
         )}
       </div>
 
-      {/* ========================================================= */}
-      {/* MODAL 1: STEP ADD / EDIT MODAL                            */}
-      {/* ========================================================= */}
+      {/* MODAL 1: STEP ADD / EDIT */}
       {isStepModalOpen && editingStep && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl">
@@ -1290,9 +1546,7 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* MODAL 2: PARÇA & MODAL ZENGİN EDİTÖRÜ                      */}
-      {/* ========================================================= */}
+      {/* MODAL 2: PARÇA & MODAL ZENGİN EDİTÖRÜ */}
       {isOptionModalOpen && editingOption && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl space-y-5">
@@ -1313,7 +1567,6 @@ export default function AdminPage() {
             </div>
 
             <form onSubmit={handleSaveOption} className="space-y-4 text-xs">
-              {/* Step Selection & Name */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-slate-700 font-bold mb-1">Ait Olduğu Adım / Kategori</label>
@@ -1342,7 +1595,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Cost Price vs Selling Price + Live Profit Calculator */}
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-rose-600 font-bold mb-1">Alış / Toptan Maliyet (₺)</label>
@@ -1375,7 +1627,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Image URL & Badge */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-slate-700 font-bold mb-1">Büyük HD Görsel URL'si</label>
@@ -1399,7 +1650,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Card Short Description */}
               <div>
                 <label className="block text-slate-700 font-bold mb-1">Kart Üzeri Kısa Açıklama</label>
                 <input
@@ -1412,7 +1662,6 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* Modal Long Description */}
               <div>
                 <label className="block text-[hsl(var(--brand-plum))] font-bold mb-1">🔎 Modal Detaylı Açıklama Paragrafı</label>
                 <textarea
@@ -1424,7 +1673,7 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* Modal Specs Editor (Lines) */}
+              {/* Specs Editor */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-slate-700 font-bold">📊 Modal Teknik Özellik Maddeleri</label>
@@ -1464,7 +1713,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Modal Highlights Editor (Lines) */}
+              {/* Highlights Editor */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-emerald-800 font-bold">✨ Modal Öne Çıkan Avantaj Maddeleri</label>
@@ -1504,7 +1753,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Submit Buttons */}
               <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                 <button
                   type="button"
@@ -1525,9 +1773,298 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* MODAL 3: ARIZA REHBERİ & UZMAN TAVSİYESİ EDİTÖRÜ           */}
-      {/* ========================================================= */}
+      {/* MODAL 3: HAZIR CİHAZ MODELİ EDİTÖRÜ */}
+      {isDeviceModalOpen && editingDevice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-display font-bold text-xl text-slate-900">
+                  {editingDevice._id ? "Hazır Modeli Düzenle" : "Yeni Hazır Model Ekle"}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Satın alma akışında önerilecek hazır arıtma cihazı.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDeviceModalOpen(false)}
+                className="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDevice} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Model Adı</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: Lotus Smart RO-7"
+                    value={editingDevice.name}
+                    onChange={(e) => setEditingDevice({ ...editingDevice, name: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Görünen Fiyat Metni</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: 18.900 ₺"
+                    value={editingDevice.price}
+                    onChange={(e) => setEditingDevice({ ...editingDevice, price: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Slogan / Kısa Açıklama</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: 7 aşamalı arıtma + dahili pompa"
+                    value={editingDevice.tagline || ""}
+                    onChange={(e) => setEditingDevice({ ...editingDevice, tagline: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Garanti Süresi</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: 3 Yıl Garanti"
+                    value={editingDevice.warranty || ""}
+                    onChange={(e) => setEditingDevice({ ...editingDevice, warranty: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">HD Görsel URL'si</label>
+                <input
+                  type="url"
+                  required
+                  value={editingDevice.img}
+                  onChange={(e) => setEditingDevice({ ...editingDevice, img: e.target.value })}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-mono text-[11px]"
+                />
+              </div>
+
+              {/* Features Editor */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-700 font-bold">✨ Öne Çıkan Özellik Maddeleri</label>
+                  <button
+                    type="button"
+                    onClick={() => setEditingDevice({ ...editingDevice, features: [...(editingDevice.features || []), "Yeni Özellik"] })}
+                    className="text-[11px] text-[hsl(var(--brand-plum))] hover:underline inline-flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="h-3 w-3" /> Madde Ekle
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {(editingDevice.features || []).map((feat, fIdx) => (
+                    <div key={fIdx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={feat}
+                        onChange={(e) => {
+                          const updated = [...editingDevice.features];
+                          updated[fIdx] = e.target.value;
+                          setEditingDevice({ ...editingDevice, features: updated });
+                        }}
+                        className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-slate-900 text-xs w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = editingDevice.features.filter((_, i) => i !== fIdx);
+                          setEditingDevice({ ...editingDevice, features: updated });
+                        }}
+                        className="text-rose-600 hover:text-rose-700 p-1.5 rounded-lg bg-rose-50 border border-rose-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsDeviceModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 bg-slate-100 font-semibold"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-1.5 btn-champagne px-5 py-2 rounded-xl font-bold shadow-xs"
+                >
+                  <Save className="h-4 w-4" /> Cihaz Modelini Kaydet
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: FİLTRE PAKETİ EDİTÖRÜ */}
+      {isFilterSetModalOpen && editingFilterSet && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="font-display font-bold text-xl text-slate-900">
+                  {editingFilterSet._id ? "Filtre Paketini Düzenle" : "Yeni Filtre Paketi Ekle"}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">Filtre değişim akışında önerilecek paket ve içerikleri.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsFilterSetModalOpen(false)}
+                className="h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 hover:text-slate-900"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveFilterSet} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Paket Adı</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: 5'li Tam Kapsamlı Orijinal Filtre Seti"
+                    value={editingFilterSet.name}
+                    onChange={(e) => setEditingFilterSet({ ...editingFilterSet, name: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Fiyat Metni</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Örn: 1.850 ₺"
+                    value={editingFilterSet.price}
+                    onChange={(e) => setEditingFilterSet({ ...editingFilterSet, price: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Alt Başlık</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: 3 Ön Filtre + Membran + Tatlandırıcı"
+                    value={editingFilterSet.subtitle || ""}
+                    onChange={(e) => setEditingFilterSet({ ...editingFilterSet, subtitle: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Önerilen Değişim Periyodu</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: Son değişim ~1 yıl önce"
+                    value={editingFilterSet.recommendedFor || ""}
+                    onChange={(e) => setEditingFilterSet({ ...editingFilterSet, recommendedFor: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">HD Görsel URL'si</label>
+                <input
+                  type="url"
+                  required
+                  value={editingFilterSet.img}
+                  onChange={(e) => setEditingFilterSet({ ...editingFilterSet, img: e.target.value })}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-mono text-[11px]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">Açıklama</label>
+                <textarea
+                  rows={2}
+                  placeholder="Paketin sağladığı fayda ve kullanım alanı..."
+                  value={editingFilterSet.desc || ""}
+                  onChange={(e) => setEditingFilterSet({ ...editingFilterSet, desc: e.target.value })}
+                  className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] resize-none"
+                />
+              </div>
+
+              {/* Includes Editor */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-slate-700 font-bold">📦 Paket İçeriğindeki Filtreler</label>
+                  <button
+                    type="button"
+                    onClick={() => setEditingFilterSet({ ...editingFilterSet, includes: [...(editingFilterSet.includes || []), "Yeni Filtre Aşaması"] })}
+                    className="text-[11px] text-[hsl(var(--brand-plum))] hover:underline inline-flex items-center gap-1 font-bold"
+                  >
+                    <Plus className="h-3 w-3" /> Filtre Ekle
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {(editingFilterSet.includes || []).map((inc, iIdx) => (
+                    <div key={iIdx} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={inc}
+                        onChange={(e) => {
+                          const updated = [...editingFilterSet.includes];
+                          updated[iIdx] = e.target.value;
+                          setEditingFilterSet({ ...editingFilterSet, includes: updated });
+                        }}
+                        className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-slate-900 text-xs w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = editingFilterSet.includes.filter((_, i) => i !== iIdx);
+                          setEditingFilterSet({ ...editingFilterSet, includes: updated });
+                        }}
+                        className="text-rose-600 hover:text-rose-700 p-1.5 rounded-lg bg-rose-50 border border-rose-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsFilterSetModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-900 bg-slate-100 font-semibold"
+                >
+                  İptal
+                </button>
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-1.5 btn-champagne px-5 py-2 rounded-xl font-bold shadow-xs"
+                >
+                  <Save className="h-4 w-4" /> Filtre Paketini Kaydet
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: ARIZA REHBERİ EDİTÖRÜ */}
       {isFaultModalOpen && editingFault && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl space-y-5">
@@ -1573,7 +2110,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* 💡 Uzman Tavsiyesi & Arıza Nedeni Açıklaması */}
               <div>
                 <label className="block text-amber-900 font-bold mb-1">
                   💡 Uzman Tavsiyesi & Arıza Nedeni (Seçimden sonraki sayfada görünecektir)
@@ -1588,7 +2124,6 @@ export default function AdminPage() {
                 />
               </div>
 
-              {/* 🛠️ Servis Gelene Kadar Yapılacaklar (tips) */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-slate-700 font-bold">🛠️ Servis Gelene Kadar Yapılması Gereken İlk Adımlar</label>
@@ -1633,7 +2168,6 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* Submit Buttons */}
               <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">
                 <button
                   type="button"

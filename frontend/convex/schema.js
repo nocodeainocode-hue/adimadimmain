@@ -37,6 +37,42 @@ export default defineSchema({
     .index("by_stepKey", ["stepKey"])
     .index("by_order", ["order"]),
 
+  // Hazır Cihaz & Model Kataloğu (Satın Alma Akışı)
+  catalogDevices: defineTable({
+    deviceId: v.string(),
+    name: v.string(),
+    price: v.string(),
+    costPrice: v.optional(v.number()),
+    salePrice: v.optional(v.number()),
+    tagline: v.string(),
+    budgetTags: v.array(v.string()), // ["eko", "orta", "premium"]
+    consumptionTags: v.array(v.string()), // ["az", "orta", "cok"]
+    capacity: v.string(),
+    warranty: v.string(),
+    img: v.string(),
+    features: v.array(v.string()),
+    order: v.number(),
+    isActive: v.boolean(),
+  }).index("by_order", ["order"]),
+
+  // Filtre Değişim Paketleri
+  filterSets: defineTable({
+    setId: v.string(), // "set3", "set5", vb.
+    name: v.string(),
+    subtitle: v.string(),
+    recommendedFor: v.string(), // "Son değişim ~6 ay önce"
+    matchKey: v.string(), // "6ay", "1yil", "bilmiyorum"
+    price: v.string(),
+    costPrice: v.optional(v.number()),
+    salePrice: v.optional(v.number()),
+    img: v.string(),
+    desc: v.string(),
+    includes: v.array(v.string()),
+    benefits: v.array(v.string()),
+    order: v.number(),
+    isActive: v.boolean(),
+  }).index("by_order", ["order"]),
+
   // Arıza Rehberi & Çözüm / Uzman Tavsiyeleri
   faultGuides: defineTable({
     faultId: v.string(),
@@ -87,5 +123,6 @@ export default defineSchema({
     baseCost: v.number(),
     discountRate: v.number(),
     discountBadgeText: v.string(),
+    districts: v.optional(v.array(v.string())),
   }).index("by_key", ["key"]),
 });
