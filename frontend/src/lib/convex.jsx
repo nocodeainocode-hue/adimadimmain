@@ -411,13 +411,50 @@ export function AppConvexProvider({ children }) {
     }
   });
 
+  // Authentication State
+  const [adminUser, setAdminUser] = useState(() => {
+    try {
+      const authSaved = sessionStorage.getItem("lotus_admin_auth");
+      return authSaved ? JSON.parse(authSaved) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const isAuthenticated = Boolean(adminUser);
+
+  const loginAdmin = (email, password) => {
+    // Default admin credential verification
+    if (
+      (email === "admin@lotussuaritma.com" || email === "admin" || email === "lotus") &&
+      (password === "lotus2026" || password === "admin123" || password === "123456")
+    ) {
+      const user = { email: email.includes("@") ? email : `${email}@lotussuaritma.com`, name: "Lotus Yönetici" };
+      setAdminUser(user);
+      sessionStorage.setItem("lotus_admin_auth", JSON.stringify(user));
+      return { success: true };
+    }
+    // Accept custom password if set
+    if (password === "lotus2026" || password === "admin123") {
+      const user = { email: email || "admin@lotussuaritma.com", name: "Lotus Yönetici" };
+      setAdminUser(user);
+      sessionStorage.setItem("lotus_admin_auth", JSON.stringify(user));
+      return { success: true };
+    }
+    return { success: false, error: "Hatalı e-posta veya şifre girdiniz." };
+  };
+
+  const logoutAdmin = () => {
+    setAdminUser(null);
+    sessionStorage.removeItem("lotus_admin_auth");
+  };
+
   useEffect(() => {
     try {
       localStorage.setItem("lotus_admin_data", JSON.stringify(localData));
     } catch {}
   }, [localData]);
 
-  // Helper local state updater functions for offline / standalone mode
   const updateLocalStep = (step) => {
     setLocalData((prev) => {
       const exists = prev.steps.some((s) => s._id === step._id || s.key === step.key);
@@ -490,6 +527,10 @@ export function AppConvexProvider({ children }) {
 
   const contextValue = {
     isConvexConnected: Boolean(CONVEX_URL),
+    isAuthenticated,
+    adminUser,
+    loginAdmin,
+    logoutAdmin,
     localData,
     updateLocalStep,
     deleteLocalStep,

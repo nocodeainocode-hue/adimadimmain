@@ -31,6 +31,10 @@ import {
   X,
   FileText,
   SlidersHorizontal,
+  Lock,
+  Unlock,
+  LogOut,
+  KeyRound,
 } from "lucide-react";
 import { useLocalData } from "@/lib/convex";
 import { toast } from "sonner";
@@ -38,6 +42,10 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AdminPage() {
   const {
+    isAuthenticated,
+    adminUser,
+    loginAdmin,
+    logoutAdmin,
     localData,
     updateLocalStep,
     deleteLocalStep,
@@ -47,6 +55,12 @@ export default function AdminPage() {
     updateLocalLeadStatus,
     resetLocalToDefault,
   } = useLocalData();
+
+  // Login Form States
+  const [emailInput, setEmailInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState("finans"); // "finans" | "steps" | "options" | "leads" | "settings"
   const [selectedStepFilter, setSelectedStepFilter] = useState("all");
@@ -142,6 +156,105 @@ export default function AdminPage() {
     setEditingOption(null);
   };
 
+  // Handle Admin Login
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    setLoginLoading(true);
+    const result = loginAdmin(emailInput.trim(), passwordInput.trim());
+    setLoginLoading(false);
+    if (result.success) {
+      toast.success("Yönetici girişi başarılı!");
+    } else {
+      toast.error(result.error || "Giriş başarısız.");
+    }
+  };
+
+  // If not authenticated, render Login Screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
+        {/* Background Glows */}
+        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-[hsl(var(--brand-champagne)/0.12)] blur-[120px] pointer-events-none" />
+        <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-amber-500/10 blur-[120px] pointer-events-none" />
+
+        <div className="relative max-w-md w-full rounded-3xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-xl p-6 sm:p-8 shadow-2xl space-y-6">
+          {/* Top Logo & Title */}
+          <div className="text-center">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(var(--brand-champagne))] text-neutral-950 font-black text-2xl mb-3 shadow-lg">
+              <Lock className="h-7 w-7" />
+            </div>
+            <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-white tracking-tight">
+              Lotus Yönetici Girişi
+            </h2>
+            <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
+              Fiyatlandırma, adım motoru, kârlılık takibi ve siparişleri yönetmek için giriş yapın.
+            </p>
+          </div>
+
+          <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block text-neutral-300 font-bold mb-1.5">Yönetici E-posta Adresi</label>
+              <input
+                type="text"
+                required
+                placeholder="admin@lotussuaritma.com"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3.5 py-3 text-white placeholder:text-neutral-600 focus:outline-none focus:border-amber-400 text-sm font-medium"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-neutral-300 font-bold">Yönetici Şifresi</label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-[11px] text-amber-400 hover:underline"
+                >
+                  {showPassword ? "Gizle" : "Göster"}
+                </button>
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                placeholder="••••••••"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="w-full rounded-xl border border-neutral-800 bg-neutral-950 px-3.5 py-3 text-white placeholder:text-neutral-600 focus:outline-none focus:border-amber-400 text-sm font-mono"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loginLoading || !passwordInput}
+              className="btn-champagne w-full rounded-xl h-12 text-sm font-bold flex items-center justify-center gap-2 shadow-lg hover:scale-[1.01] transition-all disabled:opacity-50"
+            >
+              <KeyRound className="h-4 w-4" />
+              {loginLoading ? "Giriş Yapılıyor..." : "Yönetim Paneline Giriş Yap"}
+            </button>
+          </form>
+
+          {/* Hint / Demo Credentials Box */}
+          <div className="pt-2 border-t border-neutral-800/80 text-center">
+            <div className="p-3 rounded-xl bg-neutral-950/60 border border-neutral-800 text-[11px] text-neutral-400 space-y-1">
+              <span className="block font-semibold text-neutral-300">🔑 Varsayılan Yönetici Bilgileri:</span>
+              <span>E-posta: <strong className="text-amber-300 font-mono">admin@lotussuaritma.com</strong></span>
+              <span className="block">Şifre: <strong className="text-amber-300 font-mono">lotus2026</strong></span>
+            </div>
+
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white mt-4 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> Ana Sayfaya Geri Dön
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans">
       {/* Top Navbar */}
@@ -168,7 +281,7 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Global Quick Action */}
+        {/* Global Quick Action & User Auth */}
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => {
@@ -179,8 +292,28 @@ export default function AdminPage() {
             }}
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-400 hover:text-rose-300 bg-neutral-900 border border-neutral-800 px-3 py-1.5 rounded-lg hover:border-rose-500/40 transition-all"
           >
-            <RotateCcw className="h-3.5 w-3.5" /> Varsayılana Sıfırla
+            <RotateCcw className="h-3.5 w-3.5" /> Sıfırla
           </button>
+
+          <div className="h-4 w-px bg-neutral-800 hidden sm:block" />
+
+          {/* Logged in User & Logout */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-neutral-400 hidden md:inline font-mono">
+              {adminUser?.email || "admin@lotussuaritma.com"}
+            </span>
+            <button
+              onClick={() => {
+                logoutAdmin();
+                toast.info("Oturum kapatıldı.");
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-300 hover:text-rose-200 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 px-3 py-1.5 rounded-lg transition-all shadow-sm"
+              title="Yönetici Oturumunu Kapat"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>Çıkış Yap</span>
+            </button>
+          </div>
         </div>
       </header>
 

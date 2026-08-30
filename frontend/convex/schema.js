@@ -1,33 +1,36 @@
 import { defineSchema, defineTable } from "convex/server";
+import { authTables } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  ...authTables,
+
   // Konfigüratör Adımları (Dinamik Adım Motoru)
   builderSteps: defineTable({
     key: v.string(), // "kasa", "filtre", "beyin", "pompa", "tank", "musluk", vb.
-    stepNumber: v.number(), // 1, 2, 3, 4, 5, 6...
+    stepNumber: v.number(),
     order: v.number(),
-    badge: v.string(), // "1. Adım • Dış Gövde & Kasa"
-    title: v.string(), // "Kasa Tipinizi Seçin"
-    description: v.string(), // "Tezgah altınızın alanına ve estetik tercihinize..."
-    icon: v.optional(v.string()), // "Layers", "Droplets", "Cpu", "Zap", "Cylinder", "Pipette"
-    guideText: v.optional(v.string()), // Örn. Pompa için "Neye Göre Seçmelisiniz?" rehber kutusu metni
+    badge: v.string(),
+    title: v.string(),
+    description: v.string(),
+    icon: v.optional(v.string()),
+    guideText: v.optional(v.string()),
     isActive: v.boolean(),
   }).index("by_order", ["order"]),
 
   // Her adımdaki parçalar / seçenekler
   builderOptions: defineTable({
-    stepKey: v.string(), // builderSteps.key ile eşleşir
-    optionId: v.string(), // "acik", "kapali", "cam_slim", vb.
-    name: v.string(), // "Kapalı Kasa"
-    costPrice: v.number(), // Alış / Maliyet Fiyatı ₺ (Admin içi)
-    salePrice: v.number(), // Satış Liste Fiyatı ₺
-    desc: v.string(), // Kısa açıklama (kart üstü)
-    img: v.string(), // HD Görsel URL
-    badge: v.optional(v.string()), // "En Çok Tercih Edilen", "Fiyat/Performans", vb.
-    longDesc: v.optional(v.string()), // Modal detaylı açıklama
-    specs: v.optional(v.array(v.string())), // Teknik özellikler listesi
-    highlights: v.optional(v.array(v.string())), // Öne çıkan avantajlar listesi
+    stepKey: v.string(),
+    optionId: v.string(),
+    name: v.string(),
+    costPrice: v.number(),
+    salePrice: v.number(),
+    desc: v.string(),
+    img: v.string(),
+    badge: v.optional(v.string()),
+    longDesc: v.optional(v.string()),
+    specs: v.optional(v.array(v.string())),
+    highlights: v.optional(v.array(v.string())),
     order: v.number(),
     isActive: v.boolean(),
   })
@@ -40,7 +43,7 @@ export default defineSchema({
     phone: v.string(),
     city: v.string(),
     district: v.string(),
-    flowType: v.string(), // "builder", "buy", "filter", "fault"
+    flowType: v.string(),
     selectedItems: v.optional(
       v.array(
         v.object({
@@ -55,23 +58,23 @@ export default defineSchema({
     baseCost: v.optional(v.number()),
     totalListPrice: v.number(),
     finalDiscountedPrice: v.number(),
-    totalCostPrice: v.number(), // Toplam Parça Alış Maliyeti ₺
-    estimatedProfit: v.number(), // Tahmini Net Kâr ₺
-    profitMarginPercent: v.number(), // Kâr Marjı %
-    status: v.string(), // "new" | "called" | "appointment" | "completed" | "cancelled"
+    totalCostPrice: v.number(),
+    estimatedProfit: v.number(),
+    profitMarginPercent: v.number(),
+    status: v.string(),
     adminNote: v.optional(v.string()),
     createdAt: v.number(),
   }).index("by_createdAt", ["createdAt"]),
 
   // Genel Site & Fiyat Ayarları
   siteSettings: defineTable({
-    key: v.string(), // "global"
+    key: v.string(),
     brandName: v.string(),
     whatsappNumber: v.string(),
     whatsappDisplay: v.string(),
-    basePrice: v.number(), // Baz montaj/aparat bedeli (500 ₺)
-    baseCost: v.number(), // Baz parça maliyeti (200 ₺)
-    discountRate: v.number(), // %20 -> 0.20
-    discountBadgeText: v.string(), // "🎁 Formu Doldur %20 İndirim Kazan"
+    basePrice: v.number(),
+    baseCost: v.number(),
+    discountRate: v.number(),
+    discountBadgeText: v.string(),
   }).index("by_key", ["key"]),
 });
