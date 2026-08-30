@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buildWaLink } from "@/lib/whatsapp";
+import { useLocalData } from "@/lib/convex";
 import {
   TEKIRDAG_DISTRICTS,
   BUILDER_CONFIG as DEFAULT_BUILDER_CONFIG,
@@ -80,105 +81,108 @@ function BuilderDetailModal({ item, onClose, onSelect, isSelected }) {
           )}
         </div>
 
-        <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">
-          {item.name}
-        </h3>
-
-        {/* Big HD Image */}
-        {item.img && (
-          <div className="mt-4 w-full h-56 sm:h-72 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 border border-border/80 shadow-md">
-            <img
-              src={item.img}
-              alt={item.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-
-        {/* Price & Guarantee Box */}
-        <div className="mt-5 p-4 rounded-2xl bg-muted/50 border border-border/60 flex items-center justify-between gap-4">
-          <div>
-            <span className="block text-xs text-muted-foreground font-medium">Bileşen Ek Tutarı</span>
+        {/* Title & Price */}
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-border pb-4 mb-5">
+          <h3 className="font-display font-extrabold text-2xl sm:text-3xl text-foreground">
+            {item.name || item.title}
+          </h3>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-xs text-muted-foreground font-medium">Liste Fiyatı:</span>
             <span className="font-display font-extrabold text-2xl text-[hsl(var(--brand-plum))] font-mono">
-              {item.price === 0 ? "Dahil (0 ₺)" : `+${item.price.toLocaleString("tr-TR")} ₺`}
-            </span>
-          </div>
-          <div className="text-right">
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
-              <ShieldCheck className="h-4 w-4" /> 2 Yıl Orijinal Garanti
+              {(item.salePrice || item.price || 0) === 0 ? "Ücretsiz" : `${(item.salePrice || item.price || 0).toLocaleString("tr-TR")} ₺`}
             </span>
           </div>
         </div>
 
-        {/* Long Description */}
-        <div className="mt-5">
-          <h4 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-1.5">
-            Bileşen Açıklaması
+        {/* HD Image */}
+        <div className="relative h-64 sm:h-80 w-full rounded-2xl overflow-hidden border border-border bg-neutral-950 mb-6 shadow-inner">
+          <img
+            src={item.img}
+            alt={item.name || item.title}
+            className="h-full w-full object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4 text-white text-xs font-medium drop-shadow">
+            {item.desc}
+          </div>
+        </div>
+
+        {/* Detailed Explanation Paragraph */}
+        <div className="mb-6">
+          <h4 className="font-bold text-sm text-foreground uppercase tracking-wider mb-2 flex items-center gap-2">
+            <Info className="h-4 w-4 text-[hsl(var(--brand-plum))]" />
+            Detaylı Tanıtım & Kullanım Amacı
           </h4>
-          <p className="text-sm sm:text-base text-foreground/90 leading-relaxed">
+          <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
             {item.longDesc || item.desc}
           </p>
         </div>
 
-        {/* Highlights */}
+        {/* Highlights / Avantajlar */}
         {item.highlights && item.highlights.length > 0 && (
-          <div className="mt-5">
-            <h4 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-2">
-              Öne Çıkan Avantajlar
+          <div className="mb-6 rounded-2xl bg-[hsl(var(--brand-champagne)/0.12)] border border-[hsl(var(--brand-champagne)/0.3)] p-4 sm:p-5">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-[hsl(var(--brand-plum))] mb-3 flex items-center gap-1.5">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              Neden Bu Seçeneği Tercih Etmelisiniz?
             </h4>
-            <div className="grid gap-2 sm:grid-cols-1">
+            <div className="grid sm:grid-cols-2 gap-2.5">
               {item.highlights.map((hl, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-foreground bg-muted/30 p-2.5 rounded-xl border border-border/50">
-                  <span className="h-5 w-5 rounded-full bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <Check className="h-3 w-3 stroke-[3]" />
-                  </span>
-                  <span className="font-medium">{hl}</span>
+                <div key={idx} className="flex items-start gap-2 text-xs sm:text-sm font-semibold text-foreground">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <span>{hl}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Specs Grid */}
+        {/* Specs Table */}
         {item.specs && item.specs.length > 0 && (
-          <div className="mt-5">
-            <h4 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-2">
+          <div className="mb-6">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground mb-3">
               Teknik Özellikler & Standartlar
             </h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {item.specs.map((sp, idx) => (
-                <div key={idx} className="p-2.5 rounded-xl bg-card border border-border text-xs text-foreground/90 font-medium">
-                  {sp}
+            <div className="rounded-xl border border-border overflow-hidden divide-y divide-border text-xs sm:text-sm">
+              {item.specs.map((spec, idx) => (
+                <div key={idx} className="px-4 py-2.5 bg-muted/30 flex items-center justify-between">
+                  <span className="font-medium text-foreground">{spec}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Footer Actions */}
-        <div className="mt-8 pt-5 border-t border-border flex flex-col sm:flex-row items-center justify-end gap-3">
+        {/* Action Button */}
+        <div className="mt-8 pt-4 border-t border-border flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="w-full sm:w-auto px-5 h-12 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-all"
+            className="rounded-xl px-5 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted transition-all"
           >
             Kapat
           </button>
+
           <button
             type="button"
             onClick={() => {
               if (onSelect) onSelect();
               onClose();
             }}
-            className="w-full sm:w-auto btn-champagne px-6 h-12 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md"
+            className={`inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm sm:text-base font-bold shadow-lg transition-all ${
+              isSelected
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                : "btn-champagne"
+            }`}
           >
             {isSelected ? (
               <>
-                <Check className="h-4 w-4 stroke-[3]" /> Bu Seçenek Seçili
+                <Check className="h-5 w-5 stroke-[2.5]" />
+                Seçildi (Cihazınızda Mevcut)
               </>
             ) : (
               <>
-                <Check className="h-4 w-4 stroke-[3]" /> Bu Seçeneği Cihaza Ekle ({item.price === 0 ? "0 ₺" : `+${item.price.toLocaleString("tr-TR")} ₺`})
+                <Check className="h-5 w-5 stroke-[2.5]" />
+                Bu Seçeneği Cihaza Ekle
               </>
             )}
           </button>
@@ -188,119 +192,137 @@ function BuilderDetailModal({ item, onClose, onSelect, isSelected }) {
   );
 }
 
-/* ---------- Builder Option Card with Image Support & Details Trigger ---------- */
-function BuilderOptionCard({ selected, onClick, title, price, desc, badge, img, onOpenDetails }) {
+/* ---------- Builder Option Card with Image and Modal Trigger ---------- */
+function BuilderOptionCard({
+  selected,
+  onClick,
+  onOpenDetails,
+  title,
+  price,
+  desc,
+  img,
+  badge,
+}) {
   return (
     <div
       onClick={onClick}
-      className={`w-full text-left rounded-2xl border p-3.5 sm:p-4 transition-all duration-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer group ${
+      className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 shadow-sm cursor-pointer ${
         selected
-          ? "border-[hsl(var(--brand-champagne))] ring-2 ring-[hsl(var(--brand-champagne)/0.5)] bg-[hsl(var(--brand-champagne)/0.10)] scale-[1.01]"
-          : "border-border bg-card hover:bg-muted/60 hover:border-neutral-300"
+          ? "border-[hsl(var(--brand-champagne))] ring-2 ring-[hsl(var(--brand-champagne)/0.5)] bg-[hsl(var(--brand-champagne)/0.12)] -translate-y-0.5"
+          : "border-border bg-card/90 hover:bg-muted/60 hover:border-neutral-300"
       }`}
     >
-      <div className="flex items-center gap-3.5 sm:gap-4 flex-1">
-        {img && (
-          <div
-            onClick={(e) => {
-              if (onOpenDetails) {
-                e.stopPropagation();
-                onOpenDetails();
-              }
-            }}
-            title="Büyük görsel ve detaylar için tıklayın"
-            className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 shrink-0 border border-border/80 shadow-sm group-hover:ring-2 group-hover:ring-[hsl(var(--brand-champagne))]"
-          >
-            <img
-              src={img}
-              alt={title}
-              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity text-white">
-              <Eye className="h-4 w-4 drop-shadow" />
-            </div>
+      <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        {/* Left Thumbnail with Click to Zoom */}
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onOpenDetails) onOpenDetails();
+          }}
+          className="relative h-24 w-full sm:h-20 sm:w-28 shrink-0 rounded-xl overflow-hidden border border-border bg-neutral-900 group/img shadow-sm"
+          title="Büyük görseli ve detayları incelemek için tıklayın"
+        >
+          <img
+            src={img}
+            alt={title}
+            className="h-full w-full object-cover group-hover/img:scale-110 transition-transform duration-300"
+          />
+          <div className="absolute inset-0 bg-black/30 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
+            <span className="inline-flex items-center gap-1 rounded-md bg-black/70 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm shadow group-hover/img:scale-105 transition-transform">
+              <Eye className="h-3 w-3" /> İncele
+            </span>
           </div>
-        )}
-        <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-bold text-base sm:text-lg text-foreground">{title}</span>
+        </div>
+
+        {/* Middle Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className="font-bold text-base sm:text-lg text-foreground group-hover:text-foreground">
+              {title}
+            </span>
             {badge && (
-              <Badge className="bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] text-[10px] font-bold border-0">
+              <Badge className="bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 text-[11px] font-bold">
                 {badge}
               </Badge>
             )}
           </div>
-          {desc && <p className="text-xs sm:text-sm text-muted-foreground mt-1 leading-relaxed">{desc}</p>}
-          
-          {onOpenDetails && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onOpenDetails();
-              }}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-[hsl(var(--brand-plum))] hover:text-[hsl(var(--brand-plum)/0.8)] mt-2 hover:underline bg-[hsl(var(--brand-plum)/0.08)] px-2 py-0.5 rounded-md"
-            >
-              <Info className="h-3 w-3" /> Büyük Görsel & Detaylı Özellikler
-            </button>
-          )}
-        </div>
-      </div>
+          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+            {desc}
+          </p>
 
-      <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/60">
-        <span className="font-display font-extrabold text-base sm:text-lg text-[hsl(var(--brand-plum))] block font-mono">
-          {price === 0 ? "0 ₺" : `+${price.toLocaleString("tr-TR")} ₺`}
-        </span>
-        <span
-          className={`inline-flex h-6 w-6 mt-1.5 items-center justify-center rounded-full border transition-all ${
-            selected
-              ? "bg-[hsl(var(--brand-champagne))] border-[hsl(var(--brand-champagne))] text-neutral-900"
-              : "border-border text-transparent"
-          }`}
-        >
-          <Check className="h-3.5 w-3.5 stroke-[3]" />
-        </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onOpenDetails) onOpenDetails();
+            }}
+            className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[hsl(var(--brand-plum))] hover:underline"
+          >
+            <Info className="h-3.5 w-3.5" />
+            <span>🔎 Büyük Görsel & Detaylı Özellikler</span>
+          </button>
+        </div>
+
+        {/* Right Price & Select Circle */}
+        <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/60">
+          <div className="text-left sm:text-right">
+            <span className="block text-[11px] font-medium text-muted-foreground">Fiyat Farkı</span>
+            <span className="font-display font-extrabold text-lg sm:text-xl text-[hsl(var(--brand-plum))] font-mono">
+              {price === 0 ? "Dahil (0 ₺)" : `+${price.toLocaleString("tr-TR")} ₺`}
+            </span>
+          </div>
+
+          <span
+            className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
+              selected
+                ? "bg-[hsl(var(--brand-champagne))] border-[hsl(var(--brand-champagne))] text-neutral-900 shadow-md scale-110"
+                : "border-border text-transparent group-hover:border-neutral-400"
+            }`}
+          >
+            <Check className="h-4 w-4 stroke-[3]" />
+          </span>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ---------- Callback "Beni Arayın" Lead Form ---------- */
-function CallbackForm({ flowType, itemName, city, district, discountOffer }) {
+/* ---------- Callback Form with Convex Support ---------- */
+function CallbackForm({ flowType, itemName, city, district, discountOffer, leadPayload }) {
+  const { addLocalLead } = useLocalData();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const cleanPhone = phone.trim();
     if (!cleanPhone || cleanPhone.length < 10) return;
     setLoading(true);
-    setError(false);
 
-    const leadData = {
-      full_name: name.trim() || "İsimsiz Müşteri",
+    const fullLead = {
+      fullName: name.trim() || "İsimsiz Müşteri",
       phone: cleanPhone,
-      city: city || "Belirtilmedi",
+      city: city || "Tekirdağ",
       district: district || "",
-      flow_type: flowType,
-      item_name: itemName,
+      flowType: flowType,
+      itemName: itemName,
+      ...(leadPayload || {}),
     };
 
-    // Save locally first for 100% guarantee
-    saveLeadLocally(leadData);
+    // Save to Convex / Local storage
+    addLocalLead(fullLead);
 
-    // Optional API sync if server is configured
-    if (API) {
-      try {
-        await axios.post(`${API}/lead`, leadData);
-      } catch (err) {
-        console.warn("Backend sync skipped, saved locally.", err);
-      }
-    }
+    // Also persist in legacy localStorage
+    saveLeadLocally({
+      full_name: fullLead.fullName,
+      phone: fullLead.phone,
+      city: fullLead.city,
+      district: fullLead.district,
+      flow_type: fullLead.flowType,
+      item_name: fullLead.itemName,
+    });
 
     setSubmitted(true);
     setLoading(false);
@@ -378,7 +400,6 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer }) {
           {discountOffer ? "%20 İndirimle Ara" : "Beni Arayın"}
         </button>
       </form>
-      {error && <p className="text-xs text-rose-500 mt-2 font-medium">Bir bağlantı hatası oluştu, lütfen doğrudan WhatsApp'tan deneyin.</p>}
     </div>
   );
 }
@@ -439,30 +460,25 @@ function EntryCard({ icon: Icon, title, desc, onClick, testId }) {
   );
 }
 
-/* ---------- WhatsApp CTA button ---------- */
-function WhatsAppButton({ number, message, testId, children, full }) {
-  return (
-    <a
-      href={buildWaLink(number, message)}
-      target="_blank"
-      rel="noopener noreferrer"
-      data-testid={testId}
-      className={`btn-whatsapp inline-flex items-center justify-center gap-2.5 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all shadow-sm ${full ? "w-full" : ""}`}
-    >
-      <MessageCircle className="h-5 w-5 shrink-0" />
-      {children || "WhatsApp'tan Yaz"}
-    </a>
-  );
-}
-
 export default function Wizard({ config }) {
-  const waNumber = config?.whatsapp?.number || "905550000000";
+  const { localData } = useLocalData();
+  const siteSettings = localData?.settings || {};
+  const waNumber = siteSettings.whatsappNumber || config?.whatsapp?.number || "905550000000";
 
-  const [flow, setFlow] = useState(null); // 'buy' | 'filter' | 'fault'
+  // Dynamic Builder Steps from Convex / LocalData
+  const activeBuilderSteps = useMemo(() => {
+    return (localData?.steps || []).filter((s) => s.isActive);
+  }, [localData]);
+
+  const allBuilderOptions = useMemo(() => {
+    return (localData?.options || []).filter((o) => o.isActive);
+  }, [localData]);
+
+  const [flow, setFlow] = useState(null); // 'buy' | 'filter' | 'fault' | 'builder'
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
 
-  // selections
+  // General Wizard selections
   const [city, setCity] = useState("Tekirdağ");
   const [district, setDistrict] = useState("Süleymanpaşa");
   const [consumption, setConsumption] = useState(null);
@@ -470,21 +486,22 @@ export default function Wizard({ config }) {
   const [lastChanged, setLastChanged] = useState(null);
   const [faultType, setFaultType] = useState(null);
 
-  // Custom Device Builder selections (start empty for step-by-step accumulation)
-  const [builderKasa, setBuilderKasa] = useState(null);
-  const [builderFiltre, setBuilderFiltre] = useState(null);
-  const [builderBeyin, setBuilderBeyin] = useState(null);
-  const [builderPompa, setBuilderPompa] = useState(null);
-  const [builderTank, setBuilderTank] = useState(null);
-  const [builderMusluk, setBuilderMusluk] = useState(null);
+  // Dynamic Custom Device Builder selections map: { [stepKey]: optionId }
+  const [builderSelections, setBuilderSelections] = useState({});
   const [modalItem, setModalItem] = useState(null);
 
   // device results
   const [devices, setDevices] = useState([]);
   const [devLoading, setDevLoading] = useState(false);
 
-  const stepsByFlow = { buy: 4, filter: 2, fault: 2, builder: 7 };
-  const totalSteps = flow ? stepsByFlow[flow] : 0;
+  const stepsByFlow = {
+    buy: 4,
+    filter: 2,
+    fault: 2,
+    builder: activeBuilderSteps.length + 1, // All steps + 1 summary step
+  };
+
+  const totalSteps = flow ? stepsByFlow[flow] || 1 : 0;
   const progress = flow ? ((step + 1) / totalSteps) * 100 : 0;
 
   const stepLabels = {
@@ -492,38 +509,52 @@ export default function Wizard({ config }) {
     filter: ["Son değişim", "Önerilen filtre seti"],
     fault: ["Arıza tipi", "Yönlendirme"],
     builder: [
-      "Kasa Seçimi",
-      "Filtre Paketi",
-      "Beyin / Otomasyon",
-      "Pompa Seçimi",
-      "Depolama Tankı",
-      "Musluk Seçimi",
+      ...activeBuilderSteps.map((s) => s.title),
       "Özet & %20 İndirim",
     ],
   };
 
   const locationText = district ? `Tekirdağ / ${district}` : "Tekirdağ";
 
-  // Builder calculation logic (only adds items selected so far)
-  const bCfg = config?.builderConfig || DEFAULT_BUILDER_CONFIG;
-  const selKasa = bCfg.kasa.find((k) => k.id === builderKasa) || null;
-  const selFiltre = bCfg.filtre.find((f) => f.id === builderFiltre) || null;
-  const selBeyin = bCfg.beyin.find((b) => b.id === builderBeyin) || null;
-  const selPompa = bCfg.pompa.find((p) => p.id === builderPompa) || null;
-  const selTank = bCfg.tank.find((t) => t.id === builderTank) || null;
-  const selMusluk = bCfg.musluk.find((m) => m.id === builderMusluk) || null;
+  // Builder Selected Items List & Financial Calculations
+  const selectedItemsList = useMemo(() => {
+    return activeBuilderSteps
+      .map((stepItem) => {
+        const chosenOptId = builderSelections[stepItem.key];
+        if (!chosenOptId) return null;
+        const opt = allBuilderOptions.find(
+          (o) => o.stepKey === stepItem.key && o.optionId === chosenOptId
+        );
+        return opt
+          ? {
+              ...opt,
+              stepTitle: stepItem.title,
+              stepBadge: stepItem.badge,
+            }
+          : null;
+      })
+      .filter(Boolean);
+  }, [activeBuilderSteps, builderSelections, allBuilderOptions]);
+
+  const basePrice = siteSettings.basePrice || 500;
+  const baseCost = siteSettings.baseCost || 180;
+  const discountRate = siteSettings.discountRate || 0.2;
 
   const builderListPrice =
-    (bCfg.basePrice || 500) +
-    (selKasa ? selKasa.price : 0) +
-    (selFiltre ? selFiltre.price : 0) +
-    (selBeyin ? selBeyin.price : 0) +
-    (selPompa ? selPompa.price : 0) +
-    (selTank ? selTank.price : 0) +
-    (selMusluk ? selMusluk.price : 0);
+    basePrice +
+    selectedItemsList.reduce((sum, item) => sum + (item.salePrice || item.price || 0), 0);
 
-  const builderDiscount = Math.round(builderListPrice * 0.2);
+  const builderTotalCost =
+    baseCost +
+    selectedItemsList.reduce((sum, item) => sum + (item.costPrice || 0), 0);
+
+  const builderDiscount = Math.round(builderListPrice * discountRate);
   const builderFinalPrice = builderListPrice - builderDiscount;
+  const builderEstimatedProfit = builderFinalPrice - builderTotalCost;
+  const builderMarginPercent =
+    builderFinalPrice > 0
+      ? Math.round((builderEstimatedProfit / builderFinalPrice) * 100)
+      : 0;
 
   const go = (nextStep, direction = 1) => {
     setDir(direction);
@@ -540,12 +571,7 @@ export default function Wizard({ config }) {
     setBudget(null);
     setLastChanged(null);
     setFaultType(null);
-    setBuilderKasa(null);
-    setBuilderFiltre(null);
-    setBuilderBeyin(null);
-    setBuilderPompa(null);
-    setBuilderTank(null);
-    setBuilderMusluk(null);
+    setBuilderSelections({});
     setDevices([]);
   };
 
@@ -579,7 +605,7 @@ export default function Wizard({ config }) {
   const recommendedSet = useMemo(() => {
     if (!lastChanged) return null;
     if (lastChanged === "6ay") return config.filterSets.set3;
-    return config.filterSets.set5; // 1yil & bilmiyorum -> 5'li
+    return config.filterSets.set5;
   }, [lastChanged, config]);
 
   const selectedFault = useMemo(
@@ -588,6 +614,17 @@ export default function Wizard({ config }) {
   );
 
   const stepKey = `${flow || "entry"}-${step}`;
+
+  // Current Dynamic Step Object
+  const currentStep =
+    flow === "builder" && step < activeBuilderSteps.length
+      ? activeBuilderSteps[step]
+      : null;
+
+  const currentStepOptions = useMemo(() => {
+    if (!currentStep) return [];
+    return allBuilderOptions.filter((o) => o.stepKey === currentStep.key);
+  }, [currentStep, allBuilderOptions]);
 
   return (
     <div className="relative">
@@ -620,7 +657,7 @@ export default function Wizard({ config }) {
                 </button>
 
                 <div aria-live="polite" className="text-xs sm:text-sm font-semibold text-muted-foreground px-3 py-1 rounded-full bg-muted/60">
-                  Adım {step + 1} / {totalSteps} • {stepLabels[flow][step]}
+                  Adım {step + 1} / {totalSteps} • {stepLabels[flow]?.[step] || "Adım"}
                 </div>
 
                 <button
@@ -690,7 +727,9 @@ export default function Wizard({ config }) {
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-display font-bold text-lg sm:text-xl text-foreground">Kendi Cihazını Kendin Oluştur</span>
-                            <Badge className="bg-emerald-600 text-white font-bold text-[10px] border-0">🎁 Formu Doldur %20 İndirim Kazan</Badge>
+                            <Badge className="bg-emerald-600 text-white font-bold text-[10px] border-0">
+                              {siteSettings.discountBadgeText || "🎁 Formu Doldur %20 İndirim Kazan"}
+                            </Badge>
                           </div>
                           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                             Kasa, filtre paketi, beyin, pompa, tank ve musluğu ihtiyacınıza göre parça parça kendiniz seçin; canlı fiyatınızı hesaplayın.
@@ -706,7 +745,6 @@ export default function Wizard({ config }) {
               )}
 
               {/* ============ BUY FLOW ============ */}
-              {/* Step 0: Tekirdağ İlçe Seçimi */}
               {flow === "buy" && step === 0 && (
                 <div data-testid="wizard-location-step" className="max-w-2xl mx-auto">
                   <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--brand-champagne)/0.4)] bg-[hsl(var(--brand-champagne)/0.12)] px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
@@ -755,23 +793,40 @@ export default function Wizard({ config }) {
                 </div>
               )}
 
-              {/* Step 1: Su Tüketim Yoğunluğu */}
               {flow === "buy" && step === 1 && (
                 <div data-testid="wizard-consumption-step" className="max-w-2xl mx-auto">
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Su tüketim yoğunluğunuz nedir?</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">Evinizdeki kişi sayısına ve günlük kullanımınıza göre en verimli tank ve debi kapasitesini seçelim.</p>
-                  <div className="grid gap-3.5" data-testid="wizard-consumption-options">
-                    {config.consumptionOptions.map((o) => (
-                      <OptionCard
-                        key={o.id}
-                        selected={consumption === o.id}
-                        onClick={() => setConsumption(o.id)}
-                        title={o.label}
-                        hint={o.hint}
-                        testId={`wizard-consumption-option-${o.id}`}
-                      />
-                    ))}
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Günlük su tüketiminiz ne kadar?</h3>
+                  <p className="text-muted-foreground text-sm sm:text-base mb-6">
+                    Ailenizin kişi sayısına ve içme/yemek kullanım sıklığına en uygun tank kapasitesini belirleyelim.
+                  </p>
+
+                  <div className="space-y-3">
+                    <OptionCard
+                      selected={consumption === "az"}
+                      onClick={() => setConsumption("az")}
+                      title="1 - 2 Kişilik Hane (Düşük Tüketim)"
+                      hint="Günde 4-8 litre içme suyu, dar dolaplar için kompakt tank"
+                      icon={Droplets}
+                      testId="wizard-consumption-low"
+                    />
+                    <OptionCard
+                      selected={consumption === "orta"}
+                      onClick={() => setConsumption("orta")}
+                      title="3 - 4 Kişilik Aile (Standart Tüketim)"
+                      hint="Günde 10-18 litre, içme + çay/kahve ve yemek pişirme için ideal"
+                      icon={Droplets}
+                      testId="wizard-consumption-medium"
+                    />
+                    <OptionCard
+                      selected={consumption === "cok"}
+                      onClick={() => setConsumption("cok")}
+                      title="5+ Kişi / Kalabalık Aile veya Küçük Ofis (Yüksek Tüketim)"
+                      hint="Günde 20+ litre, yüksek kapasiteli çelik basınç tankı ve hızlı dolum"
+                      icon={Droplets}
+                      testId="wizard-consumption-high"
+                    />
                   </div>
+
                   <div className="mt-8 flex justify-end">
                     <button
                       type="button"
@@ -780,29 +835,43 @@ export default function Wizard({ config }) {
                       className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       data-testid="wizard-consumption-next"
                     >
-                      Devam Et <ArrowRight className="h-4 w-4" />
+                      Bütçe Seçimine İlerle <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: Bütçe */}
               {flow === "buy" && step === 2 && (
                 <div data-testid="wizard-budget-step" className="max-w-2xl mx-auto">
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Bütçeniz nedir?</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">Size en uygun fiyat-performans aralığındaki cihazları sıralayalım.</p>
-                  <div className="grid gap-3.5" data-testid="wizard-budget-preset">
-                    {config.budgetOptions.map((o) => (
-                      <OptionCard
-                        key={o.id}
-                        selected={budget === o.id}
-                        onClick={() => setBudget(o.id)}
-                        title={o.label}
-                        hint={o.hint}
-                        testId={`wizard-budget-option-${o.id}`}
-                      />
-                    ))}
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Bütçe aralığınız nedir?</h3>
+                  <p className="text-muted-foreground text-sm sm:text-base mb-6">
+                    Yalnızca seçtiğiniz fiyat bandındaki en yüksek verimli modeller filtrelenecektir.
+                  </p>
+
+                  <div className="space-y-3">
+                    <OptionCard
+                      selected={budget === "eko"}
+                      onClick={() => setBudget("eko")}
+                      title="Ekonomik Çözüm (0 - 10.000 ₺)"
+                      hint="Temel 5 aşamalı ters ozmoz, standart tatlandırıcı ve güvenilir filtrasyon"
+                      testId="wizard-budget-eko"
+                    />
+                    <OptionCard
+                      selected={budget === "orta"}
+                      onClick={() => setBudget("orta")}
+                      title="Orta Segment (10.000 ₺ - 20.000 ₺)"
+                      hint="İthal NSF onaylı membran, mineral zenginleştirici ve şık kapalı kasa"
+                      testId="wizard-budget-orta"
+                    />
+                    <OptionCard
+                      selected={budget === "premium"}
+                      onClick={() => setBudget("premium")}
+                      title="Premium & Akıllı (20.000 ₺ ve Üzeri)"
+                      hint="pH 9+ alkali mineralize, dijital TDS saflık göstergesi ve akıllı su kaçağı emniyeti"
+                      testId="wizard-budget-premium"
+                    />
                   </div>
+
                   <div className="mt-8 flex justify-end">
                     <button
                       type="button"
@@ -811,65 +880,74 @@ export default function Wizard({ config }) {
                       className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       data-testid="wizard-budget-next"
                     >
-                      Cihazları Göster <ArrowRight className="h-4 w-4" />
+                      {devLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Modeller Hazırlanıyor...
+                        </>
+                      ) : (
+                        <>
+                          Cihazları İncele <ArrowRight className="h-4 w-4" />
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Step 3: Sonuç Ekranı */}
               {flow === "buy" && step === 3 && (
-                <div data-testid="wizard-device-results">
-                  <div className="text-center max-w-xl mx-auto mb-8">
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 text-emerald-600 px-3 py-1 text-xs font-bold mb-2">
-                      <Check className="h-3.5 w-3.5" />
-                      <span>{locationText ? `${locationText} Bölgesine Özel Eşleşme` : "Özel Eşleşme"}</span>
+                <div data-testid="wizard-buy-results" className="max-w-4xl mx-auto">
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--brand-champagne)/0.15)] text-[hsl(var(--brand-plum))] px-3.5 py-1 text-xs font-bold mb-2">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>{locationText} İçin Özel Eşleşme</span>
                     </div>
-                    <h3 className="font-display font-bold text-2xl sm:text-3xl mb-2 text-foreground">Size Özel Önerilen Cihazlar</h3>
-                    <p className="text-muted-foreground text-sm sm:text-base">
-                      Seçimlerinize ve bölgenize göre en yüksek puanı alan modeller aşağıda listelendi.
-                    </p>
+                    <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">Sizin İçin En İdeal Cihazlar</h3>
                   </div>
 
-                  {devLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-                      <Loader2 className="h-8 w-8 animate-spin mb-3 text-[hsl(var(--brand-champagne))]" />
-                      <p className="font-semibold">Cihazlar getiriliyor…</p>
+                  {devices.length === 0 ? (
+                    <div className="text-center py-10 bg-card rounded-2xl border border-border p-6">
+                      <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto mb-2" />
+                      <p className="text-sm font-semibold text-foreground">Bu kriterlere uygun model bulunamadı.</p>
+                      <button onClick={reset} className="btn-champagne mt-4 inline-flex items-center gap-2 rounded-xl h-10 px-4 text-xs font-bold">
+                        <RotateCcw className="h-3.5 w-3.5" /> Seçimleri Değiştir
+                      </button>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid md:grid-cols-2 gap-6">
                       {devices.map((d) => (
                         <div
                           key={d.id}
-                          className="flex flex-col rounded-2xl border border-border bg-card overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group"
-                          data-testid="wizard-device-result-card"
+                          className="group rounded-2xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
                         >
-                          <div className="device-placeholder relative aspect-[4/3] flex items-center justify-center border-b border-border/50">
-                            <div className="flex flex-col items-center text-[hsl(var(--brand-plum))]">
-                              <Droplets className="h-10 w-10 opacity-70 group-hover:scale-110 transition-transform" />
-                              <span className="mt-2 text-xs font-semibold text-muted-foreground">Lotus Arıtma Modeli</span>
+                          <div>
+                            <div className="relative h-48 w-full overflow-hidden bg-neutral-900">
+                              <img src={d.img} alt={d.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                              <div className="absolute top-3 right-3">
+                                <Badge className="bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] font-bold shadow-md">
+                                  {d.warranty}
+                                </Badge>
+                              </div>
+                            </div>
+
+                            <div className="p-5 sm:p-6">
+                              <h4 className="font-display font-bold text-xl text-foreground">{d.name}</h4>
+                              <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">{d.desc}</p>
+                              <div className="mt-4 space-y-2">
+                                {d.features?.map((f, i) => (
+                                  <div key={i} className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                                    <span>{f}</span>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           </div>
-                          <div className="p-5 flex flex-col flex-1">
-                            <div className="flex flex-wrap gap-1.5 mb-2.5">
-                              {d.badges?.map((b) => (
-                                <Badge key={b} variant="secondary" className="text-[11px] font-semibold bg-[hsl(var(--brand-plum)/0.08)] text-[hsl(var(--brand-plum))] border-0">{b}</Badge>
-                              ))}
-                            </div>
-                            <h4 className="font-display font-bold text-xl text-foreground">{d.name}</h4>
-                            <p className="text-xs sm:text-sm text-muted-foreground mt-1">{d.tagline}</p>
-                            <ul className="mt-4 space-y-2 flex-1">
-                              {d.specs?.slice(0, 4).map((s) => (
-                                <li key={s} className="flex items-start gap-2.5 text-xs sm:text-sm text-foreground/90">
-                                  <Check className="h-4 w-4 mt-0.5 text-emerald-600 shrink-0 stroke-[2.5]" />
-                                  <span>{s}</span>
-                                </li>
-                              ))}
-                            </ul>
-                            <div className="mt-5 pt-4 border-t border-border flex items-end justify-between">
+
+                          <div className="p-5 sm:p-6 pt-0 border-t border-border/60 mt-4">
+                            <div className="flex items-baseline justify-between pt-3">
                               <div>
                                 <span className="block text-[11px] font-medium text-muted-foreground">Tavsiye Edilen Fiyat</span>
-                                <span className="font-display font-bold text-2xl text-[hsl(var(--brand-plum))]" data-testid="wizard-device-price">{d.price}</span>
+                                <span className="font-display font-bold text-2xl text-[hsl(var(--brand-plum))]">{d.price}</span>
                               </div>
                             </div>
                             <a
@@ -879,7 +957,6 @@ export default function Wizard({ config }) {
                               )}
                               target="_blank"
                               rel="noopener noreferrer"
-                              data-testid="wizard-device-whatsapp-button"
                               className="btn-whatsapp mt-4 inline-flex items-center justify-center gap-2 rounded-xl h-11 px-4 text-sm font-bold transition-all w-full shadow-sm"
                             >
                               <MessageCircle className="h-4 w-4" /> WhatsApp ile Bilgi Al
@@ -910,7 +987,6 @@ export default function Wizard({ config }) {
                     </button>
                   </div>
 
-                  {/* Çift Kanallı İletişim: Hızlı Beni Arayın Formu */}
                   <CallbackForm
                     flowType="buy"
                     itemName={devices[0]?.name || "Lotus Cihaz Satın Alma"}
@@ -923,7 +999,6 @@ export default function Wizard({ config }) {
                       type="button"
                       onClick={reset}
                       className="inline-flex items-center justify-center gap-2 rounded-xl h-11 px-6 text-sm font-semibold border border-border bg-card hover:bg-muted transition-all"
-                      data-testid="wizard-restart-secondary"
                     >
                       <RotateCcw className="h-4 w-4" /> Farklı Seçim Yap
                     </button>
@@ -931,39 +1006,147 @@ export default function Wizard({ config }) {
                 </div>
               )}
 
-              {/* ============ BUILDER FLOW (KENDİ CİHAZINI OLUŞTUR) ============ */}
-              {/* Builder Step 0: Kasa */}
-              {flow === "builder" && step === 0 && (
-                <div data-testid="wizard-builder-kasa-step" className="max-w-2xl mx-auto">
+              {/* ============ FILTER & FAULT FLOWS ============ */}
+              {flow === "filter" && step === 0 && (
+                <div className="max-w-2xl mx-auto">
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Filtrelerinizi en son ne zaman değiştirdiniz?</h3>
+                  <p className="text-muted-foreground text-sm sm:text-base mb-6">
+                    Düzenli filtre değişimi suyunuzun saflığını ve membran ömrünü korur.
+                  </p>
+                  <div className="space-y-3">
+                    <OptionCard selected={lastChanged === "6ay"} onClick={() => setLastChanged("6ay")} title="6 Ay Önce (Ön Filtre Bakımı)" hint="Tortu, granül karbon ve blok karbon ön filtre seti değişimi" />
+                    <OptionCard selected={lastChanged === "1yil"} onClick={() => setLastChanged("1yil")} title="1 Yıl veya Daha Uzun (Komple Değişim)" hint="Ana membran + mineral ve tatlandırıcı dahil 5'li tam set" />
+                    <OptionCard selected={lastChanged === "bilmiyorum"} onClick={() => setLastChanged("bilmiyorum")} title="Tam Hatırlamıyorum / Yeni Taşındım" hint="Ücretsiz TDS saflık ölçümü ve tam 5'li hijyen bakım seti" />
+                  </div>
+                  <div className="mt-8 flex justify-end">
+                    <button type="button" disabled={!lastChanged} onClick={() => go(1, 1)} className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 font-bold disabled:opacity-40">
+                      Uyumlu Filtre Setini Gör <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {flow === "filter" && step === 1 && recommendedSet && (
+                <div className="max-w-2xl mx-auto text-center">
+                  <Badge className="bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 text-xs font-bold mb-3">
+                    Önerilen Orijinal Filtre Seti
+                  </Badge>
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">{recommendedSet.name}</h3>
+                  <p className="text-muted-foreground text-sm mt-1 mb-6">{recommendedSet.desc}</p>
+                  
+                  <div className="rounded-2xl border border-border bg-card p-6 shadow-md text-left mb-6">
+                    <div className="flex items-baseline justify-between mb-4 border-b border-border pb-3">
+                      <span className="text-xs font-bold text-muted-foreground uppercase">Değişim Paketi</span>
+                      <span className="font-display font-bold text-2xl text-[hsl(var(--brand-plum))]">{recommendedSet.price}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {recommendedSet.includes?.map((inc, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-foreground">
+                          <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                          <span>{inc}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <a
+                      href={buildWaLink(waNumber, `Merhaba, ${recommendedSet.name} hakkında filtre değişim randevusu ve montaj teklifi almak istiyorum.`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-whatsapp mt-6 inline-flex items-center justify-center gap-2 rounded-xl h-12 px-5 text-sm font-bold w-full shadow"
+                    >
+                      <MessageCircle className="h-4 w-4" /> WhatsApp ile Filtre Randevusu Al
+                    </a>
+                  </div>
+
+                  <CallbackForm flowType="filter" itemName={recommendedSet.name} city={city} district={district} />
+                </div>
+              )}
+
+              {flow === "fault" && step === 0 && (
+                <div className="max-w-2xl mx-auto">
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Cihazınızda hangi sorun yaşanıyor?</h3>
+                  <p className="text-muted-foreground text-sm sm:text-base mb-6">Hızlı arıza tespiti ve yerinde teknik servis yönlendirmesi.</p>
+                  <div className="space-y-3">
+                    {config.faultGuides.map((f) => (
+                      <OptionCard key={f.id} selected={faultType === f.id} onClick={() => setFaultType(f.id)} title={f.title} hint={f.solution} />
+                    ))}
+                  </div>
+                  <div className="mt-8 flex justify-end">
+                    <button type="button" disabled={!faultType} onClick={() => go(1, 1)} className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 font-bold disabled:opacity-40">
+                      Çözüm & Servis Çağır <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {flow === "fault" && step === 1 && selectedFault && (
+                <div className="max-w-2xl mx-auto text-center">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 mb-3 shadow-sm">
+                    <Wrench className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">{selectedFault.title}</h3>
+                  <div className="mt-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-5 text-left text-sm text-amber-950 dark:text-amber-200">
+                    <strong>💡 Uzman Tavsiyesi:</strong> {selectedFault.solution}
+                  </div>
+                  <a
+                    href={buildWaLink(waNumber, `Merhaba, arıtma cihazımda '${selectedFault.title}' sorunu var. Tekirdağ için acil servis randevusu almak istiyorum.`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-whatsapp mt-6 inline-flex items-center justify-center gap-2 rounded-xl h-12 px-5 text-sm font-bold w-full shadow"
+                  >
+                    <MessageCircle className="h-4 w-4" /> WhatsApp ile Yetkili Servis Çağır
+                  </a>
+                  <CallbackForm flowType="fault" itemName={`Arıza Servisi: ${selectedFault.title}`} city={city} district={district} />
+                </div>
+              )}
+
+              {/* ============ BUILDER FLOW (DİNAMİK ADIM MOTORU) ============ */}
+              {flow === "builder" && currentStep && step < activeBuilderSteps.length && (
+                <div data-testid={`wizard-builder-step-${step}`} className="max-w-2xl mx-auto">
                   <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
                     <Layers className="h-3.5 w-3.5 text-amber-500" />
-                    <span>1. Adım • Dış Gövde & Kasa</span>
+                    <span>{currentStep.badge}</span>
                   </div>
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Kasa Tipinizi Seçin</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                    Tezgah altınızın alanına ve estetik tercihinize en uygun kasa modelini belirleyin.
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">
+                    {currentStep.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm sm:text-base mb-4">
+                    {currentStep.description}
                   </p>
 
+                  {currentStep.guideText && (
+                    <div className="mb-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 p-4 text-xs text-amber-900 dark:text-amber-200">
+                      <strong>💡 Uzman Tavsiyesi:</strong> {currentStep.guideText}
+                    </div>
+                  )}
+
                   <div className="grid gap-3.5">
-                    {bCfg.kasa.map((k) => (
+                    {currentStepOptions.map((opt) => (
                       <BuilderOptionCard
-                        key={k.id}
-                        selected={builderKasa === k.id}
-                        onClick={() => setBuilderKasa(k.id)}
+                        key={opt._id || opt.optionId}
+                        selected={builderSelections[currentStep.key] === opt.optionId}
+                        onClick={() =>
+                          setBuilderSelections((prev) => ({
+                            ...prev,
+                            [currentStep.key]: opt.optionId,
+                          }))
+                        }
                         onOpenDetails={() =>
                           setModalItem({
-                            ...k,
-                            categoryTitle: "1. Adım • Dış Gövde & Kasa",
-                            badge: k.id === "kapali" ? "En Çok Tercih Edilen" : null,
-                            isSelected: builderKasa === k.id,
-                            onSelect: () => setBuilderKasa(k.id),
+                            ...opt,
+                            categoryTitle: currentStep.badge,
+                            isSelected: builderSelections[currentStep.key] === opt.optionId,
+                            onSelect: () =>
+                              setBuilderSelections((prev) => ({
+                                ...prev,
+                                [currentStep.key]: opt.optionId,
+                              })),
                           })
                         }
-                        title={k.name}
-                        price={k.price}
-                        desc={k.desc}
-                        img={k.img}
-                        badge={k.id === "kapali" ? "En Çok Tercih Edilen" : null}
+                        title={opt.name}
+                        price={opt.salePrice || opt.price || 0}
+                        desc={opt.desc}
+                        img={opt.img}
+                        badge={opt.badge}
                       />
                     ))}
                   </div>
@@ -975,9 +1158,9 @@ export default function Wizard({ config }) {
                         <div className="flex items-center gap-2 text-xs text-neutral-400">
                           <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
                           <span>
-                            {builderKasa
-                              ? "Canlı Liste Tutarı (Baz Donanım 500 ₺ Dahil):"
-                              : "Temel Montaj & Fitting Baz Tutarı: 500 ₺ (Kasa seçtiğinizde eklenecektir)"}
+                            {builderSelections[currentStep.key]
+                              ? `Canlı Liste Tutarı (${selectedItemsList.length} Parça Seçildi):`
+                              : "Şu Ana Kadarki Liste Tutarı (Bu adımın seçimi bekleniyor):"}
                           </span>
                         </div>
                         <div className="flex items-baseline gap-2 mt-1">
@@ -988,7 +1171,7 @@ export default function Wizard({ config }) {
                         </div>
                       </div>
                       <Badge className="bg-amber-400/15 text-amber-300 border border-amber-400/40 text-xs font-bold px-3 py-1.5 rounded-xl shrink-0">
-                        🎁 Formu Doldur %20 İndirim Kazan
+                        {siteSettings.discountBadgeText || "🎁 Formu Doldur %20 İndirim Kazan"}
                       </Badge>
                     </div>
                   </div>
@@ -996,391 +1179,18 @@ export default function Wizard({ config }) {
                   <div className="mt-8 flex justify-end">
                     <button
                       type="button"
-                      disabled={!builderKasa}
-                      onClick={() => go(1, 1)}
+                      disabled={!builderSelections[currentStep.key]}
+                      onClick={() => go(step + 1, 1)}
                       className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      Filtre Seçimine İlerle <ArrowRight className="h-4 w-4" />
+                      {step + 1 < activeBuilderSteps.length ? "Sonraki Adıma İlerle" : "Özet & %20 İndirim Fırsatını Gör"} <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Builder Step 1: Filtre */}
-              {flow === "builder" && step === 1 && (
-                <div data-testid="wizard-builder-filtre-step" className="max-w-2xl mx-auto">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
-                    <Droplets className="h-3.5 w-3.5 text-amber-500" />
-                    <span>2. Adım • Filtrasyon Teknolojisi</span>
-                  </div>
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Filtre Paketinizi Seçin</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                    İçme suyunuzun mineral zenginliğini, pH alkali seviyesini ve membran arıtma kalitesini belirleyin.
-                  </p>
-
-                  <div className="grid gap-3.5">
-                    {bCfg.filtre.map((f) => (
-                      <BuilderOptionCard
-                        key={f.id}
-                        selected={builderFiltre === f.id}
-                        onClick={() => setBuilderFiltre(f.id)}
-                        onOpenDetails={() =>
-                          setModalItem({
-                            ...f,
-                            categoryTitle: "2. Adım • Filtrasyon Teknolojisi",
-                            badge: f.id === "diamond5" ? "Ultra Zengin Mineral" : f.id === "premium5" ? "Fiyat/Performans" : null,
-                            isSelected: builderFiltre === f.id,
-                            onSelect: () => setBuilderFiltre(f.id),
-                          })
-                        }
-                        title={f.name}
-                        price={f.price}
-                        desc={f.desc}
-                        img={f.img}
-                        badge={f.id === "diamond5" ? "Ultra Zengin Mineral" : f.id === "premium5" ? "Fiyat/Performans" : null}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Live Incremental Price Bar */}
-                  <div className="mt-6 rounded-2xl bg-neutral-950 text-white p-4 sm:p-5 shadow-lg border border-neutral-800/80">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 text-xs text-neutral-400">
-                          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span>
-                            {builderFiltre
-                              ? "Canlı Liste Tutarı (Baz + Kasa + Filtre):"
-                              : "Şu Ana Kadarki Liste Tutarı (Filtre seçimi bekleniyor):"}
-                          </span>
-                        </div>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="font-display font-extrabold text-2xl text-amber-300 font-mono">
-                            {builderListPrice.toLocaleString("tr-TR")} ₺
-                          </span>
-                          <span className="text-xs text-neutral-400 font-medium">(KDV & Montaj Dahil)</span>
-                        </div>
-                      </div>
-                      <Badge className="bg-amber-400/15 text-amber-300 border border-amber-400/40 text-xs font-bold px-3 py-1.5 rounded-xl shrink-0">
-                        🎁 Formu Doldur %20 İndirim Kazan
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      disabled={!builderFiltre}
-                      onClick={() => go(2, 1)}
-                      className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Beyin Seçimine İlerle <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Builder Step 2: Beyin */}
-              {flow === "builder" && step === 2 && (
-                <div data-testid="wizard-builder-beyin-step" className="max-w-2xl mx-auto">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
-                    <Cpu className="h-3.5 w-3.5 text-amber-500" />
-                    <span>3. Adım • Otomasyon & Kontrol</span>
-                  </div>
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Beyin / Kontrol Ünitesini Seçin</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                    Sistem basıncını yöneten ve su sızıntılarını engelleyen otomasyon modülünü seçin.
-                  </p>
-
-                  <div className="grid gap-3.5">
-                    {bCfg.beyin.map((b) => (
-                      <BuilderOptionCard
-                        key={b.id}
-                        selected={builderBeyin === b.id}
-                        onClick={() => setBuilderBeyin(b.id)}
-                        onOpenDetails={() =>
-                          setModalItem({
-                            ...b,
-                            categoryTitle: "3. Adım • Otomasyon & Kontrol",
-                            badge: b.id === "dijital" ? "Akıllı Sensörlü" : null,
-                            isSelected: builderBeyin === b.id,
-                            onSelect: () => setBuilderBeyin(b.id),
-                          })
-                        }
-                        title={b.name}
-                        price={b.price}
-                        desc={b.desc}
-                        img={b.img}
-                        badge={b.id === "dijital" ? "Akıllı Sensörlü" : null}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Live Incremental Price Bar */}
-                  <div className="mt-6 rounded-2xl bg-neutral-950 text-white p-4 sm:p-5 shadow-lg border border-neutral-800/80">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 text-xs text-neutral-400">
-                          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span>
-                            {builderBeyin
-                              ? "Canlı Liste Tutarı (Baz + Kasa + Filtre + Beyin):"
-                              : "Şu Ana Kadarki Liste Tutarı (Beyin seçimi bekleniyor):"}
-                          </span>
-                        </div>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="font-display font-extrabold text-2xl text-amber-300 font-mono">
-                            {builderListPrice.toLocaleString("tr-TR")} ₺
-                          </span>
-                          <span className="text-xs text-neutral-400 font-medium">(KDV & Montaj Dahil)</span>
-                        </div>
-                      </div>
-                      <Badge className="bg-amber-400/15 text-amber-300 border border-amber-400/40 text-xs font-bold px-3 py-1.5 rounded-xl shrink-0">
-                        🎁 Formu Doldur %20 İndirim Kazan
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      disabled={!builderBeyin}
-                      onClick={() => go(3, 1)}
-                      className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Pompa Seçimine İlerle <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Builder Step 3: Pompa */}
-              {flow === "builder" && step === 3 && (
-                <div data-testid="wizard-builder-pompa-step" className="max-w-2xl mx-auto">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
-                    <Gauge className="h-3.5 w-3.5 text-amber-500" />
-                    <span>4. Adım • Basınç & Pompa Desteği</span>
-                  </div>
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Pompa Durumunu Seçin</h3>
-                  
-                  {/* Rehber & Bilgilendirme Kutusu */}
-                  <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 p-4 mb-6 text-xs sm:text-sm text-foreground/90">
-                    <strong className="text-blue-700 block font-bold mb-1">💡 Neye Göre Seçmelisiniz?</strong>
-                    Eviniz <strong>3. kat ve üzerindeyse</strong> veya şebeke su basıncınız 3 bar altındaysa membranın tam verimle çalışması için <strong>Pompalı</strong> seçmeniz tavsiye edilir. Giriş katlarda veya hidroforlu binalarda pompasız yeterlidir.
-                  </div>
-
-                  <div className="grid gap-3.5">
-                    {bCfg.pompa.map((p) => (
-                      <BuilderOptionCard
-                        key={p.id}
-                        selected={builderPompa === p.id}
-                        onClick={() => setBuilderPompa(p.id)}
-                        onOpenDetails={() =>
-                          setModalItem({
-                            ...p,
-                            categoryTitle: "4. Adım • Basınç & Pompa Desteği",
-                            badge: p.id === "pompali" ? "Tavsiye Edilen" : null,
-                            isSelected: builderPompa === p.id,
-                            onSelect: () => setBuilderPompa(p.id),
-                          })
-                        }
-                        title={p.name}
-                        price={p.price}
-                        desc={p.desc}
-                        img={p.img}
-                        badge={p.id === "pompali" ? "Tavsiye Edilen" : null}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Live Incremental Price Bar */}
-                  <div className="mt-6 rounded-2xl bg-neutral-950 text-white p-4 sm:p-5 shadow-lg border border-neutral-800/80">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 text-xs text-neutral-400">
-                          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span>
-                            {builderPompa
-                              ? "Canlı Liste Tutarı (Baz + Kasa + Filtre + Beyin + Pompa):"
-                              : "Şu Ana Kadarki Liste Tutarı (Pompa seçimi bekleniyor):"}
-                          </span>
-                        </div>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="font-display font-extrabold text-2xl text-amber-300 font-mono">
-                            {builderListPrice.toLocaleString("tr-TR")} ₺
-                          </span>
-                          <span className="text-xs text-neutral-400 font-medium">(KDV & Montaj Dahil)</span>
-                        </div>
-                      </div>
-                      <Badge className="bg-amber-400/15 text-amber-300 border border-amber-400/40 text-xs font-bold px-3 py-1.5 rounded-xl shrink-0">
-                        🎁 Formu Doldur %20 İndirim Kazan
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      disabled={!builderPompa}
-                      onClick={() => go(4, 1)}
-                      className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Tank Seçimine İlerle <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Builder Step 4: Tank */}
-              {flow === "builder" && step === 4 && (
-                <div data-testid="wizard-builder-tank-step" className="max-w-2xl mx-auto">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
-                    <Container className="h-3.5 w-3.5 text-amber-500" />
-                    <span>5. Adım • Depolama Kapasitesi</span>
-                  </div>
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Depolama Tankınızı Seçin</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                    Ailenizin günlük arıtılmış su ihtiyacını karşılayacak antibakteriyel basınç tankı kapasitesini belirleyin.
-                  </p>
-
-                  <div className="grid gap-3.5">
-                    {bCfg.tank.map((t) => (
-                      <BuilderOptionCard
-                        key={t.id}
-                        selected={builderTank === t.id}
-                        onClick={() => setBuilderTank(t.id)}
-                        onOpenDetails={() =>
-                          setModalItem({
-                            ...t,
-                            categoryTitle: "5. Adım • Depolama Kapasitesi",
-                            badge: t.id === "plat12" ? "Paslanmaz Çelik" : null,
-                            isSelected: builderTank === t.id,
-                            onSelect: () => setBuilderTank(t.id),
-                          })
-                        }
-                        title={t.name}
-                        price={t.price}
-                        desc={t.desc}
-                        img={t.img}
-                        badge={t.id === "plat12" ? "Paslanmaz Çelik" : null}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Live Incremental Price Bar */}
-                  <div className="mt-6 rounded-2xl bg-neutral-950 text-white p-4 sm:p-5 shadow-lg border border-neutral-800/80">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 text-xs text-neutral-400">
-                          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span>
-                            {builderTank
-                              ? "Canlı Liste Tutarı (Baz + Kasa + Filtre + Beyin + Pompa + Tank):"
-                              : "Şu Ana Kadarki Liste Tutarı (Tank seçimi bekleniyor):"}
-                          </span>
-                        </div>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="font-display font-extrabold text-2xl text-amber-300 font-mono">
-                            {builderListPrice.toLocaleString("tr-TR")} ₺
-                          </span>
-                          <span className="text-xs text-neutral-400 font-medium">(KDV & Montaj Dahil)</span>
-                        </div>
-                      </div>
-                      <Badge className="bg-amber-400/15 text-amber-300 border border-amber-400/40 text-xs font-bold px-3 py-1.5 rounded-xl shrink-0">
-                        🎁 Formu Doldur %20 İndirim Kazan
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      disabled={!builderTank}
-                      onClick={() => go(5, 1)}
-                      className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Musluk Seçimine İlerle <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Builder Step 5: Musluk */}
-              {flow === "builder" && step === 5 && (
-                <div data-testid="wizard-builder-musluk-step" className="max-w-2xl mx-auto">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
-                    <Pipette className="h-3.5 w-3.5 text-amber-500" />
-                    <span>6. Adım • Çıkış Musluğu & Batarya</span>
-                  </div>
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Musluk / Batarya Modelini Seçin</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                    Mutfak tezgahınızın görünümüne uygun klasik paslanmaz veya 3 yollu entegre lüks bataryanızı seçin.
-                  </p>
-
-                  <div className="grid gap-3.5">
-                    {bCfg.musluk.map((m) => (
-                      <BuilderOptionCard
-                        key={m.id}
-                        selected={builderMusluk === m.id}
-                        onClick={() => setBuilderMusluk(m.id)}
-                        onOpenDetails={() =>
-                          setModalItem({
-                            ...m,
-                            categoryTitle: "6. Adım • Çıkış Musluğu & Batarya",
-                            badge: m.id === "3yollu" ? "Tezgahı Deldirmez" : null,
-                            isSelected: builderMusluk === m.id,
-                            onSelect: () => setBuilderMusluk(m.id),
-                          })
-                        }
-                        title={m.name}
-                        price={m.price}
-                        desc={m.desc}
-                        img={m.img}
-                        badge={m.id === "3yollu" ? "Tezgahı Deldirmez" : null}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Live Incremental Price Bar */}
-                  <div className="mt-6 rounded-2xl bg-neutral-950 text-white p-4 sm:p-5 shadow-lg border border-neutral-800/80">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 text-xs text-neutral-400">
-                          <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-                          <span>
-                            {builderMusluk
-                              ? "Nihai Liste Tutarı (Tüm Parçalar Tamamlandı):"
-                              : "Şu Ana Kadarki Liste Tutarı (Musluk seçimi bekleniyor):"}
-                          </span>
-                        </div>
-                        <div className="flex items-baseline gap-2 mt-1">
-                          <span className="font-display font-extrabold text-2xl text-amber-300 font-mono">
-                            {builderListPrice.toLocaleString("tr-TR")} ₺
-                          </span>
-                          <span className="text-xs text-neutral-400 font-medium">(KDV & Montaj Dahil)</span>
-                        </div>
-                      </div>
-                      <Badge className="bg-amber-400/15 text-amber-300 border border-amber-400/40 text-xs font-bold px-3 py-1.5 rounded-xl shrink-0">
-                        🎁 Formu Doldur %20 İndirim Kazan
-                      </Badge>
-                    </div>
-                  </div>
-
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      disabled={!builderMusluk}
-                      onClick={() => go(6, 1)}
-                      className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      Özet & İndirim Fırsatını Gör <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Builder Step 6: Özet & Fiyat & İndirim & Form */}
-              {flow === "builder" && step === 6 && (
+              {/* ============ BUILDER SUMMARY & PROFIT / DISCOUNT STEP ============ */}
+              {flow === "builder" && step === activeBuilderSteps.length && (
                 <div data-testid="wizard-builder-result" className="max-w-3xl mx-auto">
                   <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 text-emerald-600 px-3.5 py-1 text-xs font-bold mb-2">
@@ -1399,339 +1209,113 @@ export default function Wizard({ config }) {
                       <div className="flex justify-between items-center text-xs sm:text-sm text-muted-foreground pb-2 border-b border-border/60">
                         <span className="font-bold text-foreground">Bileşen</span>
                         <span className="font-bold text-foreground">Seçiminiz</span>
-                        <span className="font-bold text-foreground text-right">Tutar</span>
+                        <span className="font-bold text-foreground">Tutar</span>
                       </div>
 
-                      <div className="flex justify-between items-center text-xs sm:text-sm">
-                        <span className="font-semibold text-foreground">Temel Donanım & Fitting</span>
-                        <span className="text-muted-foreground text-xs">Filtre kabı, çekvalf, hortum & fitting</span>
-                        <span className="font-mono font-bold text-foreground text-right">+500 ₺</span>
+                      {/* Baz Donanım */}
+                      <div className="flex items-center justify-between text-xs sm:text-sm">
+                        <span className="text-muted-foreground">Temel Montaj & Fitting Paketi:</span>
+                        <span className="font-medium text-foreground text-xs sm:text-sm">Universal Housing, Çekvalf, Rekorlar</span>
+                        <span className="font-bold text-foreground font-mono">{basePrice.toLocaleString("tr-TR")} ₺</span>
                       </div>
 
-                      <div className="flex justify-between items-center text-xs sm:text-sm">
-                        <span className="font-semibold text-foreground">Kasa Tipi</span>
-                        <span className="text-muted-foreground text-xs">{selKasa?.name || "Açık Kasa"}</span>
-                        <span className="font-mono font-bold text-foreground text-right">+{selKasa ? selKasa.price.toLocaleString("tr-TR") : "0"} ₺</span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-xs sm:text-sm">
-                        <span className="font-semibold text-foreground">Filtre Paketi</span>
-                        <span className="text-muted-foreground text-xs">{selFiltre?.name || "5'li Eko"}</span>
-                        <span className="font-mono font-bold text-foreground text-right">+{selFiltre ? selFiltre.price.toLocaleString("tr-TR") : "0"} ₺</span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-xs sm:text-sm">
-                        <span className="font-semibold text-foreground">Beyin / Otomasyon</span>
-                        <span className="text-muted-foreground text-xs">{selBeyin?.name || "Standart"}</span>
-                        <span className="font-mono font-bold text-foreground text-right">+{selBeyin ? selBeyin.price.toLocaleString("tr-TR") : "0"} ₺</span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-xs sm:text-sm">
-                        <span className="font-semibold text-foreground">Pompa Desteği</span>
-                        <span className="text-muted-foreground text-xs">{selPompa?.name || "Pompasız"}</span>
-                        <span className="font-mono font-bold text-foreground text-right">+{selPompa ? selPompa.price.toLocaleString("tr-TR") : "0"} ₺</span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-xs sm:text-sm">
-                        <span className="font-semibold text-foreground">Depolama Tankı</span>
-                        <span className="text-muted-foreground text-xs">{selTank?.name || "8 Litre"}</span>
-                        <span className="font-mono font-bold text-foreground text-right">+{selTank ? selTank.price.toLocaleString("tr-TR") : "0"} ₺</span>
-                      </div>
-
-                      <div className="flex justify-between items-center text-xs sm:text-sm">
-                        <span className="font-semibold text-foreground">Arıtma Musluğu</span>
-                        <span className="text-muted-foreground text-xs">{selMusluk?.name || "Standart Musluk"}</span>
-                        <span className="font-mono font-bold text-foreground text-right">+{selMusluk ? selMusluk.price.toLocaleString("tr-TR") : "0"} ₺</span>
-                      </div>
+                      {selectedItemsList.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-xs sm:text-sm">
+                          <span className="text-muted-foreground">{item.stepTitle}:</span>
+                          <span className="font-semibold text-foreground flex items-center gap-1.5">
+                            <Check className="h-3.5 w-3.5 text-emerald-600" />
+                            {item.name}
+                          </span>
+                          <span className="font-bold text-foreground font-mono">
+                            {(item.salePrice || item.price || 0) === 0 ? "Dahil (0 ₺)" : `+${(item.salePrice || item.price || 0).toLocaleString("tr-TR")} ₺`}
+                          </span>
+                        </div>
+                      ))}
                     </div>
 
-                    {/* %20 İndirim Kancası / Reveal Kutusu */}
-                    <div className="mt-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white border-2 border-emerald-500/50 shadow-xl">
-                      <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm mb-1.5">
-                        <Sparkles className="h-4 w-4" />
-                        <span>ÖZEL İNDİRİM HAKKI KAZANDINIZ!</span>
+                    {/* Fiyatlandırma & %20 İndirim Açığa Çıkışı */}
+                    <div className="mt-6 space-y-3">
+                      <div className="flex items-center justify-between text-sm sm:text-base">
+                        <span className="text-muted-foreground">Toplam Liste Fiyatı:</span>
+                        <span className="line-through font-mono font-bold text-muted-foreground text-lg sm:text-xl">
+                          {builderListPrice.toLocaleString("tr-TR")} ₺
+                        </span>
                       </div>
-                      <p className="text-xs sm:text-sm text-neutral-300 mb-4 leading-relaxed">
-                        Aşağıdaki formu doldurarak veya doğrudan WhatsApp'tan teklif alarak cihazınıza anında <strong>%20 İndirim</strong> uygulayabilirsiniz.
-                      </p>
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-neutral-800">
+
+                      <div className="rounded-2xl bg-gradient-to-r from-emerald-500/15 via-emerald-500/10 to-amber-500/10 border border-emerald-500/30 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-inner">
                         <div>
-                          <span className="block text-xs text-neutral-400 font-medium">Normal Liste Fiyatı:</span>
-                          <span className="text-lg line-through text-neutral-500 font-mono">{builderListPrice.toLocaleString("tr-TR")} ₺</span>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-emerald-600 text-white font-bold text-xs">
+                              %20 Lansman İndirimi
+                            </Badge>
+                            <span className="text-xs font-bold text-emerald-600">
+                              {builderDiscount.toLocaleString("tr-TR")} ₺ Net Tasarruf
+                            </span>
+                          </div>
+                          <span className="block text-xs text-muted-foreground mt-1">
+                            Montaj, KDV ve 2 Yıl Yerinde Garanti Dahil
+                          </span>
                         </div>
-                        <div className="text-left sm:text-right">
-                          <span className="block text-xs uppercase tracking-wider text-emerald-400 font-bold">Formu Doldur / %20 İndirimli Fiyat</span>
-                          <span className="font-display font-extrabold text-3xl text-amber-300 font-mono">{builderFinalPrice.toLocaleString("tr-TR")} ₺</span>
-                          <span className="block text-[11px] text-emerald-400 font-semibold mt-0.5">🎉 -{builderDiscount.toLocaleString("tr-TR")} ₺ Anında Tasarruf</span>
+
+                        <div className="text-right">
+                          <span className="block text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
+                            Nihai İndirimli Fiyat
+                          </span>
+                          <span className="font-display font-extrabold text-3xl sm:text-4xl text-[hsl(var(--brand-plum))] font-mono">
+                            {builderFinalPrice.toLocaleString("tr-TR")} ₺
+                          </span>
                         </div>
                       </div>
                     </div>
 
                     {/* WhatsApp Sipariş Butonu */}
-                    <div className="mt-6">
-                      <WhatsAppButton
-                        number={waNumber}
-                        message={`Merhaba, Tekirdağ / ${district} için Kendi Cihazımı Oluşturdum:%0A- Kasa: ${selKasa?.name}%0A- Filtre: ${selFiltre?.name}%0A- Beyin: ${selBeyin?.name}%0A- Pompa: ${selPompa?.name}%0A- Tank: ${selTank?.name}%0A- Musluk: ${selMusluk?.name}%0A%0A🎁 Form/WhatsApp İndirimli Tutarı: ${builderFinalPrice.toLocaleString("tr-TR")} ₺.%0AMontaj randevusu ve sipariş için görüşmek istiyorum.`}
-                        testId="wizard-builder-whatsapp-button"
-                        full
-                      >
-                        🎁 %20 İndirimli Teklifimi WhatsApp'tan Al & Randevu Al
-                      </WhatsAppButton>
-                    </div>
+                    <a
+                      href={buildWaLink(
+                        waNumber,
+                        `Merhaba, Tekirdağ / ${district} için Kendi Cihazımı Oluşturdum:\n` +
+                          selectedItemsList.map((it) => `• ${it.stepTitle}: ${it.name}`).join("\n") +
+                          `\n\nListe Tutarı: ${builderListPrice.toLocaleString("tr-TR")} ₺\n%20 İndirimli Teklifim: ${builderFinalPrice.toLocaleString("tr-TR")} ₺\nMontaj randevusu almak istiyorum.`
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-whatsapp mt-6 inline-flex items-center justify-center gap-2.5 rounded-xl h-14 px-6 text-base sm:text-lg font-bold transition-all w-full shadow-lg"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      %20 İndirimli WhatsApp Siparişini Başlat
+                    </a>
 
-                    {/* Callback Form with Discount Heading */}
+                    {/* Çift Kanallı Hızlı İletişim Formu */}
                     <CallbackForm
                       flowType="builder"
-                      itemName={`Özel Toplama (${selKasa?.name} + ${selFiltre?.name} + ${selPompa?.name}) - %20 İndirimli ${builderFinalPrice} ₺`}
+                      itemName="Özel Toplama Lotus Cihazı"
                       city={city}
                       district={district}
                       discountOffer={true}
+                      leadPayload={{
+                        selectedItems: selectedItemsList.map((item) => ({
+                          stepTitle: item.stepTitle,
+                          name: item.name,
+                          costPrice: item.costPrice || 0,
+                          salePrice: item.salePrice || item.price || 0,
+                        })),
+                        basePrice,
+                        baseCost,
+                        totalListPrice: builderListPrice,
+                        finalDiscountedPrice: builderFinalPrice,
+                        totalCostPrice: builderTotalCost,
+                        estimatedProfit: builderEstimatedProfit,
+                        profitMarginPercent: builderMarginPercent,
+                      }}
                     />
                   </div>
 
-                  <div className="mt-6 flex justify-center">
+                  <div className="mt-8 flex justify-center">
                     <button
                       type="button"
                       onClick={reset}
                       className="inline-flex items-center justify-center gap-2 rounded-xl h-11 px-6 text-sm font-semibold border border-border bg-card hover:bg-muted transition-all"
                     >
-                      <RotateCcw className="h-4 w-4" /> Baştan Başla
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ============ FILTER FLOW ============ */}
-              {flow === "filter" && step === 0 && (
-                <div data-testid="wizard-filter-step" className="max-w-2xl mx-auto">
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Filtreniz en son ne zaman değiştirildi?</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">Cihazınızın su kalitesini ve membran ömrünü korumak için en doğru periyodu belirleyelim.</p>
-                  <div className="grid gap-3.5" data-testid="wizard-filter-last-changed-options">
-                    <OptionCard
-                      selected={lastChanged === "6ay"}
-                      onClick={() => setLastChanged("6ay")}
-                      title="Yaklaşık 6 ay önce"
-                      hint="Ön tortu ve karbon filtrelerinin standart yenilenme zamanı"
-                      testId="wizard-filter-option-6ay"
-                    />
-                    <OptionCard
-                      selected={lastChanged === "1yil"}
-                      onClick={() => setLastChanged("1yil")}
-                      title="1 yıl veya daha uzun süre önce"
-                      hint="Membran dahil tam takım filtre değişimi tavsiye edilir"
-                      testId="wizard-filter-option-1yil"
-                    />
-                    <OptionCard
-                      selected={lastChanged === "bilmiyorum"}
-                      onClick={() => setLastChanged("bilmiyorum")}
-                      title="Tarihi hatırlamıyorum / Bilmiyorum"
-                      hint="Su tadında veya akışında değişiklik varsa tam kontrol önerilir"
-                      testId="wizard-filter-option-bilmiyorum"
-                    />
-                  </div>
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      disabled={!lastChanged}
-                      onClick={() => go(1, 1)}
-                      className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                      data-testid="wizard-filter-next"
-                    >
-                      Önerilen Seti Gör <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {flow === "filter" && step === 1 && recommendedSet && (
-                <div data-testid="wizard-filter-result" className="max-w-3xl mx-auto">
-                  <div className="text-center mb-8">
-                    <h3 className="font-display font-bold text-2xl sm:text-3xl mb-2 text-foreground">Sizin İçin Önerilen Filtre Seti</h3>
-                    <p className="text-muted-foreground text-sm sm:text-base">{recommendedSet.recommendedFor}</p>
-                  </div>
-
-                  <div
-                    className="rounded-2xl border-2 border-[hsl(var(--brand-champagne)/0.6)] bg-card overflow-hidden shadow-lg"
-                    data-testid="wizard-filter-result-card"
-                  >
-                    <div
-                      className="device-placeholder relative aspect-[16/6] flex items-center justify-center border-b border-border/50"
-                      data-testid="wizard-filter-image-placeholder"
-                    >
-                      <div className="flex flex-col items-center text-[hsl(var(--brand-plum))]">
-                        <Replace className="h-10 w-10 opacity-70" />
-                        <span className="mt-2 text-xs font-semibold text-muted-foreground">Orijinal Lotus Filtre Seti</span>
-                      </div>
-                    </div>
-
-                    <div className="p-6 sm:p-8">
-                      <div className="flex items-start justify-between gap-4 flex-wrap pb-5 border-b border-border">
-                        <div>
-                          <Badge className="bg-[hsl(var(--brand-champagne))] text-neutral-900 font-bold border-0 mb-2">⭐ Tavsiye Edilen Set</Badge>
-                          <h4 className="font-display font-bold text-2xl text-foreground">{recommendedSet.name}</h4>
-                          <p className="text-sm text-muted-foreground mt-1">{recommendedSet.subtitle}</p>
-                        </div>
-                        <div className="text-right">
-                          <span className="block text-xs font-medium text-muted-foreground">Fiyat</span>
-                          <span className="font-display font-bold text-2xl text-[hsl(var(--brand-plum))]" data-testid="wizard-filter-price">
-                            {recommendedSet.price}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mt-6 grid sm:grid-cols-2 gap-6">
-                        <div>
-                          <p className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                            <Check className="h-4 w-4 text-emerald-600" /> Set İçeriği
-                          </p>
-                          <ul className="space-y-2">
-                            {recommendedSet.includes.map((s) => (
-                              <li key={s} className="flex items-start gap-2.5 text-xs sm:text-sm text-foreground/85">
-                                <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--brand-plum))] mt-1.5 shrink-0" />
-                                <span>{s}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                            <Sparkles className="h-4 w-4 text-[hsl(var(--brand-champagne))]" /> Sağladığı Avantajlar
-                          </p>
-                          <ul className="space-y-2">
-                            {recommendedSet.benefits.map((s) => (
-                              <li key={s} className="flex items-start gap-2 text-xs sm:text-sm text-foreground/85">
-                                <ChevronRight className="h-4 w-4 mt-0.5 text-[hsl(var(--brand-rose))] shrink-0" />
-                                <span>{s}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-
-                      {recommendedSet.isPlaceholderPrice && (
-                        <p className="mt-5 text-xs text-muted-foreground bg-muted/40 p-3 rounded-xl border border-border/60">{recommendedSet.priceNote}</p>
-                      )}
-
-                      <div className="mt-6">
-                        <WhatsAppButton
-                          number={waNumber}
-                          message={`Merhaba, ${locationText ? locationText + " bölgesindeyim. " : ""}${recommendedSet.name} için güncel fiyat ve montaj randevusu bilgisi almak istiyorum.`}
-                          testId="wizard-filter-whatsapp-button"
-                          full
-                        >
-                          WhatsApp ile Fiyat Al & Randevu Oluştur
-                        </WhatsAppButton>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Çift Kanallı İletişim: Hızlı Beni Arayın Formu */}
-                  <CallbackForm
-                    flowType="filter"
-                    itemName={recommendedSet.name}
-                    city={city}
-                    district={district}
-                  />
-
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={reset}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl h-11 px-6 text-sm font-semibold border border-border bg-card hover:bg-muted transition-all"
-                      data-testid="wizard-restart-secondary"
-                    >
-                      <RotateCcw className="h-4 w-4" /> Baştan Başla
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ============ FAULT FLOW ============ */}
-              {flow === "fault" && step === 0 && (
-                <div data-testid="wizard-fault-step" className="max-w-2xl mx-auto">
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Cihazınızda ne tür bir sorun var?</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">Yaşadığınız arıza tipini seçin, hemen ilk müdahale adımlarını ve servis yönlendirmesini aktaralım.</p>
-                  <div className="grid gap-3.5" data-testid="wizard-malfunction-options">
-                    {config.faultGuides.map((f) => (
-                      <OptionCard
-                        key={f.id}
-                        selected={faultType === f.id}
-                        onClick={() => setFaultType(f.id)}
-                        title={f.label}
-                        testId={`wizard-fault-option-${f.id}`}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="button"
-                      disabled={!faultType}
-                      onClick={() => go(1, 1)}
-                      className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                      data-testid="wizard-fault-next"
-                    >
-                      Çözümü Gör <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {flow === "fault" && step === 1 && selectedFault && (
-                <div data-testid="wizard-fault-result" className="max-w-3xl mx-auto">
-                  <div
-                    className="rounded-2xl border border-[hsl(var(--brand-rose)/0.4)] bg-[hsl(var(--brand-rose)/0.06)] p-6 sm:p-8 shadow-sm"
-                    data-testid="wizard-malfunction-guidance"
-                  >
-                    <div className="flex items-center gap-3.5 pb-4 border-b border-[hsl(var(--brand-rose)/0.2)]">
-                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] shadow-sm">
-                        <AlertTriangle className="h-6 w-6" />
-                      </span>
-                      <h3 className="font-display font-bold text-2xl text-foreground">{selectedFault.title}</h3>
-                    </div>
-                    <p className="mt-4 text-sm sm:text-base text-foreground/90 leading-relaxed">{selectedFault.body}</p>
-
-                    <div className="mt-6 rounded-xl bg-white/70 border border-border/80 p-4 sm:p-5">
-                      <p className="text-sm font-bold text-foreground">🛠️ Servis Ulaşana Kadar Yapabileceğiniz Güvenlik Adımları:</p>
-                      <ul className="mt-3 space-y-2">
-                        {selectedFault.tips.map((t) => (
-                          <li key={t} className="flex items-start gap-2.5 text-xs sm:text-sm text-foreground/85">
-                            <Check className="h-4 w-4 mt-0.5 text-emerald-600 shrink-0 stroke-[2.5]" />
-                            <span>{t}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <p className="mt-5 text-sm sm:text-base font-medium text-foreground/90">{selectedFault.cta}</p>
-
-                    <div className="mt-6">
-                      <WhatsAppButton
-                        number={waNumber}
-                        message={`Merhaba, ${locationText ? locationText + " bölgesindeyim. " : ""}Cihazımda "${selectedFault.label}" arızası var. Hızlı teknik servis desteği alabilir miyim?`}
-                        testId="wizard-malfunction-whatsapp-button"
-                        full
-                      >
-                        Hemen WhatsApp ile Servis Çağır
-                      </WhatsAppButton>
-                    </div>
-                  </div>
-
-                  {/* Çift Kanallı İletişim: Hızlı Beni Arayın Formu */}
-                  <CallbackForm
-                    flowType="fault"
-                    itemName={selectedFault.label}
-                    city={city}
-                    district={district}
-                  />
-
-                  <div className="mt-6 flex justify-center">
-                    <button
-                      type="button"
-                      onClick={reset}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl h-11 px-6 text-sm font-semibold border border-border bg-card hover:bg-muted transition-all"
-                      data-testid="wizard-restart-secondary"
-                    >
-                      <RotateCcw className="h-4 w-4" /> Baştan Başla
+                      <RotateCcw className="h-4 w-4" /> Baştan Yeni Cihaz Oluştur
                     </button>
                   </div>
                 </div>
@@ -1741,15 +1325,13 @@ export default function Wizard({ config }) {
         </div>
       </div>
 
-      {/* Component Detail Modal */}
-      {modalItem && (
-        <BuilderDetailModal
-          item={modalItem}
-          onClose={() => setModalItem(null)}
-          onSelect={modalItem.onSelect}
-          isSelected={modalItem.isSelected}
-        />
-      )}
+      {/* Global Detail Modal */}
+      <BuilderDetailModal
+        item={modalItem}
+        onClose={() => setModalItem(null)}
+        onSelect={modalItem?.onSelect}
+        isSelected={modalItem?.isSelected}
+      />
     </div>
   );
 }

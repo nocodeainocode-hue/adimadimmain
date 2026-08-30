@@ -39,7 +39,15 @@ export default function Footer({ brand, waDisplay }) {
       <div className="border-t border-neutral-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 text-xs text-neutral-500 flex flex-col sm:flex-row justify-between items-center gap-2">
           <span>© {new Date().getFullYear()} {name}. Tüm hakları saklıdır.</span>
-          <span className="text-neutral-400">Lotus Su Arıtma Sistemleri</span>
+          <div className="flex items-center gap-4">
+            <span className="text-neutral-400">Lotus Su Arıtma Sistemleri</span>
+            <a
+              href="/admin"
+              className="text-neutral-500 hover:text-amber-300 transition-colors inline-flex items-center gap-1 font-semibold"
+            >
+              ⚙️ Yönetim Paneli
+            </a>
+          </div>
         </div>
       </div>
     </footer>
