@@ -1,0 +1,74 @@
+.App {
+    min-height: 100vh;
+}
+
+/* Champagne / plum brand button helpers */
+.btn-champagne {
+    background: linear-gradient(135deg, hsl(38 55% 66%), hsl(38 45% 58%));
+    color: #1a1520;
+    box-shadow: 0 4px 14px 0 hsl(38 45% 62% / 0.35);
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.btn-champagne:hover {
+    background: linear-gradient(135deg, hsl(38 58% 70%), hsl(38 48% 62%));
+    box-shadow: 0 6px 20px 0 hsl(38 45% 62% / 0.45);
+    transform: translateY(-1px);
+}
+.btn-champagne:active {
+    transform: translateY(0);
+}
+
+.btn-whatsapp {
+    background: linear-gradient(135deg, #25d366, #128c7e);
+    color: #ffffff;
+    box-shadow: 0 4px 14px 0 rgba(37, 211, 102, 0.35);
+    transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.btn-whatsapp:hover {
+    background: linear-gradient(135deg, #2bf074, #15a191);
+    box-shadow: 0 6px 20px 0 rgba(37, 211, 102, 0.45);
+    transform: translateY(-1px);
+}
+.btn-whatsapp:active {
+    transform: translateY(0);
+}
+
+/* device placeholder visual */
+.device-placeholder {
+    background:
+        radial-gradient(600px circle at 20% 10%, hsl(var(--brand-rose) / 0.25), transparent 55%),
+        linear-gradient(135deg, hsl(var(--brand-plum) / 0.10), hsl(var(--brand-champagne) / 0.12));
+}
+
+.hero-overlay {
+    background:
+        radial-gradient(1000px circle at 15% 10%, hsl(var(--brand-rose) / 0.18), transparent 60%),
+        linear-gradient(135deg, hsl(240 12% 7% / 0.95), hsl(292 32% 18% / 0.70), hsl(240 12% 7% / 0.96));
+}
+
+/* Pulse indicator for live WhatsApp status */
+.pulse-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #25d366;
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+    animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(37, 211, 102, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+    }
+}
+
