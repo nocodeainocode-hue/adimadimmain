@@ -167,6 +167,47 @@ const setNestedValue = (object, path, value) => {
   return { ...object, [key]: setNestedValue(object?.[key] || {}, rest.join("."), value) };
 };
 
+function StringListEditor({ label, values = [], onChange, placeholder = "Yeni madde" }) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between gap-3">
+        <label className="font-bold text-slate-700">{label}</label>
+        <button
+          type="button"
+          onClick={() => onChange([...values, placeholder])}
+          className="inline-flex items-center gap-1 text-[11px] font-bold text-[hsl(var(--brand-plum))] hover:underline"
+        >
+          <Plus className="h-3 w-3" /> Madde Ekle
+        </button>
+      </div>
+      <div className="space-y-1.5">
+        {values.map((value, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <input
+              type="text"
+              value={value}
+              onChange={(event) => {
+                const updated = [...values];
+                updated[index] = event.target.value;
+                onChange(updated);
+              }}
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+            />
+            <button
+              type="button"
+              onClick={() => onChange(values.filter((_, itemIndex) => itemIndex !== index))}
+              className="rounded-lg border border-rose-100 bg-rose-50 p-1.5 text-rose-600 hover:text-rose-700"
+              aria-label={`${label} maddesini kaldır`}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const {
     isAuthenticated,
@@ -1022,6 +1063,14 @@ export default function AdminPage() {
                     capacity: "3-4 kişilik hane",
                     warranty: "3 Yıl Garanti",
                     img: "https://images.unsplash.com/photo-1585771724684-38269d6639fd?auto=format&fit=crop&w=800&q=80",
+                    galleryImages: [],
+                    videoUrl: "",
+                    longDescription: "",
+                    specs: [],
+                    includedItems: [],
+                    maintenanceInfo: "",
+                    recommendationReason: "",
+                    certifications: [],
                     features: ["5 aşamalı RO filtrasyon", "Antibakteriyel tank", "Paslanmaz musluk"],
                     order: (localData.devices || []).length + 1,
                     isActive: true,
@@ -1088,6 +1137,10 @@ export default function AdminPage() {
                           setEditingDevice({
                             ...dev,
                             features: dev.features || [],
+                            galleryImages: dev.galleryImages || [],
+                            specs: dev.specs || [],
+                            includedItems: dev.includedItems || [],
+                            certifications: dev.certifications || [],
                             budgetTags: dev.budgetTags || ["orta"],
                             consumptionTags: dev.consumptionTags || ["orta"],
                           });
@@ -1786,7 +1839,7 @@ export default function AdminPage() {
       {/* MODAL 2: PARÇA & MODAL ZENGİN EDİTÖRÜ */}
       {isOptionModalOpen && editingOption && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl space-y-5">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-display font-bold text-xl text-slate-900">
@@ -2010,7 +2063,7 @@ export default function AdminPage() {
       {/* MODAL 3: HAZIR CİHAZ MODELİ EDİTÖRÜ */}
       {isDeviceModalOpen && editingDevice && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl space-y-5">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto text-left shadow-2xl space-y-5">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-display font-bold text-xl text-slate-900">
@@ -2028,7 +2081,7 @@ export default function AdminPage() {
             </div>
 
             <form onSubmit={handleSaveDevice} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-slate-700 font-bold mb-1">Model Adı</label>
                   <input
@@ -2038,6 +2091,16 @@ export default function AdminPage() {
                     value={editingDevice.name}
                     onChange={(e) => setEditingDevice({ ...editingDevice, name: e.target.value })}
                     className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">Önerilen Kapasite</label>
+                  <input
+                    type="text"
+                    placeholder="Örn: 3-5 kişilik hane"
+                    value={editingDevice.capacity || ""}
+                    onChange={(e) => setEditingDevice({ ...editingDevice, capacity: e.target.value })}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
                   />
                 </div>
                 <div>
@@ -2077,49 +2140,113 @@ export default function AdminPage() {
               </div>
 
               <ImageUploadField
-                label="HD Cihaz Görseli"
+                label="Ana Cihaz Görseli"
                 value={editingDevice.img}
                 onChange={(img) => setEditingDevice({ ...editingDevice, img })}
               />
 
-              {/* Features Editor */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-slate-700 font-bold">✨ Öne Çıkan Özellik Maddeleri</label>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h4 className="font-bold text-slate-800">📷 Detay Galerisi</h4>
+                    <p className="mt-0.5 text-[11px] text-slate-500">Kurulum, iç filtre ve ölçü görsellerinden en fazla 5 adet ekleyin.</p>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setEditingDevice({ ...editingDevice, features: [...(editingDevice.features || []), "Yeni Özellik"] })}
-                    className="text-[11px] text-[hsl(var(--brand-plum))] hover:underline inline-flex items-center gap-1 font-bold"
+                    disabled={(editingDevice.galleryImages || []).length >= 5}
+                    onClick={() => setEditingDevice({ ...editingDevice, galleryImages: [...(editingDevice.galleryImages || []), ""] })}
+                    className="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-2 text-[11px] font-bold text-[hsl(var(--brand-plum))] shadow-xs disabled:opacity-40"
                   >
-                    <Plus className="h-3 w-3" /> Madde Ekle
+                    <Plus className="h-3.5 w-3.5" /> Fotoğraf Alanı Ekle
                   </button>
                 </div>
-                <div className="space-y-1.5">
-                  {(editingDevice.features || []).map((feat, fIdx) => (
-                    <div key={fIdx} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={feat}
-                        onChange={(e) => {
-                          const updated = [...editingDevice.features];
-                          updated[fIdx] = e.target.value;
-                          setEditingDevice({ ...editingDevice, features: updated });
-                        }}
-                        className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 text-slate-900 text-xs w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = editingDevice.features.filter((_, i) => i !== fIdx);
-                          setEditingDevice({ ...editingDevice, features: updated });
-                        }}
-                        className="text-rose-600 hover:text-rose-700 p-1.5 rounded-lg bg-rose-50 border border-rose-100"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {(editingDevice.galleryImages || []).map((image, imageIndex) => (
+                    <ImageUploadField
+                      key={imageIndex}
+                      label={`Galeri Görseli ${imageIndex + 1}`}
+                      value={image}
+                      onChange={(nextImage) => {
+                        const updated = [...(editingDevice.galleryImages || [])];
+                        if (nextImage) updated[imageIndex] = nextImage;
+                        else updated.splice(imageIndex, 1);
+                        setEditingDevice({ ...editingDevice, galleryImages: updated });
+                      }}
+                    />
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">🎬 Tanıtım Videosu Bağlantısı</label>
+                <input
+                  type="url"
+                  placeholder="YouTube, Vimeo veya doğrudan MP4/WebM bağlantısı"
+                  value={editingDevice.videoUrl || ""}
+                  onChange={(event) => setEditingDevice({ ...editingDevice, videoUrl: event.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                />
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Detaylı Cihaz Açıklaması</label>
+                  <textarea
+                    rows={5}
+                    placeholder="Cihazın çalışma biçimi, kullanım amacı ve farkları..."
+                    value={editingDevice.longDescription || ""}
+                    onChange={(event) => setEditingDevice({ ...editingDevice, longDescription: event.target.value })}
+                    className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 leading-relaxed text-slate-900 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Neden Öneriliyor?</label>
+                  <textarea
+                    rows={5}
+                    placeholder="Hangi hane, su koşulu veya kullanım tipi için uygun?"
+                    value={editingDevice.recommendationReason || ""}
+                    onChange={(event) => setEditingDevice({ ...editingDevice, recommendationReason: event.target.value })}
+                    className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 leading-relaxed text-slate-900 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Bakım ve Filtre Değişim Bilgisi</label>
+                <textarea
+                  rows={3}
+                  placeholder="Önerilen bakım sıklığı ve müşterinin bilmesi gereken servis bilgileri..."
+                  value={editingDevice.maintenanceInfo || ""}
+                  onChange={(event) => setEditingDevice({ ...editingDevice, maintenanceInfo: event.target.value })}
+                  className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 leading-relaxed text-slate-900 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                />
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <StringListEditor
+                  label="✨ Öne Çıkan Özellikler"
+                  values={editingDevice.features || []}
+                  onChange={(features) => setEditingDevice({ ...editingDevice, features })}
+                  placeholder="Yeni özellik"
+                />
+                <StringListEditor
+                  label="📊 Teknik Özellikler"
+                  values={editingDevice.specs || []}
+                  onChange={(specs) => setEditingDevice({ ...editingDevice, specs })}
+                  placeholder="Örn: Ölçüler: 40 × 25 × 42 cm"
+                />
+                <StringListEditor
+                  label="📦 Pakete / Montaja Dahil"
+                  values={editingDevice.includedItems || []}
+                  onChange={(includedItems) => setEditingDevice({ ...editingDevice, includedItems })}
+                  placeholder="Yeni dahil ürün veya hizmet"
+                />
+                <StringListEditor
+                  label="🛡️ Sertifikalar ve Güvenceler"
+                  values={editingDevice.certifications || []}
+                  onChange={(certifications) => setEditingDevice({ ...editingDevice, certifications })}
+                  placeholder="Yeni sertifika veya güvence"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100">

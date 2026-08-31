@@ -34,6 +34,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { DeviceDetailModal } from "@/components/DeviceDetails";
 import { buildWaLink } from "@/lib/whatsapp";
 import { useLocalData } from "@/lib/convex";
 import {
@@ -533,6 +534,7 @@ export default function Wizard({ config }) {
   // device results
   const [devices, setDevices] = useState([]);
   const [devLoading, setDevLoading] = useState(false);
+  const [selectedDevice, setSelectedDevice] = useState(null);
 
   const stepsByFlow = {
     buy: 4,
@@ -613,6 +615,7 @@ export default function Wizard({ config }) {
     setFaultType(null);
     setBuilderSelections({});
     setDevices([]);
+    setSelectedDevice(null);
   };
 
   const startFlow = (f) => {
@@ -1023,6 +1026,13 @@ export default function Wizard({ config }) {
                                 <span className="font-display font-bold text-2xl text-[hsl(var(--brand-plum))]">{d.price}</span>
                               </div>
                             </div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDevice(d)}
+                              className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-bold text-foreground transition-all hover:bg-muted"
+                            >
+                              <Eye className="h-4 w-4" /> Fotoğraf, Video ve Detayları İncele
+                            </button>
                             <a
                               href={buildWaLink(
                                 waNumber,
@@ -1030,7 +1040,7 @@ export default function Wizard({ config }) {
                               )}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="btn-whatsapp mt-4 inline-flex items-center justify-center gap-2 rounded-xl h-11 px-4 text-sm font-bold transition-all w-full shadow-sm"
+                              className="btn-whatsapp mt-2 inline-flex items-center justify-center gap-2 rounded-xl h-11 px-4 text-sm font-bold transition-all w-full shadow-sm"
                             >
                               <MessageCircle className="h-4 w-4" /> WhatsApp ile Bilgi Al
                             </a>
@@ -1530,6 +1540,16 @@ export default function Wizard({ config }) {
         onClose={() => setModalItem(null)}
         onSelect={modalItem?.onSelect}
         isSelected={modalItem?.isSelected}
+      />
+      <DeviceDetailModal
+        device={selectedDevice}
+        waNumber={waNumber}
+        matchReason={
+          selectedDevice
+            ? selectedDevice.recommendationReason || `${selectedDevice.capacity || "Evinizin kullanımı"} ve seçtiğiniz ${budget || "uygun"} bütçe aralığıyla eşleştiği için önerildi.`
+            : ""
+        }
+        onClose={() => setSelectedDevice(null)}
       />
     </div>
   );

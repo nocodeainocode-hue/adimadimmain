@@ -845,6 +845,14 @@ export const updateCatalogDevice = mutation({
     capacity: v.string(),
     warranty: v.string(),
     img: v.string(),
+    galleryImages: v.optional(v.array(v.string())),
+    videoUrl: v.optional(v.string()),
+    longDescription: v.optional(v.string()),
+    specs: v.optional(v.array(v.string())),
+    includedItems: v.optional(v.array(v.string())),
+    maintenanceInfo: v.optional(v.string()),
+    recommendationReason: v.optional(v.string()),
+    certifications: v.optional(v.array(v.string())),
     features: v.array(v.string()),
     order: v.number(),
     isActive: v.boolean(),
@@ -919,4 +927,3 @@ export const deleteFilterSet = mutation({
     return true;
   },
 });
-
