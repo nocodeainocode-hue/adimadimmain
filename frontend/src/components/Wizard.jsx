@@ -298,7 +298,7 @@ function BuilderOptionCard({
 }
 
 /* ---------- Callback Form with Convex Support ---------- */
-function CallbackForm({ flowType, itemName, city, district, discountOffer, leadPayload }) {
+function CallbackForm({ flowType, itemName, city, district, discountOffer, leadPayload, whatsappUrl }) {
   const { addLocalLead } = useLocalData();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -308,13 +308,22 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const cleanName = name.trim();
     const cleanPhone = phone.trim();
-    if (!cleanPhone || cleanPhone.length < 10) return;
+    if (!cleanPhone || cleanPhone.length < 10 || (whatsappUrl && !cleanName)) return;
+
+    const resolvedWhatsappUrl = whatsappUrl?.replace(
+      encodeURIComponent("{MÜŞTERİ_ADI}"),
+      encodeURIComponent(cleanName)
+    );
+    const whatsappWindow = resolvedWhatsappUrl ? window.open("", "_blank") : null;
+    if (whatsappWindow) whatsappWindow.opener = null;
+
     setLoading(true);
     setSubmitError("");
 
     const fullLead = {
-      fullName: name.trim() || "İsimsiz Müşteri",
+      fullName: cleanName || "İsimsiz Müşteri",
       phone: cleanPhone,
       city: city || "Tekirdağ",
       district: district || "",
@@ -326,7 +335,15 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
     try {
       await addLocalLead(fullLead);
       setSubmitted(true);
+      if (resolvedWhatsappUrl) {
+        if (whatsappWindow) {
+          whatsappWindow.location.href = resolvedWhatsappUrl;
+        } else {
+          window.location.href = resolvedWhatsappUrl;
+        }
+      }
     } catch {
+      if (whatsappWindow) whatsappWindow.close();
       setSubmitError("Talebiniz kaydedilemedi. Lütfen bağlantınızı kontrol edip tekrar deneyin.");
     } finally {
       setLoading(false);
@@ -341,8 +358,14 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
         </div>
         <h4 className="font-display font-bold text-lg text-foreground">Talebiniz Başarıyla Alındı!</h4>
         <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-md mx-auto">
-          {discountOffer ? "🎁 %20 İndirim hakkınız numaranıza tanımlandı! " : ""}
-          Su uzmanımız 10-15 dakika içinde <strong className="text-foreground font-semibold">{phone}</strong> numaranızdan sizi arayarak montaj ve fiyat detaylarını aktaracaktır.
+          {whatsappUrl ? (
+            <>Siparişiniz kaydedildi ve WhatsApp görüşmeniz açıldı. Mesajı göndererek montaj talebinizi tamamlayabilirsiniz.</>
+          ) : (
+            <>
+              {discountOffer ? "🎁 %20 İndirim hakkınız numaranıza tanımlandı! " : ""}
+              Su uzmanımız 10-15 dakika içinde <strong className="text-foreground font-semibold">{phone}</strong> numaranızdan sizi arayarak montaj ve fiyat detaylarını aktaracaktır.
+            </>
+          )}
         </p>
       </div>
     );
@@ -364,21 +387,31 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
         </span>
         <div>
           <h4 className="font-display font-bold text-base sm:text-lg text-foreground">
-            {discountOffer ? "🎁 %20 İndirim Fırsatını Numaranıza Tanımlayın" : "WhatsApp Kullanmıyor musunuz?"}
+            {whatsappUrl
+              ? "WhatsApp Siparişinizi Oluşturun"
+              : discountOffer
+                ? "🎁 %20 İndirim Fırsatını Numaranıza Tanımlayın"
+                : "WhatsApp Kullanmıyor musunuz?"}
           </h4>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            {discountOffer 
-              ? "Numaranızı bırakın, teknik uzmanımız %20 indirimli teklifinizle sizi 10-15 dk içinde arasın." 
-              : "Numaranızı bırakın, teknik uzmanımız sizi hemen arasın."}
+            {whatsappUrl
+              ? "Adınızı ve telefonunuzu girin; siparişiniz kaydedildikten sonra seçiminizle birlikte WhatsApp açılır."
+              : discountOffer
+                ? "Numaranızı bırakın, teknik uzmanımız %20 indirimli teklifinizle sizi 10-15 dk içinde arasın."
+                : "Numaranızı bırakın, teknik uzmanımız sizi hemen arasın."}
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 grid sm:grid-cols-3 gap-3">
+      <form
+        onSubmit={handleSubmit}
+        className={`mt-4 grid gap-3 ${whatsappUrl ? "sm:grid-cols-[1fr_1fr_1.35fr]" : "sm:grid-cols-3"}`}
+      >
         <div className="relative">
           <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
+            required={Boolean(whatsappUrl)}
             placeholder="Adınız Soyadınız"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -398,11 +431,11 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
         </div>
         <button
           type="submit"
-          disabled={loading || !phone}
-          className="btn-champagne rounded-xl h-12 px-5 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm"
+          disabled={loading || !phone || (whatsappUrl && !name.trim())}
+          className={`${whatsappUrl ? "btn-whatsapp" : "btn-champagne"} rounded-xl h-12 px-5 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm`}
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : discountOffer ? <Sparkles className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-          {discountOffer ? "%20 İndirimle Ara" : "Beni Arayın"}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : whatsappUrl ? <MessageCircle className="h-4 w-4" /> : discountOffer ? <Sparkles className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+          {whatsappUrl ? "Siparişi Kaydet ve WhatsApp'ı Aç" : discountOffer ? "%20 İndirimle Ara" : "Beni Arayın"}
         </button>
       </form>
       {submitError && <p role="alert" className="mt-3 text-xs font-semibold text-rose-600">{submitError}</p>}
@@ -1444,29 +1477,19 @@ export default function Wizard({ config }) {
                       </div>
                     </div>
 
-                    {/* WhatsApp Sipariş Butonu */}
-                    <a
-                      href={buildWaLink(
-                        waNumber,
-                        `Merhaba, Tekirdağ / ${district} için Kendi Cihazımı Oluşturdum:\n` +
-                          selectedItemsList.map((it) => `• ${it.stepTitle}: ${it.name}`).join("\n") +
-                          `\n\nListe Tutarı: ${builderListPrice.toLocaleString("tr-TR")} ₺\n%20 İndirimli Teklifim: ${builderFinalPrice.toLocaleString("tr-TR")} ₺\nMontaj randevusu almak istiyorum.`
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-whatsapp mt-6 inline-flex items-center justify-center gap-2.5 rounded-xl h-14 px-6 text-base sm:text-lg font-bold transition-all w-full shadow-lg"
-                    >
-                      <MessageCircle className="h-5 w-5" />
-                      %20 İndirimli WhatsApp Siparişini Başlat
-                    </a>
-
-                    {/* Çift Kanallı Hızlı İletişim Formu */}
+                    {/* Siparişi kaydet, ardından WhatsApp görüşmesini başlat */}
                     <CallbackForm
                       flowType="builder"
                       itemName="Özel Toplama Lotus Cihazı"
                       city={city}
                       district={district}
                       discountOffer={true}
+                      whatsappUrl={buildWaLink(
+                        waNumber,
+                        `Merhaba, ben {MÜŞTERİ_ADI}. Tekirdağ / ${district} için Kendi Cihazımı Oluşturdum:\n` +
+                          selectedItemsList.map((it) => `• ${it.stepTitle}: ${it.name}`).join("\n") +
+                          `\n\nListe Tutarı: ${builderListPrice.toLocaleString("tr-TR")} ₺\n%20 İndirimli Teklifim: ${builderFinalPrice.toLocaleString("tr-TR")} ₺\nMontaj randevusu almak istiyorum.`
+                      )}
                       leadPayload={{
                         selectedItems: selectedItemsList.map((item) => ({
                           stepTitle: item.stepTitle,
