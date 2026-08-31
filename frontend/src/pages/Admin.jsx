@@ -239,6 +239,8 @@ export default function AdminPage() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState("finans");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const [selectedStepFilter, setSelectedStepFilter] = useState("all");
   const [leadStatusFilter, setLeadStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -581,109 +583,147 @@ export default function AdminPage() {
         </div>
       </header>
 
-      {/* Main Layout */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 flex flex-col gap-6">
-        {/* Navigation Tabs - All 4 Flows + Finance & Settings */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-slate-200 text-sm">
-          <button
-            onClick={() => setActiveTab("finans")}
-            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-              activeTab === "finans"
-                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-            }`}
-          >
-            <TrendingUp className="h-4 w-4" /> Finans & Kâr
-          </button>
+      {/* Main Layout: Sidebar + Content */}
+      <div className="flex-1 flex overflow-hidden" style={{ minHeight: "calc(100vh - 57px)" }}>
 
-          <button
-            onClick={() => setActiveTab("steps")}
-            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-              activeTab === "steps"
-                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-            }`}
-          >
-            <Layers className="h-4 w-4" /> 1. Konfigüratör Adımları ({localData.steps.length})
-          </button>
+        {/* Mobile sidebar backdrop */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
-          <button
-            onClick={() => setActiveTab("options")}
-            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-              activeTab === "options"
-                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-            }`}
-          >
-            <Package className="h-4 w-4" /> 2. Parçalar & Fiyatlar ({localData.options.length})
-          </button>
+        {/* LEFT SIDEBAR */}
+        <aside
+          className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 lg:translate-x-0 ${
+            sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+          }`}
+          style={{ top: 57 }}
+        >
+          <div className="px-4 py-4 border-b border-slate-100">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Yönetim Menüsü</p>
+          </div>
 
-          <button
-            onClick={() => setActiveTab("devices")}
-            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-              activeTab === "devices"
-                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-            }`}
-          >
-            <ShoppingCart className="h-4 w-4" /> 3. Hazır Cihaz Modelleri ({(localData.devices || []).length})
-          </button>
+          <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
 
-          <button
-            onClick={() => setActiveTab("filterSets")}
-            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-              activeTab === "filterSets"
-                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-            }`}
-          >
-            <Droplets className="h-4 w-4" /> 4. Filtre Paketleri ({(localData.filterSets || []).length})
-          </button>
+            <p className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Genel</p>
 
-          <button
-            onClick={() => setActiveTab("faults")}
-            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-              activeTab === "faults"
-                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-            }`}
-          >
-            <Wrench className="h-4 w-4" /> 5. Arıza Rehberi ({(localData.faultGuides || []).length})
-          </button>
+            {[
+              { key: "finans", icon: TrendingUp, label: "Finans & Kâr" },
+              { key: "leads", icon: MessageSquare, label: "Gelen Siparişler", count: (localData.leads || []).length },
+            ].map(({ key, icon: Icon, label, count }) => (
+              <button
+                key={key}
+                onClick={() => { setActiveTab(key); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  activeTab === key
+                    ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1 text-left">{label}</span>
+                {count != null && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === key ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            ))}
 
-          <button
-            onClick={() => setActiveTab("leads")}
-            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-              activeTab === "leads"
-                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-            }`}
-          >
-            <MessageSquare className="h-4 w-4" /> Gelen Siparişler ({(localData.leads || []).length})
-          </button>
+            <p className="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Wizard İçerikleri</p>
 
-          <button
-            onClick={() => setActiveTab("texts")}
-            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-              activeTab === "texts"
-                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-            }`}
-          >
-            <FileText className="h-4 w-4" /> 📝 Metin & İçerikler
-          </button>
+            {[
+              { key: "steps", icon: Layers, label: "1. Konfigüratör Adımları", count: localData.steps.length },
+              { key: "options", icon: Package, label: "2. Parçalar & Fiyatlar", count: localData.options.length },
+              { key: "devices", icon: ShoppingCart, label: "3. Hazır Cihaz Modelleri", count: (localData.devices || []).length },
+              { key: "filterSets", icon: Droplets, label: "4. Filtre Paketleri", count: (localData.filterSets || []).length },
+              { key: "faults", icon: Wrench, label: "5. Arıza Rehberi", count: (localData.faultGuides || []).length },
+              { key: "texts", icon: FileText, label: "Metin & İçerikler" },
+            ].map(({ key, icon: Icon, label, count }) => (
+              <button
+                key={key}
+                onClick={() => { setActiveTab(key); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  activeTab === key
+                    ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                }`}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="flex-1 text-left">{label}</span>
+                {count != null && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${activeTab === key ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            ))}
 
-          <button
-            onClick={() => setActiveTab("settings")}
-            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
-              activeTab === "settings"
-                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
-            }`}
-          >
-            <Settings className="h-4 w-4" /> Genel Ayarlar
-          </button>
-        </div>
+            <p className="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Sistem</p>
+
+            <button
+              onClick={() => { setActiveTab("settings"); setSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                activeTab === "settings"
+                  ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              }`}
+            >
+              <Settings className="h-4 w-4 shrink-0" />
+              <span className="flex-1 text-left">Genel Ayarlar</span>
+            </button>
+          </nav>
+
+          {/* Sidebar footer actions */}
+          <div className="px-4 py-3 border-t border-slate-100 space-y-1.5">
+            <button
+              onClick={async () => {
+                if (window.confirm("Varsayılan fabrika ayarlarına sıfırlamak istiyor musunuz?")) {
+                  await persistChange(resetLocalToDefault, "Tüm veriler varsayılana sıfırlandı.");
+                }
+              }}
+              className="w-full flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-rose-600 px-3 py-2 rounded-lg hover:bg-rose-50 transition-all"
+            >
+              <RotateCcw className="h-3.5 w-3.5" /> Fabrika Ayarlarına Sıfırla
+            </button>
+            <button
+              onClick={() => { logoutAdmin(); toast.info("Oturum kapatıldı."); }}
+              className="w-full flex items-center gap-2 text-xs font-bold text-rose-700 hover:text-rose-800 px-3 py-2 rounded-lg hover:bg-rose-50 transition-all"
+            >
+              <LogOut className="h-3.5 w-3.5" /> Çıkış Yap
+            </button>
+          </div>
+        </aside>
+
+        {/* MAIN CONTENT */}
+        <main className="flex-1 min-w-0 overflow-y-auto">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+
+            {/* Mobile: hamburger + current tab label */}
+            <div className="flex items-center gap-3 lg:hidden">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold shadow-xs hover:bg-slate-50 transition-all"
+              >
+                <SlidersHorizontal className="h-4 w-4" /> Menü
+              </button>
+              <span className="text-sm font-bold text-slate-700">
+                {activeTab === "finans" && "Finans & Kâr"}
+                {activeTab === "steps" && "Konfigüratör Adımları"}
+                {activeTab === "options" && "Parçalar & Fiyatlar"}
+                {activeTab === "devices" && "Hazır Cihaz Modelleri"}
+                {activeTab === "filterSets" && "Filtre Paketleri"}
+                {activeTab === "faults" && "Arıza Rehberi"}
+                {activeTab === "leads" && "Gelen Siparişler"}
+                {activeTab === "texts" && "Metin & İçerikler"}
+                {activeTab === "settings" && "Genel Ayarlar"}
+              </span>
+            </div>
+
+
+
 
         {/* TAB 1: KÂRLILIK & FİNANS */}
         {activeTab === "finans" && (
@@ -1749,6 +1789,8 @@ export default function AdminPage() {
             </form>
           </div>
         )}
+          </div>
+        </main>
       </div>
 
       {/* MODAL 1: STEP ADD / EDIT */}
@@ -2535,9 +2577,12 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+
           </div>
         </div>
       )}
+
     </div>
   );
 }
+
