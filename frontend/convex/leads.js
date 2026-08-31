@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./admin";
 
 // Müşteri Talebi Kaydet (Frontend Form & Builder Siparişleri)
 export const submitLead = mutation({
@@ -9,6 +10,7 @@ export const submitLead = mutation({
     city: v.string(),
     district: v.string(),
     flowType: v.string(),
+    itemName: v.optional(v.string()),
     selectedItems: v.optional(
       v.array(
         v.object({
@@ -40,6 +42,7 @@ export const submitLead = mutation({
 export const getLeads = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     return await ctx.db
       .query("leads")
       .withIndex("by_createdAt")
@@ -56,6 +59,7 @@ export const updateLeadStatus = mutation({
     adminNote: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const { id, ...data } = args;
     await ctx.db.patch(id, data);
   },
@@ -65,6 +69,7 @@ export const updateLeadStatus = mutation({
 export const getFinancialStats = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     const leads = await ctx.db.query("leads").collect();
 
     let totalRevenue = 0;

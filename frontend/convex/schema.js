@@ -91,6 +91,7 @@ export default defineSchema({
     city: v.string(),
     district: v.string(),
     flowType: v.string(),
+    itemName: v.optional(v.string()),
     selectedItems: v.optional(
       v.array(
         v.object({
@@ -124,5 +125,27 @@ export default defineSchema({
     discountRate: v.number(),
     discountBadgeText: v.string(),
     districts: v.optional(v.array(v.string())),
+  }).index("by_key", ["key"]),
+
+  // Wizard ve giriş ekranındaki yönetilebilir metinler
+  siteTexts: defineTable({
+    key: v.string(),
+    content: v.any(),
+  }).index("by_key", ["key"]),
+
+  // Convex Storage'a yüklenen görsellerin doğrulanmış metadata kayıtları
+  mediaAssets: defineTable({
+    storageId: v.id("_storage"),
+    fileName: v.string(),
+    contentType: v.string(),
+    size: v.number(),
+    createdAt: v.number(),
+  }).index("by_storageId", ["storageId"]),
+
+  // Tek seferlik kurulum ve tarayıcıdan Convex'e geçiş işaretleri
+  appState: defineTable({
+    key: v.string(),
+    value: v.string(),
+    updatedAt: v.number(),
   }).index("by_key", ["key"]),
 });

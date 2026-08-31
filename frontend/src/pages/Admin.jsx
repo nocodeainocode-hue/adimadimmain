@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Layers,
@@ -42,6 +42,130 @@ import {
 import { useLocalData } from "@/lib/convex";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import ImageUploadField from "@/components/admin/ImageUploadField";
+
+const ENTRY_ICON_OPTIONS = [
+  ["ShoppingCart", "Alışveriş Sepeti"],
+  ["Replace", "Değişim Okları"],
+  ["Wrench", "Anahtar / Servis"],
+  ["Droplets", "Su Damlaları"],
+  ["SlidersHorizontal", "Ayar Sürgüleri"],
+  ["Hammer", "Çekiç"],
+  ["ShieldCheck", "Onaylı Kalkan"],
+  ["Sparkles", "Parıltı"],
+];
+
+const TEXT_CONTENT_SECTIONS = [
+  {
+    title: "Giriş Ekranı",
+    description: "Wizard üst başlığı, kartların ortak buton metni ve genel gezinme butonları.",
+    fields: [
+      ["entry.badge", "Üst Rozet"],
+      ["entry.title", "Ana Başlık"],
+      ["entry.subtitle", "Alt Yazı", "textarea"],
+      ["entry.cardButtonText", "Kart Buton Metni"],
+      ["navigation.backButton", "Geri Butonu"],
+      ["navigation.restartButton", "Başa Dön Butonu"],
+    ],
+  },
+  ...[
+    ["buy", "Satın Al Kartı"],
+    ["filter", "Filtre Kartı"],
+    ["fault", "Arıza Kartı"],
+  ].map(([key, title]) => ({
+    title,
+    fields: [
+      [`entry.cards.${key}.icon`, "İkon", "icon"],
+      [`entry.cards.${key}.title`, "Başlık"],
+      [`entry.cards.${key}.desc`, "Açıklama", "textarea"],
+    ],
+  })),
+  {
+    title: "Konfigüratör Bannerı",
+    fields: [
+      ["entry.configurator.title", "Başlık"],
+      ["entry.configurator.desc", "Açıklama", "textarea"],
+      ["entry.configurator.buttonText", "Buton Metni"],
+    ],
+  },
+  {
+    title: "Satın Al • İlçe Adımı",
+    fields: [
+      ["buy.district.badge", "Rozet"],
+      ["buy.district.title", "Başlık"],
+      ["buy.district.subtitle", "Alt Yazı", "textarea"],
+      ["buy.district.label", "İlçe Seçim Etiketi"],
+      ["buy.district.buttonText", "Buton Metni"],
+    ],
+  },
+  {
+    title: "Satın Al • Tüketim Adımı",
+    fields: [
+      ["buy.consumption.title", "Başlık"],
+      ["buy.consumption.subtitle", "Alt Yazı", "textarea"],
+      ["buy.consumption.buttonText", "Buton Metni"],
+      ["buy.consumption.options.low.title", "Düşük Tüketim • Başlık"],
+      ["buy.consumption.options.low.hint", "Düşük Tüketim • İpucu", "textarea"],
+      ["buy.consumption.options.medium.title", "Orta Tüketim • Başlık"],
+      ["buy.consumption.options.medium.hint", "Orta Tüketim • İpucu", "textarea"],
+      ["buy.consumption.options.high.title", "Yüksek Tüketim • Başlık"],
+      ["buy.consumption.options.high.hint", "Yüksek Tüketim • İpucu", "textarea"],
+    ],
+  },
+  {
+    title: "Satın Al • Bütçe Adımı",
+    fields: [
+      ["buy.budget.title", "Başlık"],
+      ["buy.budget.subtitle", "Alt Yazı", "textarea"],
+      ["buy.budget.buttonText", "Buton Metni"],
+      ["buy.budget.loadingText", "Yükleniyor Metni"],
+      ["buy.budget.options.economy.title", "Ekonomik • Başlık"],
+      ["buy.budget.options.economy.hint", "Ekonomik • İpucu", "textarea"],
+      ["buy.budget.options.medium.title", "Orta Segment • Başlık"],
+      ["buy.budget.options.medium.hint", "Orta Segment • İpucu", "textarea"],
+      ["buy.budget.options.premium.title", "Premium • Başlık"],
+      ["buy.budget.options.premium.hint", "Premium • İpucu", "textarea"],
+    ],
+  },
+  {
+    title: "Satın Al • Sonuçlar",
+    fields: [
+      ["buy.results.title", "Başlık"],
+      ["buy.results.subtitle", "Alt Yazı", "textarea"],
+    ],
+  },
+  {
+    title: "Filtre Akışı • Soru",
+    fields: [
+      ["filter.question.title", "Başlık"],
+      ["filter.question.subtitle", "Alt Yazı", "textarea"],
+      ["filter.question.buttonText", "Buton Metni"],
+      ["filter.question.options.sixMonths.title", "6 Ay • Başlık"],
+      ["filter.question.options.sixMonths.hint", "6 Ay • İpucu", "textarea"],
+      ["filter.question.options.oneYear.title", "1 Yıl • Başlık"],
+      ["filter.question.options.oneYear.hint", "1 Yıl • İpucu", "textarea"],
+      ["filter.question.options.unknown.title", "Bilinmiyor • Başlık"],
+      ["filter.question.options.unknown.hint", "Bilinmiyor • İpucu", "textarea"],
+    ],
+  },
+  {
+    title: "Arıza Akışı • Soru",
+    fields: [
+      ["fault.question.title", "Başlık"],
+      ["fault.question.subtitle", "Alt Yazı", "textarea"],
+      ["fault.question.buttonText", "Buton Metni"],
+    ],
+  },
+];
+
+const getNestedValue = (object, path) =>
+  path.split(".").reduce((value, key) => value?.[key], object) ?? "";
+
+const setNestedValue = (object, path, value) => {
+  const [key, ...rest] = path.split(".");
+  if (rest.length === 0) return { ...object, [key]: value };
+  return { ...object, [key]: setNestedValue(object?.[key] || {}, rest.join("."), value) };
+};
 
 export default function AdminPage() {
   const {
@@ -61,6 +185,7 @@ export default function AdminPage() {
     updateLocalFault,
     deleteLocalFault,
     updateLocalSettings,
+    updateLocalTexts,
     updateLocalLeadStatus,
     resetLocalToDefault,
   } = useLocalData();
@@ -72,7 +197,7 @@ export default function AdminPage() {
   const [loginLoading, setLoginLoading] = useState(false);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState("finans"); // "finans" | "steps" | "options" | "devices" | "filterSets" | "faults" | "leads" | "settings"
+  const [activeTab, setActiveTab] = useState("finans");
   const [selectedStepFilter, setSelectedStepFilter] = useState("all");
   const [leadStatusFilter, setLeadStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -95,6 +220,15 @@ export default function AdminPage() {
 
   // Settings Local Form State
   const [settingsForm, setSettingsForm] = useState(localData.settings);
+  const [textsForm, setTextsForm] = useState(localData.texts);
+
+  useEffect(() => {
+    setTextsForm(localData.texts);
+  }, [localData.texts]);
+
+  useEffect(() => {
+    setSettingsForm(localData.settings);
+  }, [localData.settings]);
 
   // Financial Calculations
   const stats = useMemo(() => {
@@ -185,71 +319,77 @@ export default function AdminPage() {
   }, [localData.leads, leadStatusFilter, searchTerm]);
 
   // Handlers
-  const handleSaveStep = (e) => {
+  const persistChange = async (operation, successMessage) => {
+    try {
+      await operation();
+      toast.success(successMessage);
+      return true;
+    } catch (error) {
+      toast.error(error?.message || "Değişiklik Convex'e kaydedilemedi.");
+      return false;
+    }
+  };
+
+  const handleSaveStep = async (e) => {
     e.preventDefault();
     if (!editingStep.key || !editingStep.title) {
       toast.error("Lütfen adım anahtarını ve başlığını doldurun.");
       return;
     }
-    updateLocalStep(editingStep);
-    toast.success("Adım başarıyla kaydedildi!");
+    if (!(await persistChange(() => updateLocalStep(editingStep), "Adım başarıyla kaydedildi!"))) return;
     setIsStepModalOpen(false);
     setEditingStep(null);
   };
 
-  const handleSaveOption = (e) => {
+  const handleSaveOption = async (e) => {
     e.preventDefault();
     if (!editingOption.name || !editingOption.stepKey) {
       toast.error("Lütfen parça adını ve ait olduğu adımı seçin.");
       return;
     }
-    updateLocalOption(editingOption);
-    toast.success("Parça başarıyla kaydedildi!");
+    if (!(await persistChange(() => updateLocalOption(editingOption), "Parça başarıyla kaydedildi!"))) return;
     setIsOptionModalOpen(false);
     setEditingOption(null);
   };
 
-  const handleSaveDevice = (e) => {
+  const handleSaveDevice = async (e) => {
     e.preventDefault();
     if (!editingDevice.name) {
       toast.error("Lütfen cihaz adını doldurun.");
       return;
     }
-    updateLocalDevice(editingDevice);
-    toast.success("Hazır model başarıyla kaydedildi!");
+    if (!(await persistChange(() => updateLocalDevice(editingDevice), "Hazır model başarıyla kaydedildi!"))) return;
     setIsDeviceModalOpen(false);
     setEditingDevice(null);
   };
 
-  const handleSaveFilterSet = (e) => {
+  const handleSaveFilterSet = async (e) => {
     e.preventDefault();
     if (!editingFilterSet.name) {
       toast.error("Lütfen filtre seti adını doldurun.");
       return;
     }
-    updateLocalFilterSet(editingFilterSet);
-    toast.success("Filtre paketi başarıyla kaydedildi!");
+    if (!(await persistChange(() => updateLocalFilterSet(editingFilterSet), "Filtre paketi başarıyla kaydedildi!"))) return;
     setIsFilterSetModalOpen(false);
     setEditingFilterSet(null);
   };
 
-  const handleSaveFault = (e) => {
+  const handleSaveFault = async (e) => {
     e.preventDefault();
     if (!editingFault.title || !editingFault.label) {
       toast.error("Lütfen arıza başlığını doldurun.");
       return;
     }
-    updateLocalFault(editingFault);
-    toast.success("Arıza rehberi başarıyla kaydedildi!");
+    if (!(await persistChange(() => updateLocalFault(editingFault), "Arıza rehberi başarıyla kaydedildi!"))) return;
     setIsFaultModalOpen(false);
     setEditingFault(null);
   };
 
   // Login handler
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setLoginLoading(true);
-    const result = loginAdmin(emailInput.trim(), passwordInput.trim());
+    const result = await loginAdmin(emailInput.trim(), passwordInput.trim());
     setLoginLoading(false);
     if (result.success) {
       toast.success("Yönetici girişi başarılı!");
@@ -369,10 +509,9 @@ export default function AdminPage() {
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => {
+            onClick={async () => {
               if (window.confirm("Varsayılan fabrika ayarlarına sıfırlamak istiyor musunuz?")) {
-                resetLocalToDefault();
-                toast.success("Tüm veriler varsayılana sıfırlandı.");
+                await persistChange(resetLocalToDefault, "Tüm Convex verileri varsayılana sıfırlandı.");
               }
             }}
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg hover:border-rose-300 transition-all"
@@ -480,6 +619,17 @@ export default function AdminPage() {
             }`}
           >
             <MessageSquare className="h-4 w-4" /> Gelen Siparişler ({(localData.leads || []).length})
+          </button>
+
+          <button
+            onClick={() => setActiveTab("texts")}
+            className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl font-bold transition-all shrink-0 ${
+              activeTab === "texts"
+                ? "bg-[hsl(var(--brand-plum))] text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+            }`}
+          >
+            <FileText className="h-4 w-4" /> 📝 Metin & İçerikler
           </button>
 
           <button
@@ -1366,7 +1516,92 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 8: GENEL AYARLAR */}
+        {/* TAB 8: METİN & İÇERİKLER */}
+        {activeTab === "texts" && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              await persistChange(
+                () => updateLocalTexts(textsForm),
+                "Metin ve içerikler başarıyla kaydedildi!"
+              );
+            }}
+            className="space-y-5 animate-in fade-in duration-200"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+              <div>
+                <h2 className="font-display font-bold text-xl text-slate-900">Metin & İçerik Yönetimi</h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Giriş ekranı ve çözüm akışlarında müşterinin gördüğü soru, seçenek ve buton metinlerini buradan yönetin.
+                </p>
+              </div>
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center gap-2 btn-champagne px-6 py-2.5 rounded-xl font-bold text-sm shadow-sm shrink-0"
+              >
+                <Save className="h-4 w-4" /> Tüm Metinleri Kaydet
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+              {TEXT_CONTENT_SECTIONS.map((section) => (
+                <section key={section.title} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+                  <div className="border-b border-slate-100 pb-3">
+                    <h3 className="font-display font-bold text-base text-slate-900">{section.title}</h3>
+                    {section.description && <p className="text-[11px] text-slate-500 mt-0.5">{section.description}</p>}
+                  </div>
+
+                  <div className="space-y-3">
+                    {section.fields.map(([path, label, type = "text"]) => {
+                      const value = getNestedValue(textsForm, path);
+                      return (
+                        <div key={path}>
+                          <label className="block text-xs text-slate-700 font-bold mb-1">{label}</label>
+                          {type === "textarea" ? (
+                            <textarea
+                              rows={2}
+                              value={value}
+                              onChange={(e) => setTextsForm((prev) => setNestedValue(prev, path, e.target.value))}
+                              className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] resize-y text-sm leading-relaxed"
+                            />
+                          ) : type === "icon" ? (
+                            <select
+                              value={value}
+                              onChange={(e) => setTextsForm((prev) => setNestedValue(prev, path, e.target.value))}
+                              className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] text-sm"
+                            >
+                              {ENTRY_ICON_OPTIONS.map(([iconValue, iconLabel]) => (
+                                <option key={iconValue} value={iconValue}>{iconLabel}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <input
+                              type="text"
+                              value={value}
+                              onChange={(e) => setTextsForm((prev) => setNestedValue(prev, path, e.target.value))}
+                              className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] text-sm"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+            </div>
+
+            <div className="sticky bottom-4 flex justify-end pointer-events-none">
+              <button
+                type="submit"
+                className="pointer-events-auto inline-flex items-center gap-2 btn-champagne px-7 py-3 rounded-xl font-bold text-sm shadow-lg"
+              >
+                <Save className="h-4 w-4" /> Tüm Metinleri Kaydet
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* TAB 9: GENEL AYARLAR */}
         {activeTab === "settings" && (
           <div className="max-w-2xl bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-xs animate-in fade-in duration-200">
             <div>
@@ -1377,10 +1612,12 @@ export default function AdminPage() {
             </div>
 
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                updateLocalSettings(settingsForm);
-                toast.success("Ayarlar başarıyla kaydedildi!");
+                await persistChange(
+                  () => updateLocalSettings(settingsForm),
+                  "Ayarlar başarıyla kaydedildi!"
+                );
               }}
               className="space-y-4 text-xs"
             >
@@ -1629,13 +1866,10 @@ export default function AdminPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
-                  <label className="block text-slate-700 font-bold mb-1">Büyük HD Görsel URL'si</label>
-                  <input
-                    type="url"
-                    required
+                  <ImageUploadField
+                    label="Büyük HD Görsel"
                     value={editingOption.img}
-                    onChange={(e) => setEditingOption({ ...editingOption, img: e.target.value })}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-mono text-[11px]"
+                    onChange={(img) => setEditingOption({ ...editingOption, img })}
                   />
                 </div>
                 <div>
@@ -1842,16 +2076,11 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">HD Görsel URL'si</label>
-                <input
-                  type="url"
-                  required
-                  value={editingDevice.img}
-                  onChange={(e) => setEditingDevice({ ...editingDevice, img: e.target.value })}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-mono text-[11px]"
-                />
-              </div>
+              <ImageUploadField
+                label="HD Cihaz Görseli"
+                value={editingDevice.img}
+                onChange={(img) => setEditingDevice({ ...editingDevice, img })}
+              />
 
               {/* Features Editor */}
               <div>
@@ -1982,16 +2211,11 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">HD Görsel URL'si</label>
-                <input
-                  type="url"
-                  required
-                  value={editingFilterSet.img}
-                  onChange={(e) => setEditingFilterSet({ ...editingFilterSet, img: e.target.value })}
-                  className="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] font-mono text-[11px]"
-                />
-              </div>
+              <ImageUploadField
+                label="HD Filtre Paketi Görseli"
+                value={editingFilterSet.img}
+                onChange={(img) => setEditingFilterSet({ ...editingFilterSet, img })}
+              />
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">Açıklama</label>

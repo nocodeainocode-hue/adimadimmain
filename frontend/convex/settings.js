@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./admin";
 
 // Site Ayarlarını Getir
 export const getSettings = query({
@@ -24,6 +25,7 @@ export const updateSettings = mutation({
     discountBadgeText: v.string(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const existing = await ctx.db
       .query("siteSettings")
       .withIndex("by_key", (q) => q.eq("key", "global"))
@@ -45,6 +47,7 @@ export const updateSettings = mutation({
 export const seedDefaultData = mutation({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     // 1. Mevcut verileri temizle
     const existingSteps = await ctx.db.query("builderSteps").collect();
     for (const s of existingSteps) await ctx.db.delete(s._id);
@@ -797,6 +800,7 @@ export const updateFaultGuide = mutation({
     isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const { _id, ...data } = args;
     if (_id) {
       await ctx.db.patch(_id, data);
@@ -810,6 +814,7 @@ export const updateFaultGuide = mutation({
 export const deleteFaultGuide = mutation({
   args: { id: v.id("faultGuides") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     await ctx.db.delete(args.id);
     return true;
   },
@@ -845,6 +850,7 @@ export const updateCatalogDevice = mutation({
     isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const { _id, ...data } = args;
     if (_id) {
       await ctx.db.patch(_id, data);
@@ -858,6 +864,7 @@ export const updateCatalogDevice = mutation({
 export const deleteCatalogDevice = mutation({
   args: { id: v.id("catalogDevices") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     await ctx.db.delete(args.id);
     return true;
   },
@@ -893,6 +900,7 @@ export const updateFilterSet = mutation({
     isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const { _id, ...data } = args;
     if (_id) {
       await ctx.db.patch(_id, data);
@@ -906,9 +914,9 @@ export const updateFilterSet = mutation({
 export const deleteFilterSet = mutation({
   args: { id: v.id("filterSets") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     await ctx.db.delete(args.id);
     return true;
   },
 });
-
 

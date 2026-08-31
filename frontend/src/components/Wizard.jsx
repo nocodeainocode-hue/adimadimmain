@@ -40,7 +40,6 @@ import {
   TEKIRDAG_DISTRICTS,
   BUILDER_CONFIG as DEFAULT_BUILDER_CONFIG,
   getRecommendedDevices,
-  saveLeadLocally,
 } from "@/data/siteConfig";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -51,6 +50,17 @@ const variants = {
   enter: (dir) => ({ opacity: 0, x: dir >= 0 ? 16 : -16 }),
   center: { opacity: 1, x: 0 },
   exit: (dir) => ({ opacity: 0, x: dir >= 0 ? -16 : 16 }),
+};
+
+const ENTRY_ICONS = {
+  ShoppingCart,
+  Replace,
+  Wrench,
+  Droplets,
+  SlidersHorizontal,
+  Hammer,
+  ShieldCheck,
+  Sparkles,
 };
 
 /* ---------- Builder Component Detail Modal ---------- */
@@ -294,12 +304,14 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const cleanPhone = phone.trim();
     if (!cleanPhone || cleanPhone.length < 10) return;
     setLoading(true);
+    setSubmitError("");
 
     const fullLead = {
       fullName: name.trim() || "İsimsiz Müşteri",
@@ -311,21 +323,14 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
       ...(leadPayload || {}),
     };
 
-    // Save to Convex / Local storage
-    addLocalLead(fullLead);
-
-    // Also persist in legacy localStorage
-    saveLeadLocally({
-      full_name: fullLead.fullName,
-      phone: fullLead.phone,
-      city: fullLead.city,
-      district: fullLead.district,
-      flow_type: fullLead.flowType,
-      item_name: fullLead.itemName,
-    });
-
-    setSubmitted(true);
-    setLoading(false);
+    try {
+      await addLocalLead(fullLead);
+      setSubmitted(true);
+    } catch {
+      setSubmitError("Talebiniz kaydedilemedi. Lütfen bağlantınızı kontrol edip tekrar deneyin.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {
@@ -400,6 +405,7 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
           {discountOffer ? "%20 İndirimle Ara" : "Beni Arayın"}
         </button>
       </form>
+      {submitError && <p role="alert" className="mt-3 text-xs font-semibold text-rose-600">{submitError}</p>}
     </div>
   );
 }
@@ -437,7 +443,7 @@ function OptionCard({ selected, onClick, title, hint, icon: Icon, testId }) {
 }
 
 /* ---------- Entry choice big card ---------- */
-function EntryCard({ icon: Icon, title, desc, onClick, testId }) {
+function EntryCard({ icon: Icon, title, desc, buttonText, onClick, testId }) {
   return (
     <button
       type="button"
@@ -453,7 +459,7 @@ function EntryCard({ icon: Icon, title, desc, onClick, testId }) {
         <span className="font-display font-bold text-xl sm:text-2xl mt-5 text-foreground">{title}</span>
         <span className="mt-2 text-sm text-muted-foreground leading-relaxed flex-1">{desc}</span>
         <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[hsl(var(--brand-plum))] group-hover:text-[hsl(var(--brand-plum)/0.8)]">
-          Seç ve İlerle <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1.5" />
+          {buttonText} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1.5" />
         </span>
       </span>
     </button>
@@ -463,6 +469,7 @@ function EntryCard({ icon: Icon, title, desc, onClick, testId }) {
 export default function Wizard({ config }) {
   const { localData } = useLocalData();
   const siteSettings = localData?.settings || {};
+  const texts = localData.texts;
   const waNumber = siteSettings.whatsappNumber || config?.whatsapp?.number || "905550000000";
 
   // Dynamic Builder Steps from Convex / LocalData
@@ -659,13 +666,13 @@ export default function Wizard({ config }) {
     <div className="relative">
       <div className="text-center max-w-2xl mx-auto mb-10">
         <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--brand-plum)/0.15)] bg-[hsl(var(--brand-plum)/0.06)] px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
-          <span>✨ 60 Saniyelik Akıllı Çözüm Rehberi</span>
+          <span>{texts.entry.badge}</span>
         </div>
         <h2 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-foreground">
-          Nasıl yardımcı olabiliriz?
+          {texts.entry.title}
         </h2>
         <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
-          İhtiyacınıza en uygun modeli, filtreyi veya teknik servis çözümünü birkaç saniyede belirleyelim.
+          {texts.entry.subtitle}
         </p>
       </div>
 
@@ -682,7 +689,7 @@ export default function Wizard({ config }) {
                   className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-foreground/80 hover:text-foreground hover:bg-muted transition-all"
                   data-testid="wizard-back-button"
                 >
-                  <ArrowLeft className="h-4 w-4" /> Geri
+                  <ArrowLeft className="h-4 w-4" /> {texts.navigation.backButton}
                 </button>
 
                 <div aria-live="polite" className="text-xs sm:text-sm font-semibold text-muted-foreground px-3 py-1 rounded-full bg-muted/60">
@@ -695,7 +702,7 @@ export default function Wizard({ config }) {
                   className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-foreground/80 hover:text-foreground hover:bg-muted transition-all"
                   data-testid="wizard-restart-button"
                 >
-                  <RotateCcw className="h-4 w-4" /> Başa Dön
+                  <RotateCcw className="h-4 w-4" /> {texts.navigation.restartButton}
                 </button>
               </div>
               <div className="mt-4 h-2.5 w-full rounded-full bg-muted/80 overflow-hidden" data-testid="wizard-progress">
@@ -721,23 +728,26 @@ export default function Wizard({ config }) {
               {!flow && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5" data-testid="wizard-entry">
                   <EntryCard
-                    icon={ShoppingCart}
-                    title="Cihaz Satın Almak İstiyorum"
-                    desc="Bölgenize, bütçenize ve kullanım alışkanlığınıza en uygun yeni nesil su arıtma cihazını keşfedin."
+                    icon={ENTRY_ICONS[texts.entry.cards.buy.icon] || ShoppingCart}
+                    title={texts.entry.cards.buy.title}
+                    desc={texts.entry.cards.buy.desc}
+                    buttonText={texts.entry.cardButtonText}
                     onClick={() => startFlow("buy")}
                     testId="wizard-entry-buy-device"
                   />
                   <EntryCard
-                    icon={Replace}
-                    title="Filtre Değiştirmek İstiyorum"
-                    desc="Son değişim tarihinize göre tam uyumlu orijinal filtre setini hemen belirleyin."
+                    icon={ENTRY_ICONS[texts.entry.cards.filter.icon] || Replace}
+                    title={texts.entry.cards.filter.title}
+                    desc={texts.entry.cards.filter.desc}
+                    buttonText={texts.entry.cardButtonText}
                     onClick={() => startFlow("filter")}
                     testId="wizard-entry-change-filter"
                   />
                   <EntryCard
-                    icon={Wrench}
-                    title="Cihazımda Arıza Var"
-                    desc="Damlatma, sızıntı veya düşük debi gibi sorunlara hızlı çözüm ve yetkili servis desteği alın."
+                    icon={ENTRY_ICONS[texts.entry.cards.fault.icon] || Wrench}
+                    title={texts.entry.cards.fault.title}
+                    desc={texts.entry.cards.fault.desc}
+                    buttonText={texts.entry.cardButtonText}
                     onClick={() => startFlow("fault")}
                     testId="wizard-entry-malfunction"
                   />
@@ -755,18 +765,18 @@ export default function Wizard({ config }) {
                         </span>
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-display font-bold text-lg sm:text-xl text-foreground">Kendi Cihazını Kendin Oluştur</span>
+                            <span className="font-display font-bold text-lg sm:text-xl text-foreground">{texts.entry.configurator.title}</span>
                             <Badge className="bg-emerald-600 text-white font-bold text-[10px] border-0">
                               {siteSettings.discountBadgeText || "🎁 Formu Doldur %20 İndirim Kazan"}
                             </Badge>
                           </div>
                           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            Kasa, filtre paketi, beyin, pompa, tank ve musluğu ihtiyacınıza göre parça parça kendiniz seçin; canlı fiyatınızı hesaplayın.
+                            {texts.entry.configurator.desc}
                           </p>
                         </div>
                       </div>
                       <span className="btn-champagne shrink-0 inline-flex items-center gap-2 rounded-xl h-11 px-5 text-sm font-bold shadow-sm">
-                        Konfigüratörü Başlat <ArrowRight className="h-4 w-4" />
+                        {texts.entry.configurator.buttonText} <ArrowRight className="h-4 w-4" />
                       </span>
                     </button>
                   </div>
@@ -778,16 +788,16 @@ export default function Wizard({ config }) {
                 <div data-testid="wizard-location-step" className="max-w-2xl mx-auto">
                   <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--brand-champagne)/0.4)] bg-[hsl(var(--brand-champagne)/0.12)] px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
                     <MapPin className="h-3.5 w-3.5 text-[hsl(var(--brand-champagne))]" />
-                    <span>Tekirdağ Bölgesel Su & Kireç Analizi</span>
+                    <span>{texts.buy.district.badge}</span>
                   </div>
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Hangi ilçede ikamet ediyorsunuz?</h3>
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">{texts.buy.district.title}</h3>
                   <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                    Tekirdağ genelinde şebeke sularının yüksek kireç, klor ve sertlik yapısına tam uyumlu, en uzun ömürlü filtre ve membran teknolojisini seçelim.
+                    {texts.buy.district.subtitle}
                   </p>
 
                   <div>
                     <label className="block text-xs font-bold text-foreground uppercase tracking-wider mb-3">
-                      Tekirdağ İlçenizi Seçin
+                      {texts.buy.district.label}
                     </label>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5">
                       {TEKIRDAG_DISTRICTS.map((d) => (
@@ -816,7 +826,7 @@ export default function Wizard({ config }) {
                       className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       data-testid="wizard-location-next"
                     >
-                      Devam Et <ArrowRight className="h-4 w-4" />
+                      {texts.buy.district.buttonText} <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -824,33 +834,33 @@ export default function Wizard({ config }) {
 
               {flow === "buy" && step === 1 && (
                 <div data-testid="wizard-consumption-step" className="max-w-2xl mx-auto">
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Günlük su tüketiminiz ne kadar?</h3>
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">{texts.buy.consumption.title}</h3>
                   <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                    Ailenizin kişi sayısına ve içme/yemek kullanım sıklığına en uygun tank kapasitesini belirleyelim.
+                    {texts.buy.consumption.subtitle}
                   </p>
 
                   <div className="space-y-3">
                     <OptionCard
                       selected={consumption === "az"}
                       onClick={() => setConsumption("az")}
-                      title="1 - 2 Kişilik Hane (Düşük Tüketim)"
-                      hint="Günde 4-8 litre içme suyu, dar dolaplar için kompakt tank"
+                      title={texts.buy.consumption.options.low.title}
+                      hint={texts.buy.consumption.options.low.hint}
                       icon={Droplets}
                       testId="wizard-consumption-low"
                     />
                     <OptionCard
                       selected={consumption === "orta"}
                       onClick={() => setConsumption("orta")}
-                      title="3 - 4 Kişilik Aile (Standart Tüketim)"
-                      hint="Günde 10-18 litre, içme + çay/kahve ve yemek pişirme için ideal"
+                      title={texts.buy.consumption.options.medium.title}
+                      hint={texts.buy.consumption.options.medium.hint}
                       icon={Droplets}
                       testId="wizard-consumption-medium"
                     />
                     <OptionCard
                       selected={consumption === "cok"}
                       onClick={() => setConsumption("cok")}
-                      title="5+ Kişi / Kalabalık Aile veya Küçük Ofis (Yüksek Tüketim)"
-                      hint="Günde 20+ litre, yüksek kapasiteli çelik basınç tankı ve hızlı dolum"
+                      title={texts.buy.consumption.options.high.title}
+                      hint={texts.buy.consumption.options.high.hint}
                       icon={Droplets}
                       testId="wizard-consumption-high"
                     />
@@ -864,7 +874,7 @@ export default function Wizard({ config }) {
                       className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       data-testid="wizard-consumption-next"
                     >
-                      Bütçe Seçimine İlerle <ArrowRight className="h-4 w-4" />
+                      {texts.buy.consumption.buttonText} <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -872,31 +882,31 @@ export default function Wizard({ config }) {
 
               {flow === "buy" && step === 2 && (
                 <div data-testid="wizard-budget-step" className="max-w-2xl mx-auto">
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Bütçe aralığınız nedir?</h3>
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">{texts.buy.budget.title}</h3>
                   <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                    Yalnızca seçtiğiniz fiyat bandındaki en yüksek verimli modeller filtrelenecektir.
+                    {texts.buy.budget.subtitle}
                   </p>
 
                   <div className="space-y-3">
                     <OptionCard
                       selected={budget === "eko"}
                       onClick={() => setBudget("eko")}
-                      title="Ekonomik Çözüm (0 - 10.000 ₺)"
-                      hint="Temel 5 aşamalı ters ozmoz, standart tatlandırıcı ve güvenilir filtrasyon"
+                      title={texts.buy.budget.options.economy.title}
+                      hint={texts.buy.budget.options.economy.hint}
                       testId="wizard-budget-eko"
                     />
                     <OptionCard
                       selected={budget === "orta"}
                       onClick={() => setBudget("orta")}
-                      title="Orta Segment (10.000 ₺ - 20.000 ₺)"
-                      hint="İthal NSF onaylı membran, mineral zenginleştirici ve şık kapalı kasa"
+                      title={texts.buy.budget.options.medium.title}
+                      hint={texts.buy.budget.options.medium.hint}
                       testId="wizard-budget-orta"
                     />
                     <OptionCard
                       selected={budget === "premium"}
                       onClick={() => setBudget("premium")}
-                      title="Premium & Akıllı (20.000 ₺ ve Üzeri)"
-                      hint="pH 9+ alkali mineralize, dijital TDS saflık göstergesi ve akıllı su kaçağı emniyeti"
+                      title={texts.buy.budget.options.premium.title}
+                      hint={texts.buy.budget.options.premium.hint}
                       testId="wizard-budget-premium"
                     />
                   </div>
@@ -911,11 +921,11 @@ export default function Wizard({ config }) {
                     >
                       {devLoading ? (
                         <>
-                          <Loader2 className="h-4 w-4 animate-spin" /> Modeller Hazırlanıyor...
+                          <Loader2 className="h-4 w-4 animate-spin" /> {texts.buy.budget.loadingText}
                         </>
                       ) : (
                         <>
-                          Cihazları İncele <ArrowRight className="h-4 w-4" />
+                          {texts.buy.budget.buttonText} <ArrowRight className="h-4 w-4" />
                         </>
                       )}
                     </button>
@@ -930,7 +940,8 @@ export default function Wizard({ config }) {
                       <Sparkles className="h-3.5 w-3.5" />
                       <span>{locationText} İçin Özel Eşleşme</span>
                     </div>
-                    <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">Sizin İçin En İdeal Cihazlar</h3>
+                    <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">{texts.buy.results.title}</h3>
+                    <p className="text-muted-foreground text-sm sm:text-base mt-1">{texts.buy.results.subtitle}</p>
                   </div>
 
                   {devices.length === 0 ? (
@@ -1038,18 +1049,18 @@ export default function Wizard({ config }) {
               {/* ============ FILTER & FAULT FLOWS ============ */}
               {flow === "filter" && step === 0 && (
                 <div className="max-w-2xl mx-auto">
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Filtrelerinizi en son ne zaman değiştirdiniz?</h3>
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">{texts.filter.question.title}</h3>
                   <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                    Düzenli filtre değişimi suyunuzun saflığını ve membran ömrünü korur.
+                    {texts.filter.question.subtitle}
                   </p>
                   <div className="space-y-3">
-                    <OptionCard selected={lastChanged === "6ay"} onClick={() => setLastChanged("6ay")} title="6 Ay Önce (Ön Filtre Bakımı)" hint="Tortu, granül karbon ve blok karbon ön filtre seti değişimi" />
-                    <OptionCard selected={lastChanged === "1yil"} onClick={() => setLastChanged("1yil")} title="1 Yıl veya Daha Uzun (Komple Değişim)" hint="Ana membran + mineral ve tatlandırıcı dahil 5'li tam set" />
-                    <OptionCard selected={lastChanged === "bilmiyorum"} onClick={() => setLastChanged("bilmiyorum")} title="Tam Hatırlamıyorum / Yeni Taşındım" hint="Ücretsiz TDS saflık ölçümü ve tam 5'li hijyen bakım seti" />
+                    <OptionCard selected={lastChanged === "6ay"} onClick={() => setLastChanged("6ay")} title={texts.filter.question.options.sixMonths.title} hint={texts.filter.question.options.sixMonths.hint} />
+                    <OptionCard selected={lastChanged === "1yil"} onClick={() => setLastChanged("1yil")} title={texts.filter.question.options.oneYear.title} hint={texts.filter.question.options.oneYear.hint} />
+                    <OptionCard selected={lastChanged === "bilmiyorum"} onClick={() => setLastChanged("bilmiyorum")} title={texts.filter.question.options.unknown.title} hint={texts.filter.question.options.unknown.hint} />
                   </div>
                   <div className="mt-8 flex justify-end">
                     <button type="button" disabled={!lastChanged} onClick={() => go(1, 1)} className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 font-bold disabled:opacity-40">
-                      Uyumlu Filtre Setini Gör <ArrowRight className="h-4 w-4" />
+                      {texts.filter.question.buttonText} <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -1164,8 +1175,8 @@ export default function Wizard({ config }) {
 
               {flow === "fault" && step === 0 && (
                 <div className="max-w-2xl mx-auto">
-                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">Cihazınızda hangi sorun yaşanıyor?</h3>
-                  <p className="text-muted-foreground text-sm sm:text-base mb-6">Hızlı arıza tespiti ve yerinde teknik servis yönlendirmesi.</p>
+                  <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">{texts.fault.question.title}</h3>
+                  <p className="text-muted-foreground text-sm sm:text-base mb-6">{texts.fault.question.subtitle}</p>
                   <div className="space-y-3">
                     {activeFaultGuides.map((f) => (
                       <OptionCard
@@ -1185,7 +1196,7 @@ export default function Wizard({ config }) {
                       onClick={() => go(1, 1)}
                       className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 font-bold disabled:opacity-40"
                     >
-                      Çözüm & Servis Çağır <ArrowRight className="h-4 w-4" />
+                      {texts.fault.question.buttonText} <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>

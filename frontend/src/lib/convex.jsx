@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { ConvexReactClient, ConvexProvider as OriginalConvexProvider } from "convex/react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
+import { ConvexReactClient, ConvexProvider as OriginalConvexProvider, useMutation, useQuery } from "convex/react";
+import { ConvexAuthProvider, useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
+import { api } from "../../convex/_generated/api";
 import { SITE_CONFIG, BUILDER_CONFIG } from "@/data/siteConfig";
 
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
@@ -8,6 +10,21 @@ export const convexClient = CONVEX_URL ? new ConvexReactClient(CONVEX_URL) : nul
 
 // Local fallback context for offline / demo mode
 const LocalDataContext = createContext(null);
+
+const mergeWithDefaults = (defaults, saved) => {
+  if (!defaults || typeof defaults !== "object" || Array.isArray(defaults)) {
+    return saved ?? defaults;
+  }
+
+  const savedObject = saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
+  return Object.keys(defaults).reduce(
+    (result, key) => ({
+      ...result,
+      [key]: mergeWithDefaults(defaults[key], savedObject[key]),
+    }),
+    { ...savedObject }
+  );
+};
 
 const DEFAULT_LOCAL_STATE = {
   steps: [
@@ -342,6 +359,78 @@ const DEFAULT_LOCAL_STATE = {
       isActive: true,
     },
   ],
+  texts: {
+    entry: {
+      badge: "✨ 60 Saniyelik Akıllı Çözüm Rehberi",
+      title: "Nasıl yardımcı olabiliriz?",
+      subtitle: "İhtiyacınıza en uygun modeli, filtreyi veya teknik servis çözümünü birkaç saniyede belirleyelim.",
+      cardButtonText: "Seç ve İlerle",
+      cards: {
+        buy: { icon: "ShoppingCart", title: "Cihaz Satın Almak İstiyorum", desc: "Bölgenize, bütçenize ve kullanım alışkanlığınıza en uygun yeni nesil su arıtma cihazını keşfedin." },
+        filter: { icon: "Replace", title: "Filtre Değiştirmek İstiyorum", desc: "Son değişim tarihinize göre tam uyumlu orijinal filtre setini hemen belirleyin." },
+        fault: { icon: "Wrench", title: "Cihazımda Arıza Var", desc: "Damlatma, sızıntı veya düşük debi gibi sorunlara hızlı çözüm ve yetkili servis desteği alın." },
+      },
+      configurator: {
+        title: "Kendi Cihazını Kendin Oluştur",
+        desc: "Kasa, filtre paketi, beyin, pompa, tank ve musluğu ihtiyacınıza göre parça parça kendiniz seçin; canlı fiyatınızı hesaplayın.",
+        buttonText: "Konfigüratörü Başlat",
+      },
+    },
+    navigation: { backButton: "Geri", restartButton: "Başa Dön" },
+    buy: {
+      district: {
+        badge: "Tekirdağ Bölgesel Su & Kireç Analizi",
+        title: "Hangi ilçede ikamet ediyorsunuz?",
+        subtitle: "Tekirdağ genelinde şebeke sularının yüksek kireç, klor ve sertlik yapısına tam uyumlu, en uzun ömürlü filtre ve membran teknolojisini seçelim.",
+        label: "Tekirdağ İlçenizi Seçin",
+        buttonText: "Devam Et",
+      },
+      consumption: {
+        title: "Günlük su tüketiminiz ne kadar?",
+        subtitle: "Ailenizin kişi sayısına ve içme/yemek kullanım sıklığına en uygun tank kapasitesini belirleyelim.",
+        buttonText: "Bütçe Seçimine İlerle",
+        options: {
+          low: { title: "1 - 2 Kişilik Hane (Düşük Tüketim)", hint: "Günde 4-8 litre içme suyu, dar dolaplar için kompakt tank" },
+          medium: { title: "3 - 4 Kişilik Aile (Standart Tüketim)", hint: "Günde 10-18 litre, içme + çay/kahve ve yemek pişirme için ideal" },
+          high: { title: "5+ Kişi / Kalabalık Aile veya Küçük Ofis (Yüksek Tüketim)", hint: "Günde 20+ litre, yüksek kapasiteli çelik basınç tankı ve hızlı dolum" },
+        },
+      },
+      budget: {
+        title: "Bütçe aralığınız nedir?",
+        subtitle: "Yalnızca seçtiğiniz fiyat bandındaki en yüksek verimli modeller filtrelenecektir.",
+        buttonText: "Cihazları İncele",
+        loadingText: "Modeller Hazırlanıyor...",
+        options: {
+          economy: { title: "Ekonomik Çözüm (0 - 10.000 ₺)", hint: "Temel 5 aşamalı ters ozmoz, standart tatlandırıcı ve güvenilir filtrasyon" },
+          medium: { title: "Orta Segment (10.000 ₺ - 20.000 ₺)", hint: "İthal NSF onaylı membran, mineral zenginleştirici ve şık kapalı kasa" },
+          premium: { title: "Premium & Akıllı (20.000 ₺ ve Üzeri)", hint: "pH 9+ alkali mineralize, dijital TDS saflık göstergesi ve akıllı su kaçağı emniyeti" },
+        },
+      },
+      results: {
+        title: "Sizin İçin En İdeal Cihazlar",
+        subtitle: "Bölgeniz, tüketiminiz ve bütçenize göre öne çıkan cihazları sizin için eşleştirdik.",
+      },
+    },
+    filter: {
+      question: {
+        title: "Filtrelerinizi en son ne zaman değiştirdiniz?",
+        subtitle: "Düzenli filtre değişimi suyunuzun saflığını ve membran ömrünü korur.",
+        buttonText: "Uyumlu Filtre Setini Gör",
+        options: {
+          sixMonths: { title: "6 Ay Önce (Ön Filtre Bakımı)", hint: "Tortu, granül karbon ve blok karbon ön filtre seti değişimi" },
+          oneYear: { title: "1 Yıl veya Daha Uzun (Komple Değişim)", hint: "Ana membran + mineral ve tatlandırıcı dahil 5'li tam set" },
+          unknown: { title: "Tam Hatırlamıyorum / Yeni Taşındım", hint: "Ücretsiz TDS saflık ölçümü ve tam 5'li hijyen bakım seti" },
+        },
+      },
+    },
+    fault: {
+      question: {
+        title: "Cihazınızda hangi sorun yaşanıyor?",
+        subtitle: "Hızlı arıza tespiti ve yerinde teknik servis yönlendirmesi.",
+        buttonText: "Çözüm & Servis Çağır",
+      },
+    },
+  },
   settings: {
     brandName: "Lotus Su Arıtma",
     whatsappNumber: "905550000000",
@@ -690,7 +779,7 @@ const DEFAULT_LOCAL_STATE = {
   ],
 };
 
-export function AppConvexProvider({ children }) {
+function LegacyLocalDataProvider({ children }) {
   const [localData, setLocalData] = useState(() => {
     try {
       const saved = localStorage.getItem("lotus_admin_data");
@@ -718,6 +807,8 @@ export function AppConvexProvider({ children }) {
       if (!parsed.filterSets || parsed.filterSets.length === 0) {
         parsed.filterSets = DEFAULT_LOCAL_STATE.filterSets;
       }
+      // Add newly introduced content fields without overwriting existing admin edits.
+      parsed.texts = mergeWithDefaults(DEFAULT_LOCAL_STATE.texts, parsed.texts);
       return parsed;
     } catch {
       return DEFAULT_LOCAL_STATE;
@@ -808,6 +899,13 @@ export function AppConvexProvider({ children }) {
     setLocalData((prev) => ({
       ...prev,
       settings: { ...prev.settings, ...settings },
+    }));
+  };
+
+  const updateLocalTexts = (texts) => {
+    setLocalData((prev) => ({
+      ...prev,
+      texts: mergeWithDefaults(DEFAULT_LOCAL_STATE.texts, texts),
     }));
   };
 
@@ -907,6 +1005,7 @@ export function AppConvexProvider({ children }) {
     updateLocalFault,
     deleteLocalFault,
     updateLocalSettings,
+    updateLocalTexts,
     addLocalLead,
     updateLocalLeadStatus,
     resetLocalToDefault,
@@ -921,6 +1020,262 @@ export function AppConvexProvider({ children }) {
   }
 
   return <LocalDataContext.Provider value={contextValue}>{children}</LocalDataContext.Provider>;
+}
+
+const stepPayload = (step) => ({
+  ...(step._id ? { id: step._id } : {}),
+  key: step.key,
+  stepNumber: Number(step.stepNumber || 0),
+  order: Number(step.order || 0),
+  badge: step.badge || "",
+  title: step.title || "",
+  description: step.description || "",
+  ...(step.icon ? { icon: step.icon } : {}),
+  ...(step.guideText ? { guideText: step.guideText } : {}),
+  isActive: step.isActive !== false,
+});
+
+const optionPayload = (option) => ({
+  ...(option._id ? { id: option._id } : {}),
+  stepKey: option.stepKey,
+  optionId: option.optionId,
+  name: option.name || "",
+  costPrice: Number(option.costPrice || 0),
+  salePrice: Number(option.salePrice || 0),
+  desc: option.desc || "",
+  img: option.img || "",
+  ...(option.badge ? { badge: option.badge } : {}),
+  ...(option.longDesc ? { longDesc: option.longDesc } : {}),
+  specs: option.specs || [],
+  highlights: option.highlights || [],
+  order: Number(option.order || 0),
+  isActive: option.isActive !== false,
+});
+
+const devicePayload = (device) => ({
+  ...(device._id ? { _id: device._id } : {}),
+  deviceId: device.deviceId || device.id,
+  name: device.name || "",
+  price: device.price || "",
+  costPrice: Number(device.costPrice || 0),
+  salePrice: Number(device.salePrice || 0),
+  tagline: device.tagline || "",
+  budgetTags: device.budgetTags || [],
+  consumptionTags: device.consumptionTags || [],
+  capacity: device.capacity || "",
+  warranty: device.warranty || "",
+  img: device.img || "",
+  features: device.features || [],
+  order: Number(device.order || 0),
+  isActive: device.isActive !== false,
+});
+
+const filterSetPayload = (filterSet) => ({
+  ...(filterSet._id ? { _id: filterSet._id } : {}),
+  setId: filterSet.setId || filterSet.id,
+  name: filterSet.name || "",
+  subtitle: filterSet.subtitle || "",
+  recommendedFor: filterSet.recommendedFor || "",
+  matchKey: filterSet.matchKey || "",
+  price: filterSet.price || "",
+  costPrice: Number(filterSet.costPrice || 0),
+  salePrice: Number(filterSet.salePrice || 0),
+  img: filterSet.img || "",
+  desc: filterSet.desc || "",
+  includes: filterSet.includes || [],
+  benefits: filterSet.benefits || [],
+  order: Number(filterSet.order || 0),
+  isActive: filterSet.isActive !== false,
+});
+
+const faultPayload = (fault) => ({
+  ...(fault._id ? { _id: fault._id } : {}),
+  faultId: fault.faultId || fault.id,
+  label: fault.label || "",
+  title: fault.title || "",
+  body: fault.body || "",
+  tips: fault.tips || [],
+  order: Number(fault.order || 0),
+  isActive: fault.isActive !== false,
+});
+
+function ConvexDataProvider({ children }) {
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const { signIn, signOut } = useAuthActions();
+  const publicSnapshot = useQuery(api.content.getPublicSnapshot);
+  const adminSnapshot = useQuery(api.content.getSnapshot, isAuthenticated ? {} : "skip");
+  const snapshot = isAuthenticated ? adminSnapshot : publicSnapshot;
+  const replaceSnapshot = useMutation(api.content.replaceSnapshot);
+  const upsertStep = useMutation(api.builder.upsertStep);
+  const removeStep = useMutation(api.builder.deleteStep);
+  const upsertOption = useMutation(api.builder.upsertOption);
+  const removeOption = useMutation(api.builder.deleteOption);
+  const upsertDevice = useMutation(api.settings.updateCatalogDevice);
+  const removeDevice = useMutation(api.settings.deleteCatalogDevice);
+  const upsertFilterSet = useMutation(api.settings.updateFilterSet);
+  const removeFilterSet = useMutation(api.settings.deleteFilterSet);
+  const upsertFault = useMutation(api.settings.updateFaultGuide);
+  const removeFault = useMutation(api.settings.deleteFaultGuide);
+  const saveSettings = useMutation(api.settings.updateSettings);
+  const saveTexts = useMutation(api.content.updateTexts);
+  const submitLead = useMutation(api.leads.submitLead);
+  const saveLeadStatus = useMutation(api.leads.updateLeadStatus);
+  const generateUploadUrl = useMutation(api.media.generateUploadUrl);
+  const confirmUpload = useMutation(api.media.confirmUpload);
+  const migrationAttempted = useRef(false);
+
+  useEffect(() => {
+    if (!isAuthenticated || !adminSnapshot || adminSnapshot.initialized || migrationAttempted.current) return;
+    migrationAttempted.current = true;
+
+    let migrationData = DEFAULT_LOCAL_STATE;
+    let saved = null;
+    try {
+      saved = localStorage.getItem("lotus_admin_data");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        migrationData = {
+          ...DEFAULT_LOCAL_STATE,
+          ...parsed,
+          texts: mergeWithDefaults(DEFAULT_LOCAL_STATE.texts, parsed.texts),
+        };
+      }
+    } catch {
+      migrationData = DEFAULT_LOCAL_STATE;
+    }
+
+    replaceSnapshot({ snapshot: migrationData, force: false })
+      .then(() => {
+        if (saved) {
+          localStorage.setItem("lotus_admin_data_migrated_backup", saved);
+          localStorage.removeItem("lotus_admin_data");
+        }
+      })
+      .catch((error) => {
+        migrationAttempted.current = false;
+        console.error("Convex veri geçişi başarısız:", error);
+      });
+  }, [isAuthenticated, adminSnapshot, replaceSnapshot]);
+
+  const localData = useMemo(() => {
+    if (!snapshot?.initialized) return DEFAULT_LOCAL_STATE;
+    return {
+      steps: snapshot.steps,
+      options: snapshot.options,
+      devices: snapshot.devices.map((device) => ({ ...device, id: device.deviceId })),
+      filterSets: snapshot.filterSets.map((filterSet) => ({ ...filterSet, id: filterSet.setId })),
+      faultGuides: snapshot.faultGuides,
+      leads: snapshot.leads,
+      settings: { ...DEFAULT_LOCAL_STATE.settings, ...(snapshot.settings || {}) },
+      texts: mergeWithDefaults(DEFAULT_LOCAL_STATE.texts, snapshot.texts),
+    };
+  }, [snapshot]);
+
+  const loginAdmin = async (email, password) => {
+    const normalizedEmail = ["admin", "lotus"].includes(email.toLowerCase())
+      ? "admin@lotussuaritma.com"
+      : email.toLowerCase();
+    if (normalizedEmail !== "admin@lotussuaritma.com") {
+      return { success: false, error: "Bu hesap yönetici olarak yetkilendirilmemiş." };
+    }
+    try {
+      await signIn("password", { email: normalizedEmail, password, flow: "signIn" });
+      return { success: true };
+    } catch {
+      return { success: false, error: "Hatalı e-posta veya şifre girdiniz." };
+    }
+  };
+
+  const logoutAdmin = () => signOut();
+
+  const updateLocalSettings = (settings) => saveSettings({
+    brandName: settings.brandName || "",
+    whatsappNumber: settings.whatsappNumber || "",
+    whatsappDisplay: settings.whatsappDisplay || "",
+    basePrice: Number(settings.basePrice || 0),
+    baseCost: Number(settings.baseCost || 0),
+    discountRate: Number(settings.discountRate ?? 0.2),
+    discountBadgeText: settings.discountBadgeText || "",
+  });
+
+  const addLocalLead = (lead) => submitLead({
+    fullName: lead.fullName || "İsimsiz Müşteri",
+    phone: lead.phone || "",
+    city: lead.city || "",
+    district: lead.district || "",
+    flowType: lead.flowType || "",
+    ...(lead.itemName ? { itemName: lead.itemName } : {}),
+    ...(lead.selectedItems ? { selectedItems: lead.selectedItems } : {}),
+    basePrice: Number(lead.basePrice || 0),
+    baseCost: Number(lead.baseCost || 0),
+    totalListPrice: Number(lead.totalListPrice || 0),
+    finalDiscountedPrice: Number(lead.finalDiscountedPrice || 0),
+    totalCostPrice: Number(lead.totalCostPrice || 0),
+    estimatedProfit: Number(lead.estimatedProfit || 0),
+    profitMarginPercent: Number(lead.profitMarginPercent || 0),
+  });
+
+  const uploadImage = async (file) => {
+    const uploadUrl = await generateUploadUrl({});
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      headers: { "Content-Type": file.type },
+      body: file,
+    });
+    if (!response.ok) throw new Error("Görsel Convex Storage'a yüklenemedi.");
+    const { storageId } = await response.json();
+    const result = await confirmUpload({ storageId, fileName: file.name });
+    return result.url;
+  };
+
+  const contextValue = {
+    isConvexConnected: true,
+    isLoading: authLoading || snapshot === undefined || !snapshot?.initialized,
+    isAuthenticated,
+    adminUser: isAuthenticated ? { email: "admin@lotussuaritma.com", name: "Lotus Yönetici" } : null,
+    loginAdmin,
+    logoutAdmin,
+    localData,
+    updateLocalStep: (step) => upsertStep(stepPayload(step)),
+    deleteLocalStep: (id) => removeStep({ id }),
+    updateLocalOption: (option) => upsertOption(optionPayload(option)),
+    deleteLocalOption: (id) => removeOption({ id }),
+    updateLocalDevice: (device) => upsertDevice(devicePayload(device)),
+    deleteLocalDevice: (id) => removeDevice({ id }),
+    updateLocalFilterSet: (filterSet) => upsertFilterSet(filterSetPayload(filterSet)),
+    deleteLocalFilterSet: (id) => removeFilterSet({ id }),
+    updateLocalFault: (fault) => upsertFault(faultPayload(fault)),
+    deleteLocalFault: (id) => removeFault({ id }),
+    updateLocalSettings,
+    updateLocalTexts: (texts) => saveTexts({ content: mergeWithDefaults(DEFAULT_LOCAL_STATE.texts, texts) }),
+    addLocalLead,
+    updateLocalLeadStatus: (id, status, adminNote) =>
+      saveLeadStatus({ id, status, ...(adminNote !== undefined ? { adminNote } : {}) }),
+    resetLocalToDefault: () => replaceSnapshot({ snapshot: DEFAULT_LOCAL_STATE, force: true }),
+    uploadImage,
+  };
+
+  return <LocalDataContext.Provider value={contextValue}>{children}</LocalDataContext.Provider>;
+}
+
+export function AppConvexProvider({ children }) {
+  if (!convexClient) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-slate-50 p-6 text-center">
+        <div className="max-w-lg rounded-2xl border border-rose-200 bg-white p-6 shadow-sm">
+          <h1 className="font-bold text-slate-900">Convex bağlantısı yapılandırılmamış</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Uygulamanın çalışması için VITE_CONVEX_URL ortam değişkenini tanımlayın. Tarayıcı içi veri fallback'i devre dışıdır.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <ConvexAuthProvider client={convexClient}>
+      <ConvexDataProvider>{children}</ConvexDataProvider>
+    </ConvexAuthProvider>
+  );
 }
 
 export function useLocalData() {

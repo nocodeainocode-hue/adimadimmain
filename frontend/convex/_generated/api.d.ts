@@ -8,10 +8,13 @@
  * @module
  */
 
+import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
 import type * as builder from "../builder.js";
+import type * as content from "../content.js";
 import type * as http from "../http.js";
 import type * as leads from "../leads.js";
+import type * as media from "../media.js";
 import type * as settings from "../settings.js";
 
 import type {
@@ -21,10 +24,13 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
   auth: typeof auth;
   builder: typeof builder;
+  content: typeof content;
   http: typeof http;
   leads: typeof leads;
+  media: typeof media;
   settings: typeof settings;
 }>;
 

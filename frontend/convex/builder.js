@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireAdmin } from "./admin";
 
 // Tüm aktif adımları ve seçeneklerini getir (Client-side Config)
 export const getActiveBuilderConfig = query({
@@ -40,6 +41,7 @@ export const getActiveBuilderConfig = query({
 export const getAllBuilderAdmin = query({
   args: {},
   handler: async (ctx) => {
+    await requireAdmin(ctx);
     const steps = await ctx.db
       .query("builderSteps")
       .withIndex("by_order")
@@ -74,6 +76,7 @@ export const upsertStep = mutation({
     isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const { id, ...data } = args;
     if (id) {
       await ctx.db.patch(id, data);
@@ -88,6 +91,7 @@ export const upsertStep = mutation({
 export const deleteStep = mutation({
   args: { id: v.id("builderSteps") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const step = await ctx.db.get(args.id);
     if (step) {
       // Adıma bağlı parçaları da temizle
@@ -122,6 +126,7 @@ export const upsertOption = mutation({
     isActive: v.boolean(),
   },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     const { id, ...data } = args;
     if (id) {
       await ctx.db.patch(id, data);
@@ -136,6 +141,7 @@ export const upsertOption = mutation({
 export const deleteOption = mutation({
   args: { id: v.id("builderOptions") },
   handler: async (ctx, args) => {
+    await requireAdmin(ctx);
     await ctx.db.delete(args.id);
   },
 });
