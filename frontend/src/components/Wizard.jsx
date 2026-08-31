@@ -1111,9 +1111,9 @@ export default function Wizard({ config }) {
 
               {flow === "filter" && step === 1 && recommendedSet && (
                 <div className="max-w-2xl mx-auto text-center">
-                  <Badge className="bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 text-xs font-bold mb-3">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 px-3.5 py-1 text-xs font-bold mb-3 shadow-xs">
                     ✨ Cihazınıza %100 Uyumlu Orijinal Filtre Paketi
-                  </Badge>
+                  </span>
                   <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground mb-2">
                     {recommendedSet.name}
                   </h3>
@@ -1135,12 +1135,13 @@ export default function Wizard({ config }) {
                           <span className="text-xs font-semibold drop-shadow">
                             {recommendedSet.subtitle}
                           </span>
-                          <Badge className="bg-emerald-600 text-white font-bold text-[11px] border-0 shadow">
+                          <span className="inline-flex items-center rounded-lg bg-emerald-600 text-white font-bold text-[11px] px-2.5 py-1 border-0 shadow">
                             Orijinal NSF Sertifikalı
-                          </Badge>
+                          </span>
                         </div>
                       </div>
                     )}
+
 
                     <div className="p-6 sm:p-7">
                       <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-border/80 pb-4 mb-5">
