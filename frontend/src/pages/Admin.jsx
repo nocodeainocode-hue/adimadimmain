@@ -559,20 +559,8 @@ export default function AdminPage() {
 
 
         <div className="flex items-center gap-2.5">
-          <button
-            onClick={async () => {
-              if (window.confirm("Varsayılan fabrika ayarlarına sıfırlamak istiyor musunuz?")) {
-                await persistChange(resetLocalToDefault, "Tüm Convex verileri varsayılana sıfırlandı.");
-              }
-            }}
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-lg hover:border-rose-300 transition-all"
-          >
-            <RotateCcw className="h-3.5 w-3.5" /> Sıfırla
-          </button>
-
-          <div className="h-4 w-px bg-slate-200 hidden sm:block" />
-
           <div className="flex items-center gap-2">
+
             <span className="text-xs text-slate-600 hidden md:inline font-mono font-medium">
               {adminUser?.email || "admin@lotussuaritma.com"}
             </span>
@@ -685,25 +673,16 @@ export default function AdminPage() {
           </nav>
 
           {/* Sidebar footer actions */}
-          <div className="px-4 py-3 border-t border-slate-100 space-y-1.5">
-            <button
-              onClick={async () => {
-                if (window.confirm("Varsayılan fabrika ayarlarına sıfırlamak istiyor musunuz?")) {
-                  await persistChange(resetLocalToDefault, "Tüm veriler varsayılana sıfırlandı.");
-                }
-              }}
-              className="w-full flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-rose-600 px-3 py-2 rounded-lg hover:bg-rose-50 transition-all"
-            >
-              <RotateCcw className="h-3.5 w-3.5" /> Fabrika Ayarlarına Sıfırla
-            </button>
+          <div className="px-4 py-3 border-t border-slate-100">
             <button
               onClick={() => { logoutAdmin(); toast.info("Oturum kapatıldı."); }}
-              className="w-full flex items-center gap-2 text-xs font-bold text-rose-700 hover:text-rose-800 px-3 py-2 rounded-lg hover:bg-rose-50 transition-all"
+              className="w-full flex items-center justify-center gap-2 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2.5 rounded-xl transition-all shadow-xs"
             >
               <LogOut className="h-3.5 w-3.5" /> Çıkış Yap
             </button>
           </div>
         </aside>
+
 
         {/* MAIN CONTENT */}
         <main className="flex-1 min-w-0 overflow-y-auto">
