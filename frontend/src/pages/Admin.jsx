@@ -244,6 +244,15 @@ export default function AdminPage() {
   const [selectedStepFilter, setSelectedStepFilter] = useState("all");
   const [leadStatusFilter, setLeadStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedLeadIds, setExpandedLeadIds] = useState({});
+
+  const toggleLeadExpand = (leadId) => {
+    setExpandedLeadIds((prev) => ({
+      ...prev,
+      [leadId]: !prev[leadId],
+    }));
+  };
+
 
   // Modal / Form States
   const [editingStep, setEditingStep] = useState(null);
@@ -538,17 +547,16 @@ export default function AdminPage() {
           </Link>
           <div className="h-4 w-px bg-slate-200" />
           <div className="flex items-center gap-2">
-            <span className="h-7 w-7 rounded-lg bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] flex items-center justify-center font-extrabold text-sm shadow">
+            <span className="h-7 w-7 rounded-lg bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] flex items-center justify-center font-extrabold text-sm shadow shrink-0">
               L
             </span>
-            <span className="font-display font-bold text-base sm:text-lg text-slate-900">
-              Lotus Yönetim Paneli
+            <span className="font-display font-bold text-sm sm:text-base md:text-lg text-slate-900 truncate">
+              <span className="hidden sm:inline">Lotus Yönetim Paneli</span>
+              <span className="sm:hidden">Lotus Panel</span>
             </span>
-            <Badge className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] ml-1 font-bold">
-              Convex Reaktif
-            </Badge>
           </div>
         </div>
+
 
         <div className="flex items-center gap-2.5">
           <button
@@ -1474,8 +1482,9 @@ export default function AdminPage() {
               </span>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {filteredLeads.length === 0 ? (
+
                 <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl bg-white">
                   <MessageSquare className="h-10 w-10 text-slate-400 mx-auto mb-3" />
                   <h4 className="text-sm font-bold text-slate-700">Henüz talep bulunmuyor</h4>
@@ -1483,6 +1492,7 @@ export default function AdminPage() {
                 </div>
               ) : (
                 filteredLeads.map((lead) => {
+                  const isExpanded = !!expandedLeadIds[lead._id];
                   const statusColors = {
                     new: "bg-sky-50 text-sky-800 border-sky-200",
                     called: "bg-amber-50 text-amber-800 border-amber-200",
@@ -1491,116 +1501,172 @@ export default function AdminPage() {
                     cancelled: "bg-rose-50 text-rose-800 border-rose-200",
                   };
 
+                  const flowBadges = {
+                    builder: { label: "🛠️ Özel Cihaz", bg: "bg-purple-50 text-purple-700 border-purple-200" },
+                    buy: { label: "🛒 Hazır Cihaz", bg: "bg-blue-50 text-blue-700 border-blue-200" },
+                    filter: { label: "💧 Filtre Değişimi", bg: "bg-teal-50 text-teal-700 border-teal-200" },
+                    fault: { label: "🔧 Arıza Servisi", bg: "bg-amber-50 text-amber-700 border-amber-200" },
+                  };
+
+                  const flowInfo = flowBadges[lead.flowType] || { label: "Talep", bg: "bg-slate-100 text-slate-700 border-slate-200" };
+
                   return (
                     <div
                       key={lead._id}
-                      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col lg:flex-row gap-5 justify-between"
+                      className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs hover:border-slate-300 transition-all"
                     >
-                      <div className="space-y-2 lg:max-w-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="font-display font-bold text-base text-slate-900">{lead.fullName}</span>
-                          <Badge className={`text-[10px] font-bold border ${statusColors[lead.status] || "bg-slate-100"}`}>
-                            {lead.status === "new"
-                              ? "Yeni"
-                              : lead.status === "called"
-                              ? "Arandı"
-                              : lead.status === "appointment"
-                              ? "Randevu Verildi"
-                              : lead.status === "completed"
-                              ? "Tamamlandı"
-                              : "İptal"}
-                          </Badge>
+                      {/* Compact Summary Header Row */}
+                      <div
+                        onClick={() => toggleLeadExpand(lead._id)}
+                        className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/70 transition-colors"
+                      >
+                        {/* Left: Customer Info & Badges */}
+                        <div className="flex items-start sm:items-center gap-3 flex-wrap">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-display font-bold text-base text-slate-900">{lead.fullName}</span>
+                              <Badge className={`text-[10px] font-bold border ${flowInfo.bg}`}>
+                                {flowInfo.label}
+                              </Badge>
+                              <Badge className={`text-[10px] font-bold border ${statusColors[lead.status] || "bg-slate-100"}`}>
+                                {lead.status === "new"
+                                  ? "Yeni"
+                                  : lead.status === "called"
+                                  ? "Arandı"
+                                  : lead.status === "appointment"
+                                  ? "Randevu Verildi"
+                                  : lead.status === "completed"
+                                  ? "Tamamlandı"
+                                  : "İptal"}
+                              </Badge>
+                            </div>
+
+                            <div className="flex items-center gap-3 text-xs text-slate-500 flex-wrap">
+                              <span className="flex items-center gap-1">
+                                <PhoneCall className="h-3 w-3 text-emerald-600" />
+                                <strong className="text-slate-800 font-mono">{lead.phone}</strong>
+                              </span>
+                              <span>📍 {lead.district}, {lead.city}</span>
+                              <span className="text-slate-400">🕒 {new Date(lead.createdAt).toLocaleString("tr-TR", { dateStyle: "short", timeStyle: "short" })}</span>
+                            </div>
+                          </div>
                         </div>
 
-                        <div className="text-xs text-slate-600 space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <PhoneCall className="h-3.5 w-3.5 text-emerald-600" />
-                            <a
-                              href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-emerald-700 hover:underline font-mono font-bold"
-                            >
-                              {lead.phone} (WhatsApp)
-                            </a>
+                        {/* Right: Quick Price, Status Selector & Expand Button */}
+                        <div className="flex items-center gap-3 shrink-0 self-end md:self-center" onClick={(e) => e.stopPropagation()}>
+                          <div className="text-right">
+                            <span className="font-mono font-extrabold text-slate-900 text-base sm:text-lg block leading-tight">
+                              {(lead.finalDiscountedPrice || lead.totalListPrice || 0).toLocaleString("tr-TR")} ₺
+                            </span>
+                            {lead.estimatedProfit ? (
+                              <span className="text-[10px] text-emerald-700 font-bold font-mono block">
+                                +{lead.estimatedProfit.toLocaleString("tr-TR")} ₺ Kâr
+                              </span>
+                            ) : null}
                           </div>
-                          <div>
-                            📍 <strong>{lead.district}</strong>, {lead.city}
-                          </div>
-                          <div className="text-[11px] text-slate-400">
-                            🕒 {new Date(lead.createdAt).toLocaleString("tr-TR")}
-                          </div>
-                        </div>
 
-                        <div className="pt-2">
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Durumu Güncelle</label>
                           <select
                             value={lead.status}
                             onChange={(e) => {
                               updateLocalLeadStatus(lead._id, e.target.value);
                               toast.success("Talep durumu güncellendi.");
                             }}
-                            className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 w-full focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
+                            className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]"
                           >
                             <option value="new">Yeni Talep</option>
-                            <option value="called">Arandı / Bilgi Verildi</option>
-                            <option value="appointment">Montaj Randevusu Verildi</option>
-                            <option value="completed">Montaj & Teslim Tamamlandı</option>
-                            <option value="cancelled">İptal Edildi</option>
+                            <option value="called">Arandı</option>
+                            <option value="appointment">Randevu Verildi</option>
+                            <option value="completed">Tamamlandı</option>
+                            <option value="cancelled">İptal</option>
                           </select>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleLeadExpand(lead._id)}
+                            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-transform"
+                            title={isExpanded ? "Detayı Gizle" : "Detayı Gör"}
+                          >
+                            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-col justify-between">
-                        <div>
-                          <span className="text-[11px] font-bold text-[hsl(var(--brand-plum))] uppercase tracking-wider block mb-2">
-                            {lead.flowType === "builder" ? "🛠️ Özel Toplanan Cihaz Parçaları" : "📦 Talep Detayı"}
-                          </span>
+                      {/* Expandable Detail Section */}
+                      {isExpanded && (
+                        <div className="px-4 sm:px-6 pb-5 pt-2 border-t border-slate-100 bg-slate-50/50 animate-in fade-in duration-150 space-y-4">
+                          <div className="flex flex-col lg:flex-row gap-4 pt-2">
+                            {/* Selected Items or Item description */}
+                            <div className="flex-1 bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+                              <span className="text-[11px] font-bold text-[hsl(var(--brand-plum))] uppercase tracking-wider block mb-2.5">
+                                {lead.flowType === "builder" ? "🛠️ Özel Toplanan Cihaz Parçaları" : "📦 Talep Detayı"}
+                              </span>
 
-                          {lead.selectedItems && lead.selectedItems.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                              {lead.selectedItems.map((item, i) => (
-                                <div key={i} className="p-2 rounded-lg bg-white border border-slate-200 shadow-xs">
-                                  <span className="block text-[10px] text-slate-500 font-medium">{item.stepTitle}</span>
-                                  <span className="font-bold text-slate-900 truncate block">{item.name}</span>
-                                  <span className="font-mono text-[11px] text-slate-600 font-semibold">
-                                    {item.salePrice.toLocaleString("tr-TR")} ₺
+                              {lead.selectedItems && lead.selectedItems.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
+                                  {lead.selectedItems.map((item, i) => (
+                                    <div key={i} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                                      <span className="block text-[10px] text-slate-500 font-medium">{item.stepTitle}</span>
+                                      <span className="font-bold text-slate-900 truncate block">{item.name}</span>
+                                      <span className="font-mono text-[11px] text-[hsl(var(--brand-plum))] font-bold">
+                                        {(item.salePrice || item.price || 0).toLocaleString("tr-TR")} ₺
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-slate-700 font-medium">{lead.itemName || "Lotus Su Arıtma Cihaz Talebi"}</p>
+                              )}
+
+                              {lead.notes && (
+                                <div className="mt-3 pt-2.5 border-t border-slate-100 text-xs text-slate-600">
+                                  <strong className="text-slate-800">Müşteri Notu:</strong> {lead.notes}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Financial / Summary Card */}
+                            <div className="lg:w-80 bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between space-y-3">
+                              <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="p-2 bg-slate-50 rounded-lg">
+                                  <span className="block text-[10px] text-slate-500">Liste Tutarı</span>
+                                  <span className="font-mono line-through text-slate-400 font-semibold">
+                                    {(lead.totalListPrice || 0).toLocaleString("tr-TR")} ₺
                                   </span>
                                 </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-xs text-slate-600 font-medium">{lead.itemName || "Lotus Su Arıtma Cihaz Talebi"}</p>
-                          )}
-                        </div>
+                                <div className="p-2 bg-amber-50 rounded-lg">
+                                  <span className="block text-[10px] text-amber-800 font-bold">İndirimli Fiyat</span>
+                                  <span className="font-mono font-extrabold text-slate-900 text-xs">
+                                    {(lead.finalDiscountedPrice || lead.totalListPrice || 0).toLocaleString("tr-TR")} ₺
+                                  </span>
+                                </div>
+                                <div className="p-2 bg-rose-50 rounded-lg">
+                                  <span className="block text-[10px] text-rose-700 font-bold">Toplam Maliyet</span>
+                                  <span className="font-mono text-rose-700 font-bold">
+                                    {(lead.totalCostPrice || 0).toLocaleString("tr-TR")} ₺
+                                  </span>
+                                </div>
+                                <div className="p-2 bg-emerald-50 rounded-lg">
+                                  <span className="block text-[10px] text-emerald-800 font-bold">Net Kâr (%{lead.profitMarginPercent || 0})</span>
+                                  <span className="font-mono font-extrabold text-emerald-700 text-xs">
+                                    +{(lead.estimatedProfit || 0).toLocaleString("tr-TR")} ₺
+                                  </span>
+                                </div>
+                              </div>
 
-                        <div className="mt-4 pt-3 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-                          <div>
-                            <span className="block text-[10px] text-slate-500">Liste Tutarı</span>
-                            <span className="font-mono line-through text-slate-400">
-                              {(lead.totalListPrice || 0).toLocaleString("tr-TR")} ₺
-                            </span>
-                          </div>
-                          <div>
-                            <span className="block text-[10px] text-amber-700 font-bold">%20 İndirimli Satış</span>
-                            <span className="font-mono font-extrabold text-slate-900 text-sm">
-                              {(lead.finalDiscountedPrice || lead.totalListPrice || 0).toLocaleString("tr-TR")} ₺
-                            </span>
-                          </div>
-                          <div>
-                            <span className="block text-[10px] text-rose-600 font-bold">Toplam Maliyet</span>
-                            <span className="font-mono text-rose-600 font-bold">
-                              {(lead.totalCostPrice || 0).toLocaleString("tr-TR")} ₺
-                            </span>
-                          </div>
-                          <div>
-                            <span className="block text-[10px] text-emerald-700 font-bold">Net Kâr (%{lead.profitMarginPercent || 0})</span>
-                            <span className="font-mono font-extrabold text-emerald-700 text-sm">
-                              +{(lead.estimatedProfit || 0).toLocaleString("tr-TR")} ₺
-                            </span>
+                              <a
+                                href={`https://wa.me/${lead.phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                                  `Merhaba Sayın ${lead.fullName}, Lotus Su Arıtma üzerinden oluşturduğunuz talebiniz için iletişime geçiyorum.`
+                                )}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full inline-flex items-center justify-center gap-2 rounded-xl h-9 px-3 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-xs"
+                              >
+                                <PhoneCall className="h-3.5 w-3.5" /> WhatsApp ile Mesaj Yaz
+                              </a>
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   );
                 })
@@ -1608,6 +1674,7 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
 
         {/* TAB 8: METİN & İÇERİKLER */}
         {activeTab === "texts" && (
