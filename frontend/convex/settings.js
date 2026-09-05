@@ -67,7 +67,7 @@ export const seedDefaultData = mutation({
       basePrice: 500,
       baseCost: 180, // Filtre kabı, çekvalf, fitting, hortum toptan maliyeti
       discountRate: 0.2,
-      discountBadgeText: "🎁 Formu Doldur %20 İndirim Kazan",
+      discountBadgeText: "Lansmana özel konfigüratör fiyatı uygulanacaktır",
     });
 
     // 3. Adımları Ekle
@@ -134,7 +134,7 @@ export const seedDefaultData = mutation({
           "Hanedeki kişi sayısına ve günlük yemek/içme suyu tüketim hacminize uygun antibakteriyel tankı seçin.",
         icon: "Cylinder",
         guideText:
-          "1-3 kişilik çekirdek aileler için 8L Eko Tank; kalabalık aileler ve yemek pişirmede bol arıtılmış su kullananlar için 12L Paslanmaz Platinum Tank önerilir.",
+          "Standart tank 8–10 L kullanım kapasitesi sunar. Daha dayanıklı gövde, yüksek kalite diyafram ve uzun servis ömrü isteyenler için PAE veya eşdeğer komponentli Premium Tank uygundur.",
         isActive: true,
       },
       {
@@ -392,10 +392,10 @@ export const seedDefaultData = mutation({
       {
         stepKey: "tank",
         optionId: "eko8",
-        name: "Eko Tank (8 Litre)",
+        name: "Standart Basınç Tankı",
         costPrice: 620,
         salePrice: 1500,
-        desc: "1-3 kişilik haneler için gıda uyumlu antibakteriyel basınç tankı",
+        desc: "8–10 L kullanım kapasitesi; gıda uyumlu antibakteriyel diyafram",
         img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
         longDesc: "Kompakt ebatlarıyla tezgah altında minimum yer kaplar.",
         specs: ["Kapasite: 8 Litre", "İç Kaplama: Gıda Uyumlu Butil Diyafram"],
@@ -406,11 +406,11 @@ export const seedDefaultData = mutation({
       {
         stepKey: "tank",
         optionId: "plat12",
-        name: "Platinum Tank (12 Litre Paslanmaz)",
+        name: "Premium Basınç Tankı",
         costPrice: 1250,
         salePrice: 3000,
         badge: "Geniş Aileler",
-        desc: "3-5+ kişilik haneler için paslanmaz çelik yüksek kapasiteli depo",
+        desc: "Daha dayanıklı gövde, yüksek kalite diyafram ve uzun servis ömrü; PAE veya eşdeğer premium komponent",
         img: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
         longDesc: "304 paslanmaz çelik gövdesiyle ömür boyu korozyon ve koku yapmaz.",
         specs: ["Kapasite: 12 Litre", "Gövde: 304 Kalite Paslanmaz Çelik"],

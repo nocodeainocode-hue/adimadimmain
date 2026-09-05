@@ -1554,7 +1554,9 @@ export default function AdminPage() {
                     fault: { label: "🔧 Arıza Servisi", bg: "bg-amber-50 text-amber-700 border-amber-200" },
                   };
 
-                  const flowInfo = flowBadges[lead.flowType] || { label: "Talep", bg: "bg-slate-100 text-slate-700 border-slate-200" };
+                  const flowInfo = lead.source === "custom_production_order"
+                    ? { label: "🏭 Üretim Emri", bg: "bg-purple-50 text-purple-700 border-purple-200" }
+                    : flowBadges[lead.flowType] || { label: "Talep", bg: "bg-slate-100 text-slate-700 border-slate-200" };
 
                   return (
                     <div
@@ -1644,8 +1646,12 @@ export default function AdminPage() {
                             {/* Selected Items or Item description */}
                             <div className="flex-1 bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
                               <span className="text-[11px] font-bold text-[hsl(var(--brand-plum))] uppercase tracking-wider block mb-2.5">
-                                {lead.flowType === "builder" ? "🛠️ Özel Toplanan Cihaz Parçaları" : "📦 Talep Detayı"}
+                                {lead.flowType === "builder" ? "🏭 Lotus Custom Üretim Konfigürasyonu" : "📦 Talep Detayı"}
                               </span>
+
+                              {lead.flowType === "builder" && lead.itemName && (
+                                <p className="mb-3 font-display text-sm font-bold text-slate-900">{lead.itemName}</p>
+                              )}
 
                               {lead.selectedItems && lead.selectedItems.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs">
@@ -1862,7 +1868,7 @@ export default function AdminPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Baz Donanım & Montaj Satış Bedeli (₺)</label>
+                  <label className="block text-slate-700 font-bold mb-1">Lotus Custom Altyapı Paketi Satış Bedeli (₺)</label>
                   <input
                     type="number"
                     value={settingsForm.basePrice}
@@ -1871,7 +1877,7 @@ export default function AdminPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Baz Donanım Toptan Alış Maliyeti (₺)</label>
+                  <label className="block text-slate-700 font-bold mb-1">Altyapı Paketi Maliyeti (₺)</label>
                   <input
                     type="number"
                     value={settingsForm.baseCost}
@@ -1882,7 +1888,7 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-slate-700 font-bold mb-1">İndirim Rozeti Metni</label>
+                <label className="block text-slate-700 font-bold mb-1">Konfigüratör Kampanya Bandı</label>
                 <input
                   type="text"
                   value={settingsForm.discountBadgeText}

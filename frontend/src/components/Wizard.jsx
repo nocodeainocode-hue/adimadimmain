@@ -65,6 +65,43 @@ const clearWizardDraft = () => {
   }
 };
 
+const createCustomDeviceId = () => {
+  const now = new Date();
+  const datePart = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  const randomPart = String(Math.floor(1000 + Math.random() * 9000));
+  return `LC-${datePart}-${randomPart}`;
+};
+
+const customerFacingBuilderOption = (option) => {
+  if (!option) return option;
+  if (option.stepKey === "tank" && option.optionId === "eko8" && /^Eko Tank/i.test(option.name || "")) {
+    return {
+      ...option,
+      name: "Standart Basınç Tankı",
+      desc: "8–10 L kullanım kapasitesi; gıda uyumlu antibakteriyel diyafram.",
+    };
+  }
+  if (option.stepKey === "tank" && option.optionId === "plat12" && /Platinum Tank/i.test(option.name || "")) {
+    return {
+      ...option,
+      name: "Premium Basınç Tankı",
+      desc: "Daha dayanıklı gövde, yüksek kalite diyafram ve uzun servis ömrü. PAE veya eşdeğer premium komponent.",
+    };
+  }
+  return option;
+};
+
+const getOptionTier = (option, stepOptions) => {
+  if (!option || stepOptions.length < 3 || option.stepKey === "pompa") return null;
+  const priced = [...stepOptions].sort(
+    (a, b) => (a.salePrice || a.price || 0) - (b.salePrice || b.price || 0)
+  );
+  const index = priced.findIndex((item) => item.optionId === option.optionId);
+  if (index === 0) return "Ekonomik";
+  if (index === priced.length - 1) return "Premium";
+  return "Önerilen";
+};
+
 const ease = [0.2, 0.8, 0.2, 1];
 const variants = {
   enter: (dir) => ({ opacity: 0, x: dir >= 0 ? 16 : -16 }),
@@ -232,6 +269,7 @@ function BuilderOptionCard({
   desc,
   img,
   badge,
+  tier,
 }) {
   return (
     <div
@@ -273,6 +311,17 @@ function BuilderOptionCard({
             {badge && (
               <Badge className="bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 text-[11px] font-bold">
                 {badge}
+              </Badge>
+            )}
+            {tier && (
+              <Badge className={`border text-[11px] font-bold ${
+                tier === "Önerilen"
+                  ? "bg-amber-500/15 text-amber-700 border-amber-500/30"
+                  : tier === "Premium"
+                    ? "bg-[hsl(var(--brand-plum)/0.1)] text-[hsl(var(--brand-plum))] border-[hsl(var(--brand-plum)/0.25)]"
+                    : "bg-slate-500/10 text-slate-600 border-slate-500/20"
+              }`}>
+                {tier}
               </Badge>
             )}
           </div>
@@ -318,7 +367,7 @@ function BuilderOptionCard({
 }
 
 /* ---------- Callback Form with Convex Support ---------- */
-function CallbackForm({ flowType, itemName, city, district, discountOffer, leadPayload, whatsappUrl, onSubmitted }) {
+function CallbackForm({ flowType, itemName, city, district, discountOffer, productionOrder = false, leadPayload, whatsappUrl, onSubmitted }) {
   const { addLocalLead, trackAnalyticsEvent } = useLocalData();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -383,7 +432,9 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
         </div>
         <h4 className="font-display font-bold text-lg text-foreground">Talebiniz Başarıyla Alındı!</h4>
         <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-md mx-auto">
-          {whatsappUrl ? (
+          {productionOrder ? (
+            <>Üretim talebiniz kaydedildi. Uzmanımız konfigürasyonu sizinle teyit ettikten sonra üretim başlayacaktır.</>
+          ) : whatsappUrl ? (
             <>Siparişiniz kaydedildi ve WhatsApp görüşmeniz açıldı. Mesajı göndererek montaj talebinizi tamamlayabilirsiniz.</>
           ) : (
             <>
@@ -398,28 +449,32 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
 
   return (
     <div className={`mt-8 rounded-2xl border p-5 sm:p-7 backdrop-blur-sm ${
-      discountOffer 
+      discountOffer || productionOrder
         ? "border-emerald-500/40 bg-gradient-to-r from-emerald-500/5 via-transparent to-amber-500/5" 
         : "border-border/90 bg-muted/40"
     }`}>
       <div className="flex items-center gap-3 mb-2">
         <span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl shadow-sm ${
-          discountOffer
+          discountOffer || productionOrder
             ? "bg-emerald-600 text-white"
             : "bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))]"
         }`}>
-          {discountOffer ? <Sparkles className="h-4 w-4" /> : <PhoneCall className="h-4 w-4" />}
+          {discountOffer || productionOrder ? <Sparkles className="h-4 w-4" /> : <PhoneCall className="h-4 w-4" />}
         </span>
         <div>
           <h4 className="font-display font-bold text-base sm:text-lg text-foreground">
-            {whatsappUrl
+            {productionOrder
+              ? "Üretim Emrini Oluşturun"
+              : whatsappUrl
               ? "WhatsApp Siparişinizi Oluşturun"
               : discountOffer
                 ? "🎁 %20 İndirim Fırsatını Numaranıza Tanımlayın"
                 : "WhatsApp Kullanmıyor musunuz?"}
           </h4>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            {whatsappUrl
+            {productionOrder
+              ? "Seçiminiz kaydedilir. Uzmanımız konfigürasyonu sizinle teyit ettikten sonra üretim başlar."
+              : whatsappUrl
               ? "Adınızı ve telefonunuzu girin; siparişiniz kaydedildikten sonra seçiminizle birlikte WhatsApp açılır."
               : discountOffer
                 ? "Numaranızı bırakın, teknik uzmanımız %20 indirimli teklifinizle sizi 10-15 dk içinde arasın."
@@ -459,8 +514,8 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
           disabled={loading || !phone || (whatsappUrl && !name.trim())}
           className={`${whatsappUrl ? "btn-whatsapp" : "btn-champagne"} rounded-xl h-12 px-5 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm`}
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : whatsappUrl ? <MessageCircle className="h-4 w-4" /> : discountOffer ? <Sparkles className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-          {whatsappUrl ? "Siparişi Kaydet ve WhatsApp'ı Aç" : discountOffer ? "%20 İndirimle Ara" : "Beni Arayın"}
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : productionOrder ? <Layers className="h-4 w-4" /> : whatsappUrl ? <MessageCircle className="h-4 w-4" /> : discountOffer ? <Sparkles className="h-4 w-4" /> : <Send className="h-4 w-4" />}
+          {productionOrder ? "Cihazımı Üretime Gönder" : whatsappUrl ? "Siparişi Kaydet ve WhatsApp'ı Aç" : discountOffer ? "%20 İndirimle Ara" : "Beni Arayın"}
         </button>
       </form>
       {submitError && <p role="alert" className="mt-3 text-xs font-semibold text-rose-600">{submitError}</p>}
@@ -552,6 +607,7 @@ export default function Wizard({ config }) {
   const [budget, setBudget] = useState(initialDraft.budget || null);
   const [lastChanged, setLastChanged] = useState(initialDraft.lastChanged || null);
   const [faultType, setFaultType] = useState(initialDraft.faultType || null);
+  const [customDeviceId, setCustomDeviceId] = useState(initialDraft.customDeviceId || createCustomDeviceId);
 
   // Dynamic Custom Device Builder selections map: { [stepKey]: optionId }
   const [builderSelections, setBuilderSelections] = useState(initialDraft.builderSelections || {});
@@ -570,12 +626,12 @@ export default function Wizard({ config }) {
     try {
       localStorage.setItem(
         WIZARD_DRAFT_KEY,
-        JSON.stringify({ flow, step, city, district, consumption, budget, lastChanged, faultType, builderSelections })
+        JSON.stringify({ flow, step, city, district, consumption, budget, lastChanged, faultType, builderSelections, customDeviceId })
       );
     } catch {
       // Tarayıcı depolaması kapalıysa form yine kullanılabilir.
     }
-  }, [flow, step, city, district, consumption, budget, lastChanged, faultType, builderSelections]);
+  }, [flow, step, city, district, consumption, budget, lastChanged, faultType, builderSelections, customDeviceId]);
 
   useEffect(() => {
     if (!flow) return;
@@ -613,7 +669,7 @@ export default function Wizard({ config }) {
     fault: ["Arıza tipi", "Yönlendirme"],
     builder: [
       ...activeBuilderSteps.map((s) => s.title),
-      "Özet & %20 İndirim",
+      "Üretim Özeti",
     ],
   };
 
@@ -628,9 +684,10 @@ export default function Wizard({ config }) {
         const opt = allBuilderOptions.find(
           (o) => o.stepKey === stepItem.key && o.optionId === chosenOptId
         );
-        return opt
+        const displayOption = customerFacingBuilderOption(opt);
+        return displayOption
           ? {
-              ...opt,
+              ...displayOption,
               stepTitle: stepItem.title,
               stepBadge: stepItem.badge,
             }
@@ -642,6 +699,11 @@ export default function Wizard({ config }) {
   const basePrice = siteSettings.basePrice || 500;
   const baseCost = siteSettings.baseCost || 180;
   const discountRate = siteSettings.discountRate || 0.2;
+  const discountPercent = Math.round(discountRate * 100);
+  const configuredCampaignText = siteSettings.discountBadgeText || "";
+  const campaignBadgeText = /%20|formu doldur/i.test(configuredCampaignText)
+    ? "Lansmana özel konfigüratör fiyatı uygulanacaktır"
+    : configuredCampaignText || "Lansmana özel konfigüratör fiyatı uygulanacaktır";
 
   const builderListPrice =
     basePrice +
@@ -678,6 +740,7 @@ export default function Wizard({ config }) {
     setDevices([]);
     setSelectedDevice(null);
     setQuoteDevice(null);
+    setCustomDeviceId(createCustomDeviceId());
     setDraftRestored(false);
     clearWizardDraft();
   };
@@ -897,7 +960,7 @@ export default function Wizard({ config }) {
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-display font-bold text-lg sm:text-xl text-foreground">{texts.entry.configurator.title}</span>
                             <Badge className="bg-emerald-600 text-white font-bold text-[10px] border-0">
-                              {siteSettings.discountBadgeText || "🎁 Formu Doldur %20 İndirim Kazan"}
+                              {campaignBadgeText}
                             </Badge>
                           </div>
                           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -1414,21 +1477,26 @@ export default function Wizard({ config }) {
                     {currentStep.description}
                   </p>
 
-                  {currentStep.guideText && (
+                  {(currentStep.guideText || currentStep.key === "tank") && (
                     <div className="mb-5 rounded-2xl bg-amber-500/10 border-2 border-amber-400/40 p-4 sm:p-4.5 text-xs sm:text-sm text-amber-950 dark:text-amber-100 shadow-sm flex items-start gap-3">
                       <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-bold text-base shadow-xs">
                         💡
                       </span>
                       <div>
                         <strong className="font-bold text-amber-900 dark:text-amber-200 block mb-0.5">Uzman Tavsiyesi:</strong>
-                        <span className="leading-relaxed text-amber-950/90 dark:text-amber-100">{currentStep.guideText}</span>
+                        <span className="leading-relaxed text-amber-950/90 dark:text-amber-100">
+                          {currentStep.key === "tank"
+                            ? "Standart tank 8–10 L kullanım kapasitesi sunar. Daha dayanıklı gövde, yüksek kalite diyafram ve uzun servis ömrü isteyenler için PAE veya eşdeğer komponentli Premium Tank uygundur."
+                            : currentStep.guideText}
+                        </span>
                       </div>
                     </div>
                   )}
 
                   <div className="grid gap-3.5">
-                    {currentStepOptions.map((opt) => (
-                      <BuilderOptionCard
+                    {currentStepOptions.map((rawOption) => {
+                      const opt = customerFacingBuilderOption(rawOption);
+                      return <BuilderOptionCard
                         key={opt._id || opt.optionId}
                         selected={builderSelections[currentStep.key] === opt.optionId}
                         onClick={() =>
@@ -1454,9 +1522,22 @@ export default function Wizard({ config }) {
                         desc={opt.desc}
                         img={opt.img}
                         badge={opt.badge}
+                        tier={getOptionTier(opt, currentStepOptions)}
                       />
-                    ))}
+                    })}
                   </div>
+
+                  {step === 0 && (
+                    <div className="mt-5 rounded-xl border border-border bg-muted/40 p-4 text-xs sm:text-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <strong className="text-foreground">Lotus Custom Altyapı Paketi</strong>
+                        <span className="font-mono font-bold text-foreground">{basePrice.toLocaleString("tr-TR")} ₺</span>
+                      </div>
+                      <p className="mt-1.5 text-muted-foreground leading-relaxed">
+                        Temel şase, hortumlar, fittings, çekvalf, montaj altyapısı, işçilik ve test dahildir. Seçtiğiniz bileşenler bu platform üzerine eklenir.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Live Incremental Price Bar */}
                   <div className="mt-6 rounded-2xl bg-neutral-950 text-white p-4 sm:p-5 shadow-lg border border-neutral-800/80">
@@ -1477,9 +1558,7 @@ export default function Wizard({ config }) {
                           <span className="text-xs text-neutral-400 font-medium">(KDV & Montaj Dahil)</span>
                         </div>
                       </div>
-                      <Badge className="bg-amber-400/15 text-amber-300 border border-amber-400/40 text-xs font-bold px-3 py-1.5 rounded-xl shrink-0">
-                        {siteSettings.discountBadgeText || "🎁 Formu Doldur %20 İndirim Kazan"}
-                      </Badge>
+                      <span className="text-xs text-neutral-400 shrink-0">Lotus Custom altyapısı dahil</span>
                     </div>
                   </div>
 
@@ -1490,7 +1569,7 @@ export default function Wizard({ config }) {
                       onClick={() => go(step + 1, 1)}
                       className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      {step + 1 < activeBuilderSteps.length ? "Sonraki Adıma İlerle" : "Özet & %20 İndirim Fırsatını Gör"} <ArrowRight className="h-4 w-4" />
+                      {step + 1 < activeBuilderSteps.length ? "Sonraki Adıma İlerle" : "Üretim Özetini Gör"} <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -1502,15 +1581,26 @@ export default function Wizard({ config }) {
                   <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 text-emerald-600 px-3.5 py-1 text-xs font-bold mb-2">
                       <Sparkles className="h-3.5 w-3.5" />
-                      <span>Özel Toplama Lotus Arıtma Cihazınız Hazır!</span>
+                      <span>Siparişinize Özel Lotus Custom</span>
                     </div>
-                    <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">Konfigürasyon Özeti & Parça Dökümü</h3>
+                    <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">Üretim Konfigürasyonu</h3>
                     <p className="text-muted-foreground text-sm sm:text-base mt-1">
-                      Tekirdağ / {district} bölgenize özel seçtiğiniz tüm orijinal parçaların şeffaf dökümü aşağıdadır.
+                      Tekirdağ / {district} için hazırlanan cihazınızın üretim bileşenleri aşağıdadır.
                     </p>
                   </div>
 
                   <div className="rounded-2xl border-2 border-[hsl(var(--brand-champagne)/0.7)] bg-card overflow-hidden shadow-xl p-6 sm:p-8">
+                    <div className="mb-6 rounded-2xl border border-[hsl(var(--brand-plum)/0.18)] bg-[hsl(var(--brand-plum)/0.05)] p-4 sm:p-5">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Cihaz Kimliği</span>
+                      <strong className="mt-1 block font-display text-xl sm:text-2xl text-[hsl(var(--brand-plum))]">LOTUS CUSTOM #{customDeviceId}</strong>
+                      <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                        {selectedItemsList.map((item) => item.name).join(" / ")}
+                      </p>
+                      <p className="mt-2 text-xs sm:text-sm font-semibold text-foreground">
+                        Bu cihaz stoktan alınmadı. Siparişiniz için bu konfigürasyonda hazırlanacak.
+                      </p>
+                    </div>
+
                     {/* Parça Döküm Tablosu */}
                     <div className="space-y-3 pb-6 border-b border-border">
                       <div className="flex justify-between items-center text-xs sm:text-sm text-muted-foreground pb-2 border-b border-border/60">
@@ -1521,8 +1611,8 @@ export default function Wizard({ config }) {
 
                       {/* Baz Donanım */}
                       <div className="flex items-center justify-between text-xs sm:text-sm">
-                        <span className="text-muted-foreground">Temel Montaj & Fitting Paketi:</span>
-                        <span className="font-medium text-foreground text-xs sm:text-sm">Universal Housing, Çekvalf, Rekorlar</span>
+                        <span className="text-muted-foreground">Lotus Custom Altyapı Paketi:</span>
+                        <span className="font-medium text-foreground text-xs sm:text-sm">Şase, hortum, fittings, çekvalf, işçilik ve test</span>
                         <span className="font-bold text-foreground font-mono">{basePrice.toLocaleString("tr-TR")} ₺</span>
                       </div>
 
@@ -1553,7 +1643,7 @@ export default function Wizard({ config }) {
                         <div>
                           <div className="flex items-center gap-2">
                             <Badge className="bg-emerald-600 text-white font-bold text-xs">
-                              %20 Lansman İndirimi
+                              %{discountPercent} Lansman Avantajı
                             </Badge>
                             <span className="text-xs font-bold text-emerald-600">
                               {builderDiscount.toLocaleString("tr-TR")} ₺ Net Tasarruf
@@ -1566,7 +1656,7 @@ export default function Wizard({ config }) {
 
                         <div className="text-right">
                           <span className="block text-[11px] font-bold text-emerald-600 uppercase tracking-wider">
-                            Nihai İndirimli Fiyat
+                            Lotus Custom Lansman Fiyatı
                           </span>
                           <span className="font-display font-extrabold text-3xl sm:text-4xl text-[hsl(var(--brand-plum))] font-mono">
                             {builderFinalPrice.toLocaleString("tr-TR")} ₺
@@ -1578,16 +1668,16 @@ export default function Wizard({ config }) {
                     {/* Siparişi kaydet, ardından WhatsApp görüşmesini başlat */}
                     <CallbackForm
                       flowType="builder"
-                      itemName="Özel Toplama Lotus Cihazı"
+                      itemName={`Lotus Custom #${customDeviceId}`}
                       city={city}
                       district={district}
-                      discountOffer={true}
+                      productionOrder
                       onSubmitted={clearWizardDraft}
                       whatsappUrl={buildWaLink(
                         waNumber,
-                        `Merhaba, ben {MÜŞTERİ_ADI}. Tekirdağ / ${district} için Kendi Cihazımı Oluşturdum:\n` +
+                        `Merhaba, ben {MÜŞTERİ_ADI}. ${customDeviceId} kimlikli Lotus Custom cihazımı üretime göndermek istiyorum.\nTekirdağ / ${district}\n\nÜretim Konfigürasyonu:\n` +
                           selectedItemsList.map((it) => `• ${it.stepTitle}: ${it.name}`).join("\n") +
-                          `\n\nListe Tutarı: ${builderListPrice.toLocaleString("tr-TR")} ₺\n%20 İndirimli Teklifim: ${builderFinalPrice.toLocaleString("tr-TR")} ₺\nMontaj randevusu almak istiyorum.`
+                          `\n\nListe Tutarı: ${builderListPrice.toLocaleString("tr-TR")} ₺\nLotus Custom Lansman Fiyatı: ${builderFinalPrice.toLocaleString("tr-TR")} ₺\nKonfigürasyonu teyit etmek istiyorum.`
                       )}
                       leadPayload={{
                         selectedItems: selectedItemsList.map((item) => ({
@@ -1598,6 +1688,8 @@ export default function Wizard({ config }) {
                         })),
                         basePrice,
                         baseCost,
+                        deviceId: customDeviceId,
+                        source: "custom_production_order",
                         totalListPrice: builderListPrice,
                         finalDiscountedPrice: builderFinalPrice,
                         totalCostPrice: builderTotalCost,

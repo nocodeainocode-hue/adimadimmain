@@ -505,9 +505,9 @@ export const BUILDER_CONFIG = {
   tank: [
     {
       id: "eko8",
-      name: "Eko Tank (8 Litre)",
+      name: "Standart Basınç Tankı",
       price: 1500,
-      desc: "1-3 kişilik haneler için gıda uyumlu antibakteriyel basınç tankı",
+      desc: "8–10 L kullanım kapasitesi; gıda uyumlu antibakteriyel diyafram",
       img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=800&q=80",
       longDesc: "Kompakt ebatlarıyla tezgah altında minimum yer kaplar. İçerisindeki antibakteriyel diyafram sayesinde suyun hava veya metal ile teması engellenir, su her an taze ve soğuk kalır.",
       specs: [
@@ -524,9 +524,9 @@ export const BUILDER_CONFIG = {
     },
     {
       id: "plat12",
-      name: "Platinum Tank (12 Litre Paslanmaz)",
+      name: "Premium Basınç Tankı",
       price: 3000,
-      desc: "3-5+ kişilik haneler için paslanmaz çelik yüksek kapasiteli depo",
+      desc: "Daha dayanıklı gövde, yüksek kalite diyafram ve uzun servis ömrü; PAE veya eşdeğer premium komponent",
       img: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=800&q=80",
       longDesc: "Kalabalık aileler, yemeklerinde ve çay/kahvede bol arıtılmış su kullananlar için maksimum kapasite sunar. 304 paslanmaz çelik gövdesiyle ömür boyu korozyon ve koku yapmaz.",
       specs: [

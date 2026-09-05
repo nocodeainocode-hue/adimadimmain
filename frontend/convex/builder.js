@@ -29,7 +29,7 @@ export const getActiveBuilderConfig = query({
         basePrice: 500,
         baseCost: 200,
         discountRate: 0.2,
-        discountBadgeText: "🎁 Formu Doldur %20 İndirim Kazan",
+        discountBadgeText: "Lansmana özel konfigüratör fiyatı uygulanacaktır",
       },
       steps: activeSteps,
       options: activeOptions,
