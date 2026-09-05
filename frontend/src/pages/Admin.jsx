@@ -476,7 +476,7 @@ export default function AdminPage() {
               <input
                 type="text"
                 required
-                placeholder="admin@lotussuaritma.com"
+                placeholder="E-posta adresiniz"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] text-sm font-medium transition-all"
@@ -515,12 +515,6 @@ export default function AdminPage() {
           </form>
 
           <div className="pt-2 border-t border-slate-100 text-center">
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-600 space-y-1">
-              <span className="block font-bold text-slate-800">🔑 Varsayılan Yönetici Bilgileri:</span>
-              <span>E-posta: <strong className="text-[hsl(var(--brand-plum))] font-mono font-bold">admin@lotussuaritma.com</strong></span>
-              <span className="block">Şifre: <strong className="text-[hsl(var(--brand-plum))] font-mono font-bold">lotus2026</strong></span>
-            </div>
-
             <Link
               to="/"
               className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-900 mt-4 transition-colors font-medium"
@@ -2631,4 +2625,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
