@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DeviceDetailModal } from "@/components/DeviceDetails";
+import DeviceQuoteModal from "@/components/DeviceQuoteModal";
 import { buildWaLink } from "@/lib/whatsapp";
 import { useLocalData } from "@/lib/convex";
 import {
@@ -45,6 +46,24 @@ import {
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = BACKEND_URL ? `${BACKEND_URL}/api` : null;
+const WIZARD_DRAFT_KEY = "lotus_wizard_draft";
+
+const readWizardDraft = () => {
+  try {
+    const saved = localStorage.getItem(WIZARD_DRAFT_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+};
+
+const clearWizardDraft = () => {
+  try {
+    localStorage.removeItem(WIZARD_DRAFT_KEY);
+  } catch {
+    // Tarayıcı depolaması kapalıysa akış normal şekilde devam eder.
+  }
+};
 
 const ease = [0.2, 0.8, 0.2, 1];
 const variants = {
@@ -299,8 +318,8 @@ function BuilderOptionCard({
 }
 
 /* ---------- Callback Form with Convex Support ---------- */
-function CallbackForm({ flowType, itemName, city, district, discountOffer, leadPayload, whatsappUrl }) {
-  const { addLocalLead } = useLocalData();
+function CallbackForm({ flowType, itemName, city, district, discountOffer, leadPayload, whatsappUrl, onSubmitted }) {
+  const { addLocalLead, trackAnalyticsEvent } = useLocalData();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
@@ -335,6 +354,11 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, leadP
 
     try {
       await addLocalLead(fullLead);
+      await trackAnalyticsEvent({ eventType: "lead_submitted", flowType, itemId: leadPayload?.deviceId });
+      if (resolvedWhatsappUrl) {
+        await trackAnalyticsEvent({ eventType: "whatsapp_started", flowType, itemId: leadPayload?.deviceId });
+      }
+      onSubmitted?.();
       setSubmitted(true);
       if (resolvedWhatsappUrl) {
         if (whatsappWindow) {
@@ -501,7 +525,8 @@ function EntryCard({ icon: Icon, title, desc, buttonText, onClick, testId }) {
 }
 
 export default function Wizard({ config }) {
-  const { localData } = useLocalData();
+  const { localData, trackAnalyticsEvent } = useLocalData();
+  const initialDraft = useMemo(readWizardDraft, []);
   const siteSettings = localData?.settings || {};
   const texts = localData.texts;
   const waNumber = siteSettings.whatsappNumber || config?.whatsapp?.number || "905550000000";
@@ -515,26 +540,54 @@ export default function Wizard({ config }) {
     return (localData?.options || []).filter((o) => o.isActive);
   }, [localData]);
 
-  const [flow, setFlow] = useState(null); // 'buy' | 'filter' | 'fault' | 'builder'
-  const [step, setStep] = useState(0);
+  const [flow, setFlow] = useState(initialDraft.flow || null); // 'buy' | 'filter' | 'fault' | 'builder'
+  const [step, setStep] = useState(Number(initialDraft.step || 0));
   const [dir, setDir] = useState(1);
+  const [draftRestored, setDraftRestored] = useState(Boolean(initialDraft.flow));
 
   // General Wizard selections
-  const [city, setCity] = useState("Tekirdağ");
-  const [district, setDistrict] = useState("Süleymanpaşa");
-  const [consumption, setConsumption] = useState(null);
-  const [budget, setBudget] = useState(null);
-  const [lastChanged, setLastChanged] = useState(null);
-  const [faultType, setFaultType] = useState(null);
+  const [city, setCity] = useState(initialDraft.city || "Tekirdağ");
+  const [district, setDistrict] = useState(initialDraft.district || "Süleymanpaşa");
+  const [consumption, setConsumption] = useState(initialDraft.consumption || null);
+  const [budget, setBudget] = useState(initialDraft.budget || null);
+  const [lastChanged, setLastChanged] = useState(initialDraft.lastChanged || null);
+  const [faultType, setFaultType] = useState(initialDraft.faultType || null);
 
   // Dynamic Custom Device Builder selections map: { [stepKey]: optionId }
-  const [builderSelections, setBuilderSelections] = useState({});
+  const [builderSelections, setBuilderSelections] = useState(initialDraft.builderSelections || {});
   const [modalItem, setModalItem] = useState(null);
+  const trackedSteps = useRef(new Set());
+  const restoredStartTracked = useRef(false);
 
   // device results
   const [devices, setDevices] = useState([]);
   const [devLoading, setDevLoading] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState(null);
+  const [quoteDevice, setQuoteDevice] = useState(null);
+
+  useEffect(() => {
+    if (!flow) return;
+    try {
+      localStorage.setItem(
+        WIZARD_DRAFT_KEY,
+        JSON.stringify({ flow, step, city, district, consumption, budget, lastChanged, faultType, builderSelections })
+      );
+    } catch {
+      // Tarayıcı depolaması kapalıysa form yine kullanılabilir.
+    }
+  }, [flow, step, city, district, consumption, budget, lastChanged, faultType, builderSelections]);
+
+  useEffect(() => {
+    if (!flow) return;
+    if (draftRestored && !restoredStartTracked.current) {
+      restoredStartTracked.current = true;
+      trackAnalyticsEvent({ eventType: "wizard_started", flowType: flow, step: 0 });
+    }
+    const key = `${flow}:${step}`;
+    if (trackedSteps.current.has(key)) return;
+    trackedSteps.current.add(key);
+    trackAnalyticsEvent({ eventType: "step_viewed", flowType: flow, step });
+  }, [draftRestored, flow, step, trackAnalyticsEvent]);
 
   const stepsByFlow = {
     buy: 4,
@@ -545,6 +598,14 @@ export default function Wizard({ config }) {
 
   const totalSteps = flow ? stepsByFlow[flow] || 1 : 0;
   const progress = flow ? ((step + 1) / totalSteps) * 100 : 0;
+  const trackedResults = useRef(new Set());
+
+  useEffect(() => {
+    if (!flow || step !== totalSteps - 1) return;
+    if (trackedResults.current.has(flow)) return;
+    trackedResults.current.add(flow);
+    trackAnalyticsEvent({ eventType: "results_viewed", flowType: flow, step });
+  }, [flow, step, totalSteps, trackAnalyticsEvent]);
 
   const stepLabels = {
     buy: ["Tekirdağ / İlçe", "Su tüketimi", "Bütçe", "Önerilen cihazlar"],
@@ -616,12 +677,17 @@ export default function Wizard({ config }) {
     setBuilderSelections({});
     setDevices([]);
     setSelectedDevice(null);
+    setQuoteDevice(null);
+    setDraftRestored(false);
+    clearWizardDraft();
   };
 
   const startFlow = (f) => {
     setDir(1);
     setFlow(f);
     setStep(0);
+    setDraftRestored(false);
+    trackAnalyticsEvent({ eventType: "wizard_started", flowType: f, step: 0 });
   };
 
   const back = () => {
@@ -658,6 +724,29 @@ export default function Wizard({ config }) {
   const goToBuyResults = () => {
     fetchDevices(budget, consumption);
     go(3, 1);
+  };
+
+  useEffect(() => {
+    if (flow !== "buy" || step !== 3 || devices.length > 0 || activeCatalogDevices.length === 0) return;
+    let restoredDevices = activeCatalogDevices.filter((device) => {
+      const matchesBudget = !budget || device.budgetTags?.includes(budget);
+      const matchesConsumption = !consumption || device.consumptionTags?.includes(consumption);
+      return matchesBudget && matchesConsumption;
+    });
+    if (restoredDevices.length === 0 && budget) {
+      restoredDevices = activeCatalogDevices.filter((device) => device.budgetTags?.includes(budget));
+    }
+    setDevices(restoredDevices.length ? restoredDevices : activeCatalogDevices);
+  }, [flow, step, devices.length, activeCatalogDevices, budget, consumption]);
+
+  const openDeviceDetails = (device) => {
+    setSelectedDevice(device);
+    trackAnalyticsEvent({ eventType: "device_viewed", flowType: "buy", itemId: device.deviceId || device.id });
+  };
+
+  const openDeviceQuote = (device) => {
+    setQuoteDevice(device);
+    trackAnalyticsEvent({ eventType: "device_viewed", flowType: "buy", itemId: device.deviceId || device.id });
   };
 
   // Filter set recommendation logic
@@ -716,8 +805,13 @@ export default function Wizard({ config }) {
         <div className="noise absolute inset-0" />
         <div className="relative p-5 sm:p-7 md:p-10">
           {/* Stepper header (only within a flow) */}
-          {flow && (
-            <div className="mb-8">
+              {flow && (
+                <div className="mb-8">
+                  {draftRestored && (
+                    <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-800">
+                      Önceki seçimleriniz geri yüklendi; kaldığınız yerden devam edebilirsiniz.
+                    </div>
+                  )}
               <div className="flex items-center justify-between gap-3">
                 <button
                   type="button"
@@ -1028,22 +1122,18 @@ export default function Wizard({ config }) {
                             </div>
                             <button
                               type="button"
-                              onClick={() => setSelectedDevice(d)}
+                              onClick={() => openDeviceDetails(d)}
                               className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-bold text-foreground transition-all hover:bg-muted"
                             >
                               <Eye className="h-4 w-4" /> Fotoğraf, Video ve Detayları İncele
                             </button>
-                            <a
-                              href={buildWaLink(
-                                waNumber,
-                                `Merhaba, ${locationText ? locationText + " bölgesindeyim. " : ""}${d.name} modeli hakkında fiyat teklifi ve montaj randevusu almak istiyorum.`
-                              )}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              type="button"
+                              onClick={() => openDeviceQuote(d)}
                               className="btn-whatsapp mt-2 inline-flex items-center justify-center gap-2 rounded-xl h-11 px-4 text-sm font-bold transition-all w-full shadow-sm"
                             >
                               <MessageCircle className="h-4 w-4" /> WhatsApp ile Bilgi Al
-                            </a>
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -1069,13 +1159,6 @@ export default function Wizard({ config }) {
                       Kendi Cihazımı Kendim Oluşturayım
                     </button>
                   </div>
-
-                  <CallbackForm
-                    flowType="buy"
-                    itemName={devices[0]?.name || "Lotus Cihaz Satın Alma"}
-                    city={city}
-                    district={district}
-                  />
 
                   <div className="mt-8 flex justify-center">
                     <button
@@ -1201,6 +1284,7 @@ export default function Wizard({ config }) {
                         )}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackAnalyticsEvent({ eventType: "whatsapp_started", flowType: "filter", itemId: recommendedSet.setId || recommendedSet.id })}
                         className="btn-whatsapp inline-flex items-center justify-center gap-2 rounded-xl h-14 px-6 text-base font-bold w-full shadow-lg transition-all"
                       >
                         <MessageCircle className="h-5 w-5" /> WhatsApp ile Filtre Değişim Randevusu Al
@@ -1213,6 +1297,7 @@ export default function Wizard({ config }) {
                     itemName={recommendedSet.name}
                     city={city}
                     district={district}
+                    onSubmitted={clearWizardDraft}
                   />
                 </div>
               )}
@@ -1299,6 +1384,7 @@ export default function Wizard({ config }) {
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackAnalyticsEvent({ eventType: "whatsapp_started", flowType: "fault", itemId: selectedFault.faultId || selectedFault.id })}
                     className="btn-whatsapp mt-6 inline-flex items-center justify-center gap-2 rounded-xl h-12 px-5 text-sm font-bold w-full shadow"
                   >
                     <MessageCircle className="h-4 w-4" /> WhatsApp ile Yetkili Servis Çağır
@@ -1309,6 +1395,7 @@ export default function Wizard({ config }) {
                     itemName={`Arıza Servisi: ${selectedFault.title || selectedFault.label}`}
                     city={city}
                     district={district}
+                    onSubmitted={clearWizardDraft}
                   />
                 </div>
               )}
@@ -1495,6 +1582,7 @@ export default function Wizard({ config }) {
                       city={city}
                       district={district}
                       discountOffer={true}
+                      onSubmitted={clearWizardDraft}
                       whatsappUrl={buildWaLink(
                         waNumber,
                         `Merhaba, ben {MÜŞTERİ_ADI}. Tekirdağ / ${district} için Kendi Cihazımı Oluşturdum:\n` +
@@ -1551,6 +1639,18 @@ export default function Wizard({ config }) {
             : ""
         }
         onClose={() => setSelectedDevice(null)}
+        onRequestQuote={(device) => {
+          setSelectedDevice(null);
+          openDeviceQuote(device);
+        }}
+      />
+      <DeviceQuoteModal
+        device={quoteDevice}
+        waNumber={waNumber}
+        city={city}
+        district={district}
+        onClose={() => setQuoteDevice(null)}
+        onSubmitted={clearWizardDraft}
       />
     </div>
   );

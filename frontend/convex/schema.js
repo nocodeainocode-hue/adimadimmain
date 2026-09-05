@@ -100,6 +100,8 @@ export default defineSchema({
     district: v.string(),
     flowType: v.string(),
     itemName: v.optional(v.string()),
+    deviceId: v.optional(v.string()),
+    source: v.optional(v.string()),
     selectedItems: v.optional(
       v.array(
         v.object({
@@ -119,8 +121,21 @@ export default defineSchema({
     profitMarginPercent: v.number(),
     status: v.string(),
     adminNote: v.optional(v.string()),
+    completedAt: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_createdAt", ["createdAt"]),
+
+  // Kişisel veri içermeyen satış hunisi olayları
+  analyticsEvents: defineTable({
+    sessionId: v.string(),
+    eventType: v.string(),
+    flowType: v.optional(v.string()),
+    itemId: v.optional(v.string()),
+    step: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_sessionId", ["sessionId"]),
 
   // Genel Site & Fiyat Ayarları
   siteSettings: defineTable({

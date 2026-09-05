@@ -288,12 +288,15 @@ export default function AdminPage() {
     let totalRevenue = 0;
     let totalCost = 0;
     let totalEstimatedProfit = 0;
+    let potentialRevenue = 0;
 
     leads.forEach((l) => {
-      if (l.status !== "cancelled") {
+      if (l.status === "completed") {
         totalRevenue += l.finalDiscountedPrice || l.totalListPrice || 0;
         totalCost += l.totalCostPrice || 0;
         totalEstimatedProfit += l.estimatedProfit || 0;
+      } else if (l.status !== "cancelled") {
+        potentialRevenue += l.finalDiscountedPrice || l.totalListPrice || 0;
       }
     });
 
@@ -302,13 +305,30 @@ export default function AdminPage() {
 
     return {
       totalLeads: leads.length,
+      openLeads: leads.filter((l) => !["completed", "cancelled"].includes(l.status)).length,
+      completedSales: leads.filter((l) => l.status === "completed").length,
       builderLeads: leads.filter((l) => l.flowType === "builder").length,
       totalRevenue,
       totalCost,
       totalEstimatedProfit,
+      potentialRevenue,
       overallMargin,
+      salesConversion: leads.length
+        ? Math.round((leads.filter((l) => l.status === "completed").length / leads.length) * 100)
+        : 0,
     };
   }, [localData.leads]);
+
+  const analytics = localData.analyticsSummary || {
+    started: 0,
+    results: 0,
+    leads: 0,
+    whatsapp: 0,
+    deviceViews: 0,
+    resultRate: 0,
+    leadRate: 0,
+    flowStarts: {},
+  };
 
   // Filtered Options
   const filteredOptions = useMemo(() => {
@@ -601,7 +621,7 @@ export default function AdminPage() {
 
             {[
               { key: "finans", icon: TrendingUp, label: "Finans & Kâr" },
-              { key: "leads", icon: MessageSquare, label: "Gelen Siparişler", count: (localData.leads || []).length },
+              { key: "leads", icon: MessageSquare, label: "Talepler & Satışlar", count: (localData.leads || []).length },
             ].map(({ key, icon: Icon, label, count }) => (
               <button
                 key={key}
@@ -697,7 +717,7 @@ export default function AdminPage() {
                 {activeTab === "devices" && "Hazır Cihaz Modelleri"}
                 {activeTab === "filterSets" && "Filtre Paketleri"}
                 {activeTab === "faults" && "Arıza Rehberi"}
-                {activeTab === "leads" && "Gelen Siparişler"}
+                {activeTab === "leads" && "Talepler & Satışlar"}
                 {activeTab === "texts" && "Metin & İçerikler"}
                 {activeTab === "settings" && "Genel Ayarlar"}
               </span>
@@ -712,50 +732,103 @@ export default function AdminPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
-                  Toplam Ciro (Satış)
+                  Kesinleşen Satış Cirosu
                 </span>
                 <span className="font-display font-black text-2xl sm:text-3xl text-slate-900 font-mono">
                   {stats.totalRevenue.toLocaleString("tr-TR")} ₺
                 </span>
                 <span className="text-[11px] text-emerald-600 mt-2 block font-semibold">
-                  {stats.totalLeads} toplam müşteri talebinden
+                  {stats.completedSales} tamamlanan satıştan
                 </span>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">
-                  Toplam Parça Maliyeti (Alış)
+                  Kesinleşen Satış Maliyeti
                 </span>
                 <span className="font-display font-black text-2xl sm:text-3xl text-rose-600 font-mono">
                   {stats.totalCost.toLocaleString("tr-TR")} ₺
                 </span>
                 <span className="text-[11px] text-slate-500 mt-2 block font-medium">
-                  Toptan alış & montaj donanımları
+                  Yalnızca tamamlanan montajlar
                 </span>
               </div>
 
               <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 shadow-xs">
                 <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider block mb-1">
-                  Tahmini Net Kâr
+                  Gerçekleşen Net Kâr
                 </span>
                 <span className="font-display font-black text-2xl sm:text-3xl text-emerald-700 font-mono">
                   +{stats.totalEstimatedProfit.toLocaleString("tr-TR")} ₺
                 </span>
                 <span className="text-[11px] text-emerald-700 mt-2 block font-bold">
-                  Alış & indirim sonrası net kazanç
+                  Tamamlanan satışların net kazancı
                 </span>
               </div>
 
               <div className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 shadow-xs">
                 <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider block mb-1">
-                  Ortalama Kâr Marjı
+                  Talep → Satış Oranı
                 </span>
                 <span className="font-display font-black text-2xl sm:text-3xl text-amber-700 font-mono">
-                  %{stats.overallMargin}
+                  %{stats.salesConversion}
                 </span>
                 <span className="text-[11px] text-amber-800 mt-2 block font-bold">
-                  Ciro üzerinden net kârlılık
+                  {stats.totalLeads} talebin {stats.completedSales} tanesi satış oldu
                 </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-[0.8fr_1.2fr] gap-4">
+              <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-5 shadow-xs">
+                <span className="text-xs font-semibold text-blue-800 uppercase tracking-wider block mb-1">
+                  Açık Satış Fırsatları
+                </span>
+                <span className="font-display font-black text-2xl sm:text-3xl text-blue-900 font-mono">
+                  {stats.potentialRevenue.toLocaleString("tr-TR")} ₺
+                </span>
+                <p className="text-xs text-blue-800 mt-2 font-semibold">
+                  {stats.openLeads} aktif talebin satışa dönüşebilecek toplam değeri
+                </p>
+                <p className="text-[11px] text-blue-700/80 mt-1">
+                  İptal edilen ve kesinleşmiş satışlar bu tutara dahil değildir.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
+                  <div>
+                    <h3 className="font-display font-bold text-lg text-slate-900">Anonim Dönüşüm Hunisi</h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">Kişisel bilgi olmadan ziyaretçinin talebe giden adımları.</p>
+                  </div>
+                  <span className="text-[11px] font-semibold text-slate-500 rounded-full bg-slate-100 px-2.5 py-1 self-start">
+                    {analytics.deviceViews} cihaz detayı görüntülendi
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    ["Akış Başladı", analytics.started],
+                    ["Sonuç Görüldü", analytics.results],
+                    ["Talep Oluştu", analytics.leads],
+                    ["WhatsApp Açıldı", analytics.whatsapp],
+                  ].map(([label, value], index) => (
+                    <div key={label} className="relative rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500 block">{label}</span>
+                      <span className="text-xl font-black font-mono text-slate-900">{value}</span>
+                      {index < 3 && <ChevronRight className="hidden sm:block absolute -right-3 top-1/2 -translate-y-1/2 z-10 h-4 w-4 text-slate-400" />}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap gap-x-4 gap-y-2 mt-4 text-[11px] text-slate-600">
+                  <strong className="text-slate-800">Sonuca ulaşma: %{analytics.resultRate}</strong>
+                  <strong className="text-slate-800">Talebe dönüşme: %{analytics.leadRate}</strong>
+                  <span>Satın al: {analytics.flowStarts?.buy || 0}</span>
+                  <span>Filtre: {analytics.flowStarts?.filter || 0}</span>
+                  <span>Arıza: {analytics.flowStarts?.fault || 0}</span>
+                  <span>Özel cihaz: {analytics.flowStarts?.builder || 0}</span>
+                </div>
               </div>
             </div>
 
@@ -1445,7 +1518,7 @@ export default function AdminPage() {
                   <option value="new">Yeni Talep</option>
                   <option value="called">Arandı</option>
                   <option value="appointment">Randevu Verildi</option>
-                  <option value="completed">Montaj Tamamlandı</option>
+                  <option value="completed">Kesinleşmiş Satış</option>
                   <option value="cancelled">İptal Edildi</option>
                 </select>
               </div>
@@ -1509,7 +1582,7 @@ export default function AdminPage() {
                                   : lead.status === "appointment"
                                   ? "Randevu Verildi"
                                   : lead.status === "completed"
-                                  ? "Tamamlandı"
+                                  ? "Kesinleşmiş Satış"
                                   : "İptal"}
                               </Badge>
                             </div>
@@ -1549,7 +1622,7 @@ export default function AdminPage() {
                             <option value="new">Yeni Talep</option>
                             <option value="called">Arandı</option>
                             <option value="appointment">Randevu Verildi</option>
-                            <option value="completed">Tamamlandı</option>
+                            <option value="completed">Kesinleşmiş Satış</option>
                             <option value="cancelled">İptal</option>
                           </select>
 

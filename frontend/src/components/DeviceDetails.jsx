@@ -106,7 +106,7 @@ function DeviceMediaGallery({ device }) {
   );
 }
 
-export function DeviceDetailContent({ device, waNumber, matchReason, showFullPageLink = false }) {
+export function DeviceDetailContent({ device, waNumber, matchReason, showFullPageLink = false, onRequestQuote }) {
   const specs = device?.specs || [];
   const whatsappMessage = `Merhaba, ${device?.name} modeli hakkında detaylı bilgi, fiyat teklifi ve montaj randevusu almak istiyorum.`;
 
@@ -152,14 +152,24 @@ export function DeviceDetailContent({ device, waNumber, matchReason, showFullPag
           </div>
 
           <div className="mt-auto grid gap-3 pt-5 sm:grid-cols-2">
-            <a
-              href={buildWaLink(waNumber, whatsappMessage)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-whatsapp inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold shadow-md"
-            >
-              <MessageCircle className="h-4 w-4" /> WhatsApp Teklifi Al
-            </a>
+            {onRequestQuote ? (
+              <button
+                type="button"
+                onClick={() => onRequestQuote(device)}
+                className="btn-whatsapp inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold shadow-md"
+              >
+                <MessageCircle className="h-4 w-4" /> WhatsApp Teklifi Al
+              </button>
+            ) : (
+              <a
+                href={buildWaLink(waNumber, whatsappMessage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-whatsapp inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold shadow-md"
+              >
+                <MessageCircle className="h-4 w-4" /> WhatsApp Teklifi Al
+              </a>
+            )}
             {showFullPageLink && (
               <Link
                 to={`/cihazlar/${device.deviceId || device.id}`}
@@ -232,7 +242,7 @@ export function DeviceDetailContent({ device, waNumber, matchReason, showFullPag
   );
 }
 
-export function DeviceDetailModal({ device, waNumber, matchReason, onClose }) {
+export function DeviceDetailModal({ device, waNumber, matchReason, onClose, onRequestQuote }) {
   useEffect(() => {
     if (!device) return undefined;
     const previousOverflow = document.body.style.overflow;
@@ -273,6 +283,7 @@ export function DeviceDetailModal({ device, waNumber, matchReason, onClose }) {
           waNumber={waNumber}
           matchReason={matchReason}
           showFullPageLink
+          onRequestQuote={onRequestQuote}
         />
         <button
           type="button"

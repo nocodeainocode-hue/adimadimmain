@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, SearchX } from "lucide-react";
 import Header from "@/components/Header";
@@ -6,10 +6,12 @@ import Footer from "@/components/Footer";
 import { DeviceDetailContent, getDeviceImages } from "@/components/DeviceDetails";
 import { SITE_CONFIG } from "@/data/siteConfig";
 import { useLocalData } from "@/lib/convex";
+import DeviceQuoteModal from "@/components/DeviceQuoteModal";
 
 export default function DevicePage() {
   const { deviceId } = useParams();
-  const { localData } = useLocalData();
+  const { localData, trackAnalyticsEvent } = useLocalData();
+  const [quoteDevice, setQuoteDevice] = useState(null);
   const device = (localData.devices || []).find(
     (item) => (item.deviceId || item.id) === deviceId && item.isActive !== false
   );
@@ -21,6 +23,11 @@ export default function DevicePage() {
       document.title = "Lotus Su Arıtma";
     };
   }, [device]);
+
+  useEffect(() => {
+    if (!device) return;
+    trackAnalyticsEvent({ eventType: "device_viewed", flowType: "buy", itemId: device.deviceId || device.id });
+  }, [device, trackAnalyticsEvent]);
 
   const productJsonLd = device
     ? {
@@ -52,7 +59,7 @@ export default function DevicePage() {
         {device ? (
           <>
             <script type="application/ld+json">{JSON.stringify(productJsonLd)}</script>
-            <DeviceDetailContent device={device} waNumber={waNumber} />
+            <DeviceDetailContent device={device} waNumber={waNumber} onRequestQuote={setQuoteDevice} />
           </>
         ) : (
           <div className="rounded-3xl border border-border bg-card p-10 text-center shadow-sm">
@@ -66,6 +73,7 @@ export default function DevicePage() {
         )}
       </main>
       <Footer brand={SITE_CONFIG.brand} waDisplay={localData.settings?.whatsappDisplay || SITE_CONFIG.whatsapp.display} />
+      <DeviceQuoteModal device={quoteDevice} waNumber={waNumber} onClose={() => setQuoteDevice(null)} />
     </div>
   );
 }

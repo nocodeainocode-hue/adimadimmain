@@ -118,6 +118,8 @@ const cleanLead = (value) => {
     district: String(data.district || ""),
     flowType: String(data.flowType || ""),
     ...(data.itemName ? { itemName: String(data.itemName) } : {}),
+    ...(data.deviceId ? { deviceId: String(data.deviceId) } : {}),
+    ...(data.source ? { source: String(data.source) } : {}),
     ...(Array.isArray(data.selectedItems) ? {
       selectedItems: data.selectedItems.map((item) => ({
         stepTitle: String(item.stepTitle || ""),
@@ -135,7 +137,40 @@ const cleanLead = (value) => {
     profitMarginPercent: Number(data.profitMarginPercent || 0),
     status: String(data.status || "new"),
     ...(data.adminNote ? { adminNote: String(data.adminNote) } : {}),
+    ...(data.completedAt ? { completedAt: Number(data.completedAt) } : {}),
     createdAt: Number(data.createdAt || Date.now()),
+  };
+};
+
+const summarizeAnalytics = (events) => {
+  const sessionsFor = (type) => new Set(events.filter((event) => event.eventType === type).map((event) => event.sessionId));
+  const started = sessionsFor("wizard_started");
+  const results = sessionsFor("results_viewed");
+  const leads = sessionsFor("lead_submitted");
+  const whatsapp = sessionsFor("whatsapp_started");
+  const deviceViews = new Set(
+    events
+      .filter((event) => event.eventType === "device_viewed")
+      .map((event) => `${event.sessionId}:${event.itemId || "unknown"}`)
+  );
+
+  const flowStarts = {};
+  for (const event of events) {
+    if (event.eventType === "wizard_started" && event.flowType) {
+      flowStarts[event.flowType] = flowStarts[event.flowType] || new Set();
+      flowStarts[event.flowType].add(event.sessionId);
+    }
+  }
+
+  return {
+    started: started.size,
+    results: results.size,
+    leads: leads.size,
+    whatsapp: whatsapp.size,
+    deviceViews: deviceViews.size,
+    resultRate: started.size ? Math.round((results.size / started.size) * 100) : 0,
+    leadRate: started.size ? Math.round((leads.size / started.size) * 100) : 0,
+    flowStarts: Object.fromEntries(Object.entries(flowStarts).map(([key, value]) => [key, value.size])),
   };
 };
 
@@ -155,7 +190,7 @@ export const getSnapshot = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
-    const [steps, options, devices, filterSets, faultGuides, leads, settings, texts, migration] =
+    const [steps, options, devices, filterSets, faultGuides, leads, settings, texts, migration, analyticsEvents] =
       await Promise.all([
         ctx.db.query("builderSteps").withIndex("by_order").collect(),
         ctx.db.query("builderOptions").withIndex("by_order").collect(),
@@ -166,6 +201,7 @@ export const getSnapshot = query({
         ctx.db.query("siteSettings").withIndex("by_key", (q) => q.eq("key", "global")).first(),
         ctx.db.query("siteTexts").withIndex("by_key", (q) => q.eq("key", "global")).first(),
         ctx.db.query("appState").withIndex("by_key", (q) => q.eq("key", MIGRATION_KEY)).first(),
+        ctx.db.query("analyticsEvents").withIndex("by_createdAt").order("desc").take(5000),
       ]);
 
     return {
@@ -178,6 +214,7 @@ export const getSnapshot = query({
       leads,
       settings,
       texts: texts?.content || null,
+      analyticsSummary: summarizeAnalytics(analyticsEvents),
     };
   },
 });

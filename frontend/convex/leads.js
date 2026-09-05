@@ -11,6 +11,8 @@ export const submitLead = mutation({
     district: v.string(),
     flowType: v.string(),
     itemName: v.optional(v.string()),
+    deviceId: v.optional(v.string()),
+    source: v.optional(v.string()),
     selectedItems: v.optional(
       v.array(
         v.object({
@@ -61,7 +63,11 @@ export const updateLeadStatus = mutation({
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
     const { id, ...data } = args;
-    await ctx.db.patch(id, data);
+    const lead = await ctx.db.get(id);
+    await ctx.db.patch(id, {
+      ...data,
+      ...(args.status === "completed" && !lead?.completedAt ? { completedAt: Date.now() } : {}),
+    });
   },
 });
 
@@ -78,7 +84,7 @@ export const getFinancialStats = query({
     let builderLeadsCount = 0;
 
     for (const lead of leads) {
-      if (lead.status !== "cancelled") {
+      if (lead.status === "completed") {
         totalRevenue += lead.finalDiscountedPrice || lead.totalListPrice || 0;
         totalCost += lead.totalCostPrice || 0;
         totalEstimatedProfit += lead.estimatedProfit || 0;

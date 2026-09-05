@@ -1,10 +1,25 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useRef } from "react";
+import React, { createContext, useCallback, useContext, useState, useEffect, useMemo, useRef } from "react";
 import { ConvexReactClient, ConvexProvider as OriginalConvexProvider, useMutation, useQuery } from "convex/react";
 import { ConvexAuthProvider, useAuthActions, useConvexAuth } from "@convex-dev/auth/react";
 import { api } from "../../convex/_generated/api";
 import { SITE_CONFIG, BUILDER_CONFIG } from "@/data/siteConfig";
 
 const CONVEX_URL = import.meta.env.VITE_CONVEX_URL;
+const ANALYTICS_SESSION_KEY = "lotus_analytics_session";
+
+const getAnalyticsSessionId = () => {
+  if (typeof window === "undefined") return "server";
+  try {
+    let sessionId = window.sessionStorage.getItem(ANALYTICS_SESSION_KEY);
+    if (!sessionId) {
+      sessionId = window.crypto?.randomUUID?.() || `session_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      window.sessionStorage.setItem(ANALYTICS_SESSION_KEY, sessionId);
+    }
+    return sessionId;
+  } catch {
+    return `session_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  }
+};
 
 export const convexClient = CONVEX_URL ? new ConvexReactClient(CONVEX_URL) : null;
 
@@ -955,6 +970,7 @@ function LegacyLocalDataProvider({ children }) {
     updateLocalSettings,
     updateLocalTexts,
     addLocalLead,
+    trackAnalyticsEvent: async () => null,
     updateLocalLeadStatus,
     resetLocalToDefault,
   };
@@ -1075,6 +1091,7 @@ function ConvexDataProvider({ children }) {
   const saveSettings = useMutation(api.settings.updateSettings);
   const saveTexts = useMutation(api.content.updateTexts);
   const submitLead = useMutation(api.leads.submitLead);
+  const trackEvent = useMutation(api.analytics.track);
   const saveLeadStatus = useMutation(api.leads.updateLeadStatus);
   const generateUploadUrl = useMutation(api.media.generateUploadUrl);
   const confirmUpload = useMutation(api.media.confirmUpload);
@@ -1124,6 +1141,16 @@ function ConvexDataProvider({ children }) {
       leads: snapshot.leads,
       settings: { ...DEFAULT_LOCAL_STATE.settings, ...(snapshot.settings || {}) },
       texts: mergeWithDefaults(DEFAULT_LOCAL_STATE.texts, snapshot.texts),
+      analyticsSummary: snapshot.analyticsSummary || {
+        started: 0,
+        results: 0,
+        leads: 0,
+        whatsapp: 0,
+        deviceViews: 0,
+        resultRate: 0,
+        leadRate: 0,
+        flowStarts: {},
+      },
     };
   }, [snapshot]);
 
@@ -1161,6 +1188,8 @@ function ConvexDataProvider({ children }) {
     district: lead.district || "",
     flowType: lead.flowType || "",
     ...(lead.itemName ? { itemName: lead.itemName } : {}),
+    ...(lead.deviceId ? { deviceId: lead.deviceId } : {}),
+    ...(lead.source ? { source: lead.source } : {}),
     ...(lead.selectedItems ? { selectedItems: lead.selectedItems } : {}),
     basePrice: Number(lead.basePrice || 0),
     baseCost: Number(lead.baseCost || 0),
@@ -1170,6 +1199,18 @@ function ConvexDataProvider({ children }) {
     estimatedProfit: Number(lead.estimatedProfit || 0),
     profitMarginPercent: Number(lead.profitMarginPercent || 0),
   });
+
+  const trackAnalyticsEvent = useCallback(
+    (event) =>
+      trackEvent({
+        sessionId: getAnalyticsSessionId(),
+        eventType: event.eventType,
+        ...(event.flowType ? { flowType: event.flowType } : {}),
+        ...(event.itemId ? { itemId: event.itemId } : {}),
+        ...(Number.isFinite(event.step) ? { step: event.step } : {}),
+      }).catch(() => null),
+    [trackEvent]
+  );
 
   const uploadImage = async (file) => {
     const uploadUrl = await generateUploadUrl({});
@@ -1205,6 +1246,7 @@ function ConvexDataProvider({ children }) {
     updateLocalSettings,
     updateLocalTexts: (texts) => saveTexts({ content: mergeWithDefaults(DEFAULT_LOCAL_STATE.texts, texts) }),
     addLocalLead,
+    trackAnalyticsEvent,
     updateLocalLeadStatus: (id, status, adminNote) =>
       saveLeadStatus({ id, status, ...(adminNote !== undefined ? { adminNote } : {}) }),
     resetLocalToDefault: () => replaceSnapshot({ snapshot: DEFAULT_LOCAL_STATE, force: true }),
