@@ -512,7 +512,7 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, produ
         <button
           type="submit"
           disabled={loading || !phone || (whatsappUrl && !name.trim())}
-          className={`${whatsappUrl ? "btn-whatsapp" : "btn-champagne"} rounded-xl h-12 px-5 text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition-all shadow-sm`}
+          className={`${whatsappUrl ? "btn-whatsapp ring-2 ring-emerald-700/20 shadow-[0_8px_24px_rgba(18,140,126,0.32)]" : "btn-champagne"} rounded-xl h-12 px-5 text-sm font-extrabold flex items-center justify-center gap-2 disabled:opacity-80 disabled:brightness-75 disabled:cursor-not-allowed transition-all`}
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : productionOrder ? <Layers className="h-4 w-4" /> : whatsappUrl ? <MessageCircle className="h-4 w-4" /> : discountOffer ? <Sparkles className="h-4 w-4" /> : <Send className="h-4 w-4" />}
           {productionOrder ? "Cihazımı Üretime Gönder" : whatsappUrl ? "Siparişi Kaydet ve WhatsApp'ı Aç" : discountOffer ? "%20 İndirimle Ara" : "Beni Arayın"}

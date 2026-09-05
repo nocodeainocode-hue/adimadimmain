@@ -114,7 +114,7 @@ export default function DeviceQuoteModal({ device, waNumber, city = "Tekirdağ",
                 <input required type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="05XX XXX XX XX" className="h-12 w-full rounded-xl border border-border bg-card pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(var(--brand-champagne))]" />
               </label>
               {error && <p role="alert" className="text-xs font-semibold text-rose-600">{error}</p>}
-              <button disabled={loading || !name.trim() || !phone.trim()} type="submit" className="btn-whatsapp flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold disabled:opacity-50">
+              <button disabled={loading || !name.trim() || !phone.trim()} type="submit" className="btn-whatsapp flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-extrabold ring-2 ring-emerald-700/20 shadow-[0_8px_24px_rgba(18,140,126,0.32)] disabled:opacity-80 disabled:brightness-75 disabled:cursor-not-allowed">
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                 {loading ? "Talep kaydediliyor..." : "Kaydet ve WhatsApp'ı Aç"}
               </button>
