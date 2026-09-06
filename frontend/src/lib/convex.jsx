@@ -392,6 +392,37 @@ const DEFAULT_LOCAL_STATE = {
       },
     },
     navigation: { backButton: "Geri", restartButton: "Başa Dön" },
+    homeSupport: {
+      formCtaText: "Çözümünü Bul",
+      mobileCtaText: "60 Sn'de Çözümünü Bul",
+      serviceNote: "Tekirdağ merkez ve tüm ilçelerde cihaz, filtre ve teknik servis desteği.",
+      trust: {
+        items: {
+          netPrice: "Montaj dahil net fiyat",
+          serviceArea: "Tekirdağ ve tüm ilçeler",
+          originalParts: "Orijinal filtre ve parça",
+          expertConfirmation: "İşlem öncesi uzman teyidi",
+        },
+      },
+      why: {
+        badge: "Karar vermeyi kolaylaştırır",
+        title: "Bu form size ne kazandırır?",
+        items: {
+          fairRecommendation: "İhtiyacınızdan pahalı veya gereksiz özellikli bir cihaz önermek yerine kullanımınıza uygun seçenekleri ayırır.",
+          localConditions: "İlçenizi, evdeki kişi sayısını ve su kullanımınızı birlikte değerlendirir.",
+          transparentResult: "Sonucu, seçilen parçaları ve tahmini fiyatı işlem başlamadan önce açıkça gösterir.",
+        },
+      },
+      faq: {
+        title: "Kısa cevaplar",
+        items: {
+          free: { question: "Formu doldurmak ücretli mi?", answer: "Hayır. Form ücretsizdir ve sizi ödeme ya da satın alma yükümlülüğü altına sokmaz." },
+          order: { question: "Sonucu görmek sipariş oluşturur mu?", answer: "Hayır. Sipariş veya üretim talebi yalnızca bilgilerinizi girip ilgili onay butonuna bastığınızda kaydedilir." },
+          installation: { question: "Gösterilen fiyata montaj dahil mi?", answer: "Konfigüratörde gösterilen Lotus Custom fiyatına montaj ve KDV dahildir; işlem öncesinde uzmanımız son teyidi verir." },
+          afterForm: { question: "Bilgilerimi girdikten sonra ne olur?", answer: "Talebiniz yönetim paneline kaydolur. Uzmanımız seçiminizi sizinle teyit eder ve uygun servis veya montaj zamanını planlar." },
+        },
+      },
+    },
     buy: {
       district: {
         badge: "Tekirdağ Bölgesel Su & Kireç Analizi",

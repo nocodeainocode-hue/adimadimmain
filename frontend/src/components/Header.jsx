@@ -1,7 +1,7 @@
-import { MessageCircle, Droplets } from "lucide-react";
+import { MessageCircle, Droplets, Sparkles } from "lucide-react";
 import { buildWaLink } from "@/lib/whatsapp";
 
-export default function Header({ brand, waNumber }) {
+export default function Header({ brand, waNumber, formFirst = false, formCtaText = "Çözümünü Bul" }) {
   const name = brand?.name || "Lotus Su Arıtma";
   return (
     <header
@@ -19,19 +19,29 @@ export default function Header({ brand, waNumber }) {
           </div>
         </a>
 
-        <a
-          href={buildWaLink(waNumber, "Merhaba, Lotus Su Arıtma hakkında bilgi almak istiyorum.")}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-whatsapp inline-flex items-center gap-2 rounded-xl h-10 px-3.5 sm:px-4 text-sm font-semibold shadow-sm"
-          data-testid="site-header-whatsapp-button"
-        >
-          <span className="pulse-dot" />
-          <MessageCircle className="h-4 w-4" />
-          <span className="hidden sm:inline">WhatsApp Destek</span>
-        </a>
+        {formFirst ? (
+          <a
+            href="#yardim-formu"
+            className="btn-champagne inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-bold shadow-sm sm:gap-2 sm:px-4 sm:text-sm"
+            data-testid="site-header-form-button"
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>{formCtaText}</span>
+          </a>
+        ) : (
+          <a
+            href={buildWaLink(waNumber, "Merhaba, Lotus Su Arıtma hakkında bilgi almak istiyorum.")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-whatsapp inline-flex items-center gap-2 rounded-xl h-10 px-3.5 sm:px-4 text-sm font-semibold shadow-sm"
+            data-testid="site-header-whatsapp-button"
+          >
+            <span className="pulse-dot" />
+            <MessageCircle className="h-4 w-4" />
+            <span className="hidden sm:inline">WhatsApp Destek</span>
+          </a>
+        )}
       </div>
     </header>
   );
 }
-
