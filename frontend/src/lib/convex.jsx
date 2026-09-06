@@ -854,19 +854,48 @@ function LegacyLocalDataProvider({ children }) {
   }, [localData]);
 
   const updateLocalStep = (step) => {
+    const normalizedStep = { ...step, _id: step._id || "step_" + Date.now() };
     setLocalData((prev) => {
-      const exists = prev.steps.some((s) => s._id === step._id || s.key === step.key);
+      const exists = prev.steps.some((s) => s._id === normalizedStep._id || s.key === normalizedStep.key);
       const updatedSteps = exists
-        ? prev.steps.map((s) => (s._id === step._id || s.key === step.key ? { ...s, ...step } : s))
-        : [...prev.steps, { ...step, _id: "step_" + Date.now() }];
+        ? prev.steps.map((s) => (s._id === normalizedStep._id || s.key === normalizedStep.key ? { ...s, ...normalizedStep } : s))
+        : [...prev.steps, normalizedStep];
       return { ...prev, steps: updatedSteps };
+    });
+    return normalizedStep._id;
+  };
+
+  const reorderLocalSteps = (orderedIds) => {
+    setLocalData((prev) => {
+      const stepsById = new Map(prev.steps.map((step) => [step._id, step]));
+      const reordered = orderedIds
+        .map((id) => stepsById.get(id))
+        .filter(Boolean)
+        .map((step, index) => {
+          const position = index + 1;
+          return {
+            ...step,
+            order: position,
+            stepNumber: position,
+            badge: step.badge.replace(/^\s*\d+\.\s*Adım\b/i, `${position}. Adım`),
+          };
+        });
+      return { ...prev, steps: reordered };
     });
   };
 
   const deleteLocalStep = (stepId) => {
     setLocalData((prev) => {
       const step = prev.steps.find((s) => s._id === stepId);
-      const filteredSteps = prev.steps.filter((s) => s._id !== stepId);
+      const filteredSteps = prev.steps.filter((s) => s._id !== stepId).map((item, index) => {
+        const position = index + 1;
+        return {
+          ...item,
+          order: position,
+          stepNumber: position,
+          badge: item.badge.replace(/^\s*\d+\.\s*Adım\b/i, `${position}. Adım`),
+        };
+      });
       const filteredOptions = step ? prev.options.filter((o) => o.stepKey !== step.key) : prev.options;
       return { ...prev, steps: filteredSteps, options: filteredOptions };
     });
@@ -989,6 +1018,7 @@ function LegacyLocalDataProvider({ children }) {
     logoutAdmin,
     localData,
     updateLocalStep,
+    reorderLocalSteps,
     deleteLocalStep,
     updateLocalOption,
     deleteLocalOption,
@@ -1110,6 +1140,7 @@ function ConvexDataProvider({ children }) {
   const snapshot = isAuthenticated ? adminSnapshot : publicSnapshot;
   const replaceSnapshot = useMutation(api.content.replaceSnapshot);
   const upsertStep = useMutation(api.builder.upsertStep);
+  const reorderSteps = useMutation(api.builder.reorderSteps);
   const removeStep = useMutation(api.builder.deleteStep);
   const upsertOption = useMutation(api.builder.upsertOption);
   const removeOption = useMutation(api.builder.deleteOption);
@@ -1265,6 +1296,7 @@ function ConvexDataProvider({ children }) {
     logoutAdmin,
     localData,
     updateLocalStep: (step) => upsertStep(stepPayload(step)),
+    reorderLocalSteps: (orderedIds) => reorderSteps({ orderedIds }),
     deleteLocalStep: (id) => removeStep({ id }),
     updateLocalOption: (option) => upsertOption(optionPayload(option)),
     deleteLocalOption: (id) => removeOption({ id }),

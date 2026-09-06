@@ -87,6 +87,40 @@ export const upsertStep = mutation({
   },
 });
 
+// Admin: Adımların tamamını tek işlemde yeniden sırala
+export const reorderSteps = mutation({
+  args: { orderedIds: v.array(v.id("builderSteps")) },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+
+    const currentSteps = await ctx.db
+      .query("builderSteps")
+      .withIndex("by_order")
+      .take(100);
+    const uniqueIds = new Set(args.orderedIds);
+    const currentIds = new Set(currentSteps.map((step) => step._id));
+
+    if (
+      uniqueIds.size !== args.orderedIds.length ||
+      args.orderedIds.length !== currentSteps.length ||
+      args.orderedIds.some((id) => !currentIds.has(id))
+    ) {
+      throw new Error("Adım listesi güncel değil. Sayfayı yenileyip tekrar deneyin.");
+    }
+
+    const stepsById = new Map(currentSteps.map((step) => [step._id, step]));
+    for (let index = 0; index < args.orderedIds.length; index += 1) {
+      const id = args.orderedIds[index];
+      const step = stepsById.get(id);
+      const position = index + 1;
+      const badge = step.badge.replace(/^\s*\d+\.\s*Adım\b/i, `${position}. Adım`);
+      await ctx.db.patch(id, { order: position, stepNumber: position, badge });
+    }
+
+    return null;
+  },
+});
+
 // Admin: Adım Sil
 export const deleteStep = mutation({
   args: { id: v.id("builderSteps") },
@@ -103,7 +137,19 @@ export const deleteStep = mutation({
         await ctx.db.delete(opt._id);
       }
       await ctx.db.delete(args.id);
+
+      const remainingSteps = await ctx.db
+        .query("builderSteps")
+        .withIndex("by_order")
+        .take(100);
+      for (let index = 0; index < remainingSteps.length; index += 1) {
+        const remainingStep = remainingSteps[index];
+        const position = index + 1;
+        const badge = remainingStep.badge.replace(/^\s*\d+\.\s*Adım\b/i, `${position}. Adım`);
+        await ctx.db.patch(remainingStep._id, { order: position, stepNumber: position, badge });
+      }
     }
+    return null;
   },
 });
 
