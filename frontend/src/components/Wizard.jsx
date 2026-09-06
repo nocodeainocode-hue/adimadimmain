@@ -32,6 +32,7 @@ import {
   Info,
   Eye,
   CheckCircle2,
+  ImageOff,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DeviceDetailModal } from "@/components/DeviceDetails";
@@ -120,6 +121,25 @@ const ENTRY_ICONS = {
   Sparkles,
 };
 
+function ProductImage({ src, alt, className = "" }) {
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+
+  if (!src || failed) {
+    return (
+      <div className={`flex flex-col items-center justify-center gap-2 bg-muted/50 p-4 text-center text-muted-foreground ${className}`}>
+        <ImageOff className="h-7 w-7" aria-hidden="true" />
+        <span className="text-xs font-semibold">Ürün görseli güncelleniyor</span>
+      </div>
+    );
+  }
+
+  return <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />;
+}
+
 /* ---------- Builder Component Detail Modal ---------- */
 function BuilderDetailModal({ item, onClose, onSelect, isSelected }) {
   if (!item) return null;
@@ -162,14 +182,14 @@ function BuilderDetailModal({ item, onClose, onSelect, isSelected }) {
         </div>
 
         {/* HD Image */}
-        <div className="relative h-64 sm:h-80 w-full rounded-2xl overflow-hidden border border-border bg-neutral-950 mb-6 shadow-inner">
-          <img
+        <div className="relative mb-6 h-72 w-full overflow-hidden rounded-2xl border border-border bg-white shadow-inner sm:h-96">
+          <ProductImage
             src={item.img}
             alt={item.name || item.title}
-            className="h-full w-full object-cover object-center"
+            className="h-full w-full object-contain object-center p-3 sm:p-5"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-          <div className="absolute bottom-3 left-4 right-4 text-white text-xs font-medium drop-shadow">
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/70 via-black/25 to-transparent" />
+          <div className="absolute bottom-3 left-4 right-4 text-xs font-medium text-white drop-shadow">
             {item.desc}
           </div>
         </div>
@@ -280,23 +300,23 @@ function BuilderOptionCard({
           : "border-border bg-card/90 hover:bg-muted/60 hover:border-neutral-300"
       }`}
     >
-      <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div className="flex flex-col items-stretch gap-4 p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
         {/* Left Thumbnail with Click to Zoom */}
         <div
           onClick={(e) => {
             e.stopPropagation();
             if (onOpenDetails) onOpenDetails();
           }}
-          className="relative h-24 w-full sm:h-20 sm:w-28 shrink-0 rounded-xl overflow-hidden border border-border bg-neutral-900 group/img shadow-sm"
+          className="group/img relative h-44 w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm sm:h-36 sm:w-48"
           title="Büyük görseli ve detayları incelemek için tıklayın"
         >
-          <img
+          <ProductImage
             src={img}
             alt={title}
-            className="h-full w-full object-cover group-hover/img:scale-110 transition-transform duration-300"
+            className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover/img:scale-105"
           />
-          <div className="absolute inset-0 bg-black/30 group-hover/img:bg-black/10 transition-colors flex items-center justify-center">
-            <span className="inline-flex items-center gap-1 rounded-md bg-black/70 px-2 py-1 text-[10px] font-bold text-white backdrop-blur-sm shadow group-hover/img:scale-105 transition-transform">
+          <div className="absolute inset-x-0 bottom-0 flex h-16 items-end justify-end bg-gradient-to-t from-black/60 via-black/10 to-transparent p-2.5">
+            <span className="inline-flex items-center gap-1 rounded-lg bg-black/75 px-2.5 py-1.5 text-[11px] font-bold text-white shadow backdrop-blur-sm transition-transform group-hover/img:scale-105">
               <Eye className="h-3 w-3" /> İncele
             </span>
           </div>
