@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import OptionArt from "@/components/OptionArt";
 import axios from "axios";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
@@ -516,7 +517,7 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, produ
 }
 
 /* ---------- Small reusable option card ---------- */
-function OptionCard({ selected, onClick, title, hint, icon: Icon, testId }) {
+function OptionCard({ selected, onClick, title, hint, icon: Icon, art, testId }) {
   return (
     <button
       type="button"
@@ -525,7 +526,7 @@ function OptionCard({ selected, onClick, title, hint, icon: Icon, testId }) {
       aria-pressed={selected}
       className={`site-option-card ${selected ? "is-selected" : ""}`}
     >
-      {Icon && (
+      {art ? <OptionArt name={art} /> : Icon && (
         <Icon className="option-symbol h-6 w-6 shrink-0" strokeWidth={1.5} aria-hidden="true" />
       )}
       <span className="flex-1">
@@ -707,6 +708,23 @@ export default function Wizard({ config, onFlowChange }) {
     setStep(nextStep);
     scrollToForm();
   };
+
+  // Konfigüratörde seçim yapılınca kısa bir süre sonra sonraki adıma geç. "Seçildi" göstergesi görülsün diye küçük gecikme var.
+  const autoAdvanceTimer = useRef(null);
+  const cancelAutoAdvance = () => {
+    if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+    autoAdvanceTimer.current = null;
+  };
+  const selectBuilderOption = (stepKey, optionId, fromStep) => {
+    setBuilderSelections((prev) => ({ ...prev, [stepKey]: optionId }));
+    cancelAutoAdvance();
+    autoAdvanceTimer.current = setTimeout(() => {
+      autoAdvanceTimer.current = null;
+      go(fromStep + 1, 1);
+    }, prefersReducedMotion ? 150 : 450);
+  };
+  // Adım ya da akış değişirse (Geri, Başa Dön vb.) bekleyen otomatik geçişi iptal et.
+  useEffect(() => cancelAutoAdvance, [step, flow]);
 
   const scrollToForm = () => document.getElementById("yardim-formu")?.scrollIntoView({ behavior: prefersReducedMotion ? "instant" : "smooth", block: "start" });
 
@@ -1004,6 +1022,7 @@ export default function Wizard({ config, onFlowChange }) {
                   <div className="space-y-3">
                     <OptionCard
                       selected={consumption === "az"}
+                      art="people-low"
                       onClick={() => setConsumption("az")}
                       title={texts.buy.consumption.options.low.title}
                       hint={texts.buy.consumption.options.low.hint}
@@ -1012,6 +1031,7 @@ export default function Wizard({ config, onFlowChange }) {
                     />
                     <OptionCard
                       selected={consumption === "orta"}
+                      art="people-mid"
                       onClick={() => setConsumption("orta")}
                       title={texts.buy.consumption.options.medium.title}
                       hint={texts.buy.consumption.options.medium.hint}
@@ -1020,6 +1040,7 @@ export default function Wizard({ config, onFlowChange }) {
                     />
                     <OptionCard
                       selected={consumption === "cok"}
+                      art="people-high"
                       onClick={() => setConsumption("cok")}
                       title={texts.buy.consumption.options.high.title}
                       hint={texts.buy.consumption.options.high.hint}
@@ -1212,9 +1233,9 @@ export default function Wizard({ config, onFlowChange }) {
                     {texts.filter.question.subtitle}
                   </p>
                   <div className="space-y-3">
-                    <OptionCard selected={lastChanged === "6ay"} onClick={() => setLastChanged("6ay")} title={texts.filter.question.options.sixMonths.title} hint={texts.filter.question.options.sixMonths.hint} />
-                    <OptionCard selected={lastChanged === "1yil"} onClick={() => setLastChanged("1yil")} title={texts.filter.question.options.oneYear.title} hint={texts.filter.question.options.oneYear.hint} />
-                    <OptionCard selected={lastChanged === "bilmiyorum"} onClick={() => setLastChanged("bilmiyorum")} title={texts.filter.question.options.unknown.title} hint={texts.filter.question.options.unknown.hint} />
+                    <OptionCard selected={lastChanged === "6ay"} art="filter-fresh" onClick={() => setLastChanged("6ay")} title={texts.filter.question.options.sixMonths.title} hint={texts.filter.question.options.sixMonths.hint} />
+                    <OptionCard selected={lastChanged === "1yil"} art="filter-old" onClick={() => setLastChanged("1yil")} title={texts.filter.question.options.oneYear.title} hint={texts.filter.question.options.oneYear.hint} />
+                    <OptionCard selected={lastChanged === "bilmiyorum"} art="filter-unknown" onClick={() => setLastChanged("bilmiyorum")} title={texts.filter.question.options.unknown.title} hint={texts.filter.question.options.unknown.hint} />
                   </div>
                   <div className="mt-8 flex justify-end">
                     <button type="button" disabled={!lastChanged} onClick={() => go(1, 1)} className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 font-bold disabled:opacity-40">
@@ -1346,6 +1367,7 @@ export default function Wizard({ config, onFlowChange }) {
                         onClick={() => setFaultType(f.faultId || f.id || f._id)}
                         title={f.title || f.label}
                         icon={Wrench}
+                        art={`fault-${f.faultId || f.id}`}
                         testId={`wizard-fault-${f.faultId || f.id || f._id}`}
                       />
                     ))}
@@ -1445,6 +1467,9 @@ export default function Wizard({ config, onFlowChange }) {
                   <p className="text-muted-foreground text-sm sm:text-base mb-4">
                     {currentStep.description}
                   </p>
+                  <p className="text-xs sm:text-sm text-primary font-semibold mb-4" data-testid="builder-auto-advance-hint">
+                    Seçim yaptığınız anda sonraki adıma geçersiniz. Geri dönüp istediğiniz zaman değiştirebilirsiniz.
+                  </p>
 
                   {(currentStep.guideText || currentStep.key === "tank") && (
                     <div className="mb-5 flex items-start gap-3 border-l-2 border-primary bg-secondary p-4 text-xs text-foreground sm:text-sm">
@@ -1468,22 +1493,13 @@ export default function Wizard({ config, onFlowChange }) {
                       return <BuilderOptionCard
                         key={opt._id || opt.optionId}
                         selected={builderSelections[currentStep.key] === opt.optionId}
-                        onClick={() =>
-                          setBuilderSelections((prev) => ({
-                            ...prev,
-                            [currentStep.key]: opt.optionId,
-                          }))
-                        }
+                        onClick={() => selectBuilderOption(currentStep.key, opt.optionId, step)}
                         onOpenDetails={() =>
                           setModalItem({
                             ...opt,
                             categoryTitle: currentStep.badge,
                             isSelected: builderSelections[currentStep.key] === opt.optionId,
-                            onSelect: () =>
-                              setBuilderSelections((prev) => ({
-                                ...prev,
-                                [currentStep.key]: opt.optionId,
-                              })),
+                            onSelect: () => selectBuilderOption(currentStep.key, opt.optionId, step),
                           })
                         }
                         title={opt.name}
