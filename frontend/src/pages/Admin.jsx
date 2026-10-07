@@ -45,6 +45,7 @@ import {
 import { useLocalData } from "@/lib/convex";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import "./admin.css";
 import ImageUploadField from "@/components/admin/ImageUploadField";
 import TestimonialsAdmin from "@/components/admin/TestimonialsAdmin";
 
@@ -109,14 +110,22 @@ const TEXT_CONTENT_SECTIONS = [
       ["homeSupport.why.items.localConditions", "Neden Form • 2. Madde", "textarea"],
       ["homeSupport.why.items.transparentResult", "Neden Form • 3. Madde", "textarea"],
       ["homeSupport.faq.title", "SSS Başlığı"],
-      ["homeSupport.faq.items.free.question", "SSS 1 • Soru"],
-      ["homeSupport.faq.items.free.answer", "SSS 1 • Cevap", "textarea"],
-      ["homeSupport.faq.items.order.question", "SSS 2 • Soru"],
-      ["homeSupport.faq.items.order.answer", "SSS 2 • Cevap", "textarea"],
-      ["homeSupport.faq.items.installation.question", "SSS 3 • Soru"],
-      ["homeSupport.faq.items.installation.answer", "SSS 3 • Cevap", "textarea"],
-      ["homeSupport.faq.items.afterForm.question", "SSS 4 • Soru"],
+      ["homeSupport.faq.items.installation.question", "SSS 1 • Soru (Fiyata montaj dahil mi)"],
+      ["homeSupport.faq.items.installation.answer", "SSS 1 • Cevap", "textarea"],
+      ["homeSupport.faq.items.free.question", "SSS 2 • Soru (Form ücretli mi)"],
+      ["homeSupport.faq.items.free.answer", "SSS 2 • Cevap", "textarea"],
+      ["homeSupport.faq.items.order.question", "SSS 3 • Soru (Sipariş oluşur mu)"],
+      ["homeSupport.faq.items.order.answer", "SSS 3 • Cevap", "textarea"],
+      ["homeSupport.faq.items.afterForm.question", "SSS 4 • Soru (Sonrasında ne olur)"],
       ["homeSupport.faq.items.afterForm.answer", "SSS 4 • Cevap", "textarea"],
+      ["homeSupport.faq.items.warranty.question", "SSS 5 • Soru (Garanti)"],
+      ["homeSupport.faq.items.warranty.answer", "SSS 5 • Cevap", "textarea"],
+      ["homeSupport.faq.items.area.question", "SSS 6 • Soru (Hizmet bölgesi)"],
+      ["homeSupport.faq.items.area.answer", "SSS 6 • Cevap", "textarea"],
+      ["homeSupport.faq.items.notListed.question", "SSS 7 • Soru (Cihaz listede yoksa)"],
+      ["homeSupport.faq.items.notListed.answer", "SSS 7 • Cevap", "textarea"],
+      ["homeSupport.faq.items.hours.question", "SSS 8 • Soru (Çalışma saatleri)"],
+      ["homeSupport.faq.items.hours.answer", "SSS 8 • Cevap", "textarea"],
     ],
   },
   {
@@ -564,7 +573,7 @@ export default function AdminPage() {
   // Login Screen
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 sm:p-6 font-sans">
+      <div className="admin-login min-h-screen bg-background text-foreground flex items-center justify-center p-4 sm:p-6 font-sans">
         <div className="max-w-md w-full border border-slate-200 bg-white p-6 sm:p-8 space-y-6">
           <div className="text-center">
             <div className="inline-flex h-14 w-14 items-center justify-center bg-[hsl(var(--brand-plum))] text-white mb-3">
@@ -636,7 +645,7 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="admin-shell min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Top Navbar */}
       <header className="border-b border-slate-200 bg-white sticky top-0 z-40 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
@@ -1065,7 +1074,7 @@ export default function AdminPage() {
                       <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">{s.description}</p>
                       {s.guideText && (
                         <div className="mt-3 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 font-medium">
-                          <strong>💡 Rehber Kutusu:</strong> {s.guideText}
+                          <strong>Rehber Kutusu:</strong> {s.guideText}
                         </div>
                       )}
                     </div>
@@ -1538,7 +1547,7 @@ export default function AdminPage() {
               <div>
                 <h2 className="font-display font-bold text-xl text-slate-900">Arıza Rehberi & Uzman Tavsiyeleri</h2>
                 <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  Arıza tiplerini, arıza seçildiğinde çıkan 💡 Uzman Tavsiyesi metnini ve ilk müdahale adımlarını buradan yönetin.
+                  Arıza tiplerini, arıza seçildiğinde çıkan Uzman Tavsiyesi metnini ve ilk müdahale adımlarını buradan yönetin.
                 </p>
               </div>
 
@@ -1592,14 +1601,14 @@ export default function AdminPage() {
                     <h4 className="font-display font-bold text-base sm:text-lg text-slate-900">{fault.title}</h4>
 
                     <div className="mt-3 p-3.5 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-950 space-y-1">
-                      <strong className="block text-amber-900 font-bold">💡 Uzman Tavsiyesi & Neden:</strong>
+                      <strong className="block text-amber-900 font-bold">Uzman Tavsiyesi & Neden:</strong>
                       <p className="leading-relaxed text-slate-700">{fault.body}</p>
                     </div>
 
                     {fault.tips && fault.tips.length > 0 && (
                       <div className="mt-3 pt-2.5 border-t border-slate-100">
                         <span className="block text-[11px] font-bold text-slate-700 uppercase mb-1.5">
-                          🛠️ Servis Gelene Kadar Yapılacaklar ({fault.tips.length} Adım):
+                          Servis Gelene Kadar Yapılacaklar ({fault.tips.length} Adım):
                         </span>
                         <div className="space-y-1">
                           {fault.tips.map((tip, idx) => (
@@ -1699,9 +1708,9 @@ export default function AdminPage() {
                   };
 
                   const flowBadges = {
-                    builder: { label: "🛠️ Özel Cihaz", bg: "bg-purple-50 text-purple-700 border-purple-200" },
+                    builder: { label: "Özel Cihaz", bg: "bg-purple-50 text-purple-700 border-purple-200" },
                     buy: { label: "🛒 Hazır Cihaz", bg: "bg-blue-50 text-blue-700 border-blue-200" },
-                    filter: { label: "💧 Filtre Değişimi", bg: "bg-teal-50 text-teal-700 border-teal-200" },
+                    filter: { label: "Filtre Değişimi", bg: "bg-teal-50 text-teal-700 border-teal-200" },
                     fault: { label: "🔧 Arıza Servisi", bg: "bg-amber-50 text-amber-700 border-amber-200" },
                   };
 
@@ -1797,7 +1806,7 @@ export default function AdminPage() {
                             {/* Selected Items or Item description */}
                             <div className="flex-1 bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
                               <span className="text-[11px] font-bold text-[hsl(var(--brand-plum))] uppercase tracking-wider block mb-2.5">
-                                {lead.flowType === "builder" ? "🏭 Lotus Custom Üretim Konfigürasyonu" : "📦 Talep Detayı"}
+                                {lead.flowType === "builder" ? "🏭 Lotus Custom Üretim Konfigürasyonu" : "Talep Detayı"}
                               </span>
 
                               {lead.flowType === "builder" && lead.itemName && (
@@ -2339,7 +2348,7 @@ export default function AdminPage() {
               {/* Highlights Editor */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-emerald-800 font-bold">✨ Modal Öne Çıkan Avantaj Maddeleri</label>
+                  <label className="text-emerald-800 font-bold">Modal Öne Çıkan Avantaj Maddeleri</label>
                   <button
                     type="button"
                     onClick={() => setEditingOption({ ...editingOption, highlights: [...(editingOption.highlights || []), "Yeni Avantaj"] })}
@@ -2560,7 +2569,7 @@ export default function AdminPage() {
 
               <div className="grid gap-5 md:grid-cols-2">
                 <StringListEditor
-                  label="✨ Öne Çıkan Özellikler"
+                  label="Öne Çıkan Özellikler"
                   values={editingDevice.features || []}
                   onChange={(features) => setEditingDevice({ ...editingDevice, features })}
                   placeholder="Yeni özellik"
@@ -2572,7 +2581,7 @@ export default function AdminPage() {
                   placeholder="Örn: Ölçüler: 40 × 25 × 42 cm"
                 />
                 <StringListEditor
-                  label="📦 Pakete / Montaja Dahil"
+                  label="Pakete / Montaja Dahil"
                   values={editingDevice.includedItems || []}
                   onChange={(includedItems) => setEditingDevice({ ...editingDevice, includedItems })}
                   placeholder="Yeni dahil ürün veya hizmet"
@@ -2694,7 +2703,7 @@ export default function AdminPage() {
               {/* Includes Editor */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-slate-700 font-bold">📦 Paket İçeriğindeki Filtreler</label>
+                  <label className="text-slate-700 font-bold">Paket İçeriğindeki Filtreler</label>
                   <button
                     type="button"
                     onClick={() => setEditingFilterSet({ ...editingFilterSet, includes: [...(editingFilterSet.includes || []), "Yeni Filtre Aşaması"] })}
@@ -2760,7 +2769,7 @@ export default function AdminPage() {
                 <h3 className="font-display font-bold text-xl text-slate-900">
                   {editingFault._id ? "Arıza Rehberini & Çözümü Düzenle" : "Yeni Arıza Rehberi Oluştur"}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Arıza başlığı, 💡 Uzman Tavsiyesi açıklaması ve ilk müdahale adımları.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Arıza başlığı, Uzman Tavsiyesi açıklaması ve ilk müdahale adımları.</p>
               </div>
               <button
                 type="button"
@@ -2799,7 +2808,7 @@ export default function AdminPage() {
 
               <div>
                 <label className="block text-amber-900 font-bold mb-1">
-                  💡 Uzman Tavsiyesi & Arıza Nedeni (Seçimden sonraki sayfada görünecektir)
+                  Uzman Tavsiyesi & Arıza Nedeni (Seçimden sonraki sayfada görünecektir)
                 </label>
                 <textarea
                   rows={4}
@@ -2813,7 +2822,7 @@ export default function AdminPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-slate-700 font-bold">🛠️ Servis Gelene Kadar Yapılması Gereken İlk Adımlar</label>
+                  <label className="text-slate-700 font-bold">Servis Gelene Kadar Yapılması Gereken İlk Adımlar</label>
                   <button
                     type="button"
                     onClick={() =>

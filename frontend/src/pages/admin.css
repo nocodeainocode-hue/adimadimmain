@@ -1,0 +1,92 @@
+/* Yönetim paneli: siteyle aynı dil. Yalnızca .admin-shell / .admin-login içinde geçerlidir. */
+.admin-shell, .admin-login {
+  --a-navy: #0c2340; --a-blue: #0b5cc2; --a-blue-dark: #084a9e; --a-line: #d5dde7; --a-paper: #f3f6f9; --a-ink: #1b2b3f; --a-muted: #4a5a70;
+  font-size: 16px; line-height: 1.55; color: var(--a-ink);
+}
+.admin-shell { background: var(--a-paper); }
+
+.admin-shell.font-sans, .admin-login.font-sans, .admin-shell input, .admin-shell textarea, .admin-shell select, .admin-shell button, .admin-login input, .admin-login button { font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.admin-shell .font-mono { font-family: 'Figtree', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+/* Üst bar */
+.admin-shell > header { background: var(--a-navy); border-color: #1d3a63; box-shadow: none; }
+.admin-shell > header :is(.text-slate-900, .text-slate-600, .text-slate-700) { color: #fff; }
+.admin-shell > header a, .admin-shell > header .bg-slate-100 { background: #ffffff1f; border-color: #ffffff33; color: #fff; }
+.admin-shell > header a:hover { background: #ffffff33; }
+.admin-shell > header .bg-slate-200 { background: #ffffff33; }
+.admin-shell > header .h-7.w-7 { background: #fff; color: var(--a-blue); box-shadow: none; border-radius: 8px; }
+.admin-shell > header .font-display { font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+.admin-shell > header .bg-rose-50 { background: #fff; border-color: #fff; color: #b3261e; }
+.admin-shell > header .bg-rose-50:hover { background: #fde8e6; }
+.admin-shell > header :is(a, button) { min-height: 38px; }
+
+/* Yan menü */
+.admin-shell aside { border-color: var(--a-line); }
+.admin-shell aside nav button { font-size: 15.5px; border-radius: 8px; min-height: 46px; }
+.admin-shell aside nav button:not(.bg-\[hsl\(var\(--brand-plum\)\)\]):hover { background: #eaf2fc; color: var(--a-blue); }
+.admin-shell aside nav p { font-size: 12.5px; letter-spacing: .06em; color: #5a6b82; }
+.admin-shell aside .bg-\[hsl\(var\(--brand-plum\)\)\] { background: var(--a-blue); box-shadow: none; }
+
+/* Kartlar ve yüzeyler */
+.admin-shell :is(.rounded-2xl, .rounded-3xl) { border-radius: 10px; }
+.admin-shell .rounded-xl { border-radius: 8px; }
+.admin-shell :is(.shadow-xs, .shadow-sm, .shadow-md, .shadow-lg) { box-shadow: none; }
+.admin-shell .shadow-2xl { box-shadow: 0 20px 60px #0c234040; }
+.admin-shell .border-slate-200 { border-color: var(--a-line); }
+.admin-shell .bg-white.border { border-color: var(--a-line); }
+.admin-shell .hover\:scale-\[1\.02\]:hover { transform: none; }
+
+/* Yazı: küçük puntolar okunur hale */
+.admin-shell .text-xs { font-size: 14px; line-height: 1.5; }
+.admin-shell .text-sm { font-size: 15.5px; line-height: 1.55; }
+.admin-shell .text-\[11px\] { font-size: 13px; }
+.admin-shell .text-\[10px\] { font-size: 12.5px; }
+.admin-shell .text-slate-400 { color: #5f7088; }
+.admin-shell .text-slate-500 { color: #4f6077; }
+.admin-shell :is(.font-display, h1, h2, h3, h4) { color: var(--a-navy); letter-spacing: -.015em; }
+.admin-shell .font-display.font-black { font-weight: 800; }
+.admin-shell h2.font-display { font-size: 24px; }
+.admin-shell .uppercase { letter-spacing: .04em; }
+
+/* Form alanları */
+.admin-shell :is(input:not([type=checkbox]):not([type=radio]):not([type=file]), textarea, select),
+.admin-login :is(input:not([type=checkbox]), textarea, select) {
+  min-height: 44px; font-size: 15.5px; border-radius: 8px; border: 1px solid #b4c1d2; background: #fff; color: var(--a-ink);
+}
+.admin-shell textarea { line-height: 1.55; }
+.admin-shell :is(input, textarea, select):focus, .admin-login :is(input, textarea, select):focus {
+  outline: none; border-color: var(--a-blue); box-shadow: 0 0 0 3px #0b5cc233;
+}
+.admin-shell :is(a, button, summary, [tabindex]):focus-visible, .admin-login :is(a, button):focus-visible { outline: 3px solid #f2a900; outline-offset: 2px; }
+
+/* Düğmeler */
+.admin-shell .btn-champagne, .admin-login .btn-champagne { background: var(--a-blue); color: #fff; border-radius: 8px; font-weight: 700; }
+.admin-shell .btn-champagne:hover, .admin-login .btn-champagne:hover { background: var(--a-blue-dark); }
+.admin-shell button:disabled { cursor: not-allowed; }
+
+/* Tablolar */
+.admin-shell table { font-size: 14.5px; }
+.admin-shell thead th { background: #eef3f8; color: var(--a-navy); font-weight: 700; }
+.admin-shell tbody tr:hover { background: #f7fafd; }
+
+/* Giriş ekranı */
+.admin-login { background: var(--a-paper); }
+.admin-login > div { border-radius: 12px; border: 1px solid var(--a-line); box-shadow: 0 8px 30px #0c23401a; padding: 32px; }
+.admin-login h2 { color: var(--a-navy); font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+.admin-login .bg-\[hsl\(var\(--brand-plum\)\)\] { background: var(--a-blue); border-radius: 10px; }
+.admin-login label { font-size: 15px; }
+.admin-login .text-xs, .admin-login .text-sm { font-size: 15px; }
+.admin-login form button[type=submit] { min-height: 50px; font-size: 16px; }
+@media (max-width: 600px) { .admin-login > div { padding: 22px 18px; } }
+
+/* Yerleşim: üst bar sabit yükseklikte ve her zaman menünün üstünde; yan menü onun altından başlar. */
+.admin-shell { --a-header-h: 64px; }
+.admin-shell > header { z-index: 50; height: var(--a-header-h); min-height: var(--a-header-h); padding-block: 0; }
+.admin-shell > div.flex-1 { overflow: visible; min-height: calc(100vh - var(--a-header-h)) !important; }
+.admin-shell aside { top: var(--a-header-h) !important; z-index: 40; }
+@media (min-width: 1024px) {
+  .admin-shell aside { position: sticky !important; height: calc(100vh - var(--a-header-h)); align-self: flex-start; flex-shrink: 0; }
+}
+@media (max-width: 1023px) {
+  .admin-shell aside { height: calc(100vh - var(--a-header-h)); }
+}

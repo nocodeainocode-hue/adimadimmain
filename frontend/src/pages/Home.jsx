@@ -38,7 +38,7 @@ export default function Home() {
 
       <Testimonials />
 
-      <HomeSupport content={supportContent} />
+      <HomeSupport content={supportContent} waNumber={waNumber} waDisplay={waDisplay} />
       <Footer brand={brand} waDisplay={waDisplay} waNumber={waNumber} />
 
       {!formActive && <div className="mobile-form-action md:hidden">
