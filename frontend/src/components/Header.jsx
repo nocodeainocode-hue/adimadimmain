@@ -1,46 +1,30 @@
-import { MessageCircle, Droplets, Sparkles } from "lucide-react";
+import { Droplets, MapPin, MessageCircle, Phone } from "lucide-react";
 import { buildWaLink } from "@/lib/whatsapp";
 
-export default function Header({ brand, waNumber, formFirst = false, formCtaText = "Çözümünü Bul" }) {
-  const name = brand?.name || "Lotus Su Arıtma";
-  return (
-    <header
-      className="sticky top-0 z-50 border-b border-border/80 bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/75 transition-all"
-      data-testid="site-header"
-    >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-[72px] flex items-center justify-between">
-        <a href="#top" className="flex items-center gap-3 group" data-testid="site-header-brand">
-          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[hsl(var(--brand-plum))] to-[hsl(var(--brand-plum)/0.8)] text-[hsl(var(--brand-champagne))] shadow-sm transition-transform group-hover:scale-105">
-            <Droplets className="h-5 w-5" />
-          </span>
-          <div className="flex flex-col">
-            <span className="font-display font-bold text-lg sm:text-xl leading-tight text-foreground tracking-tight">{name}</span>
-            <span className="text-[11px] font-medium text-muted-foreground tracking-normal">Tekirdağ Bölge & Yetkili Servis</span>
-          </div>
-        </a>
+export const telHref = (waNumber) => `tel:+${String(waNumber || "").replace(/\D/g, "")}`;
 
-        {formFirst ? (
-          <a
-            href="#yardim-formu"
-            className="btn-champagne inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-xl px-3 text-xs font-bold shadow-sm sm:gap-2 sm:px-4 sm:text-sm"
-            data-testid="site-header-form-button"
-          >
-            <Sparkles className="h-4 w-4" />
-            <span>{formCtaText}</span>
-          </a>
-        ) : (
-          <a
-            href={buildWaLink(waNumber, "Merhaba, Lotus Su Arıtma hakkında bilgi almak istiyorum.")}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-whatsapp inline-flex items-center gap-2 rounded-xl h-10 px-3.5 sm:px-4 text-sm font-semibold shadow-sm"
-            data-testid="site-header-whatsapp-button"
-          >
-            <span className="pulse-dot" />
-            <MessageCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">WhatsApp Destek</span>
-          </a>
-        )}
+export default function Header({ brand, waNumber, waDisplay, formFirst = false, formCtaText = "Çözümünü Bul" }) {
+  const name = brand?.name || "Lotus Su Arıtma";
+  const prefix = formFirst ? "" : "/";
+  return (
+    <header className="site-header" data-testid="site-header">
+      <div className="utility-bar">
+        <div className="site-container utility-inner">
+          <span><MapPin size={15} aria-hidden="true" /> Tekirdağ merkez ve tüm ilçeler</span>
+          <span className="utility-hours">Hafta içi 09:00–18:00 · Cumartesi 09:00–14:00</span>
+          <a href={telHref(waNumber)} className="utility-phone"><Phone size={15} aria-hidden="true" /> {waDisplay || "Bizi arayın"}</a>
+        </div>
+      </div>
+      <div className="site-container header-inner">
+        <a href={formFirst ? "#top" : "/"} className="site-brand" data-testid="site-header-brand" aria-label={`${name} ana sayfa`}>
+          <span className="brand-symbol"><Droplets size={24} strokeWidth={2} aria-hidden="true" /></span>
+          <span className="brand-type"><strong>{name}</strong></span>
+        </a>
+        <nav className="header-nav" aria-label="Ana menü"><a href={`${prefix}#yardim-formu`}>Çözümlerimiz</a><a href={`${prefix}#neden-lotus`}>Neden Lotus?</a><a href={`${prefix}#sorular`}>Sık sorulanlar</a></nav>
+        <div className="header-actions">
+          <a href={buildWaLink(waNumber, "Merhaba, Lotus Su Arıtma hakkında bilgi almak istiyorum.")} target="_blank" rel="noopener noreferrer" className="header-whatsapp" aria-label="WhatsApp üzerinden yazın" data-testid="site-header-whatsapp-button"><MessageCircle size={20} aria-hidden="true" /><span>WhatsApp</span></a>
+          <a href={`${prefix}#yardim-formu`} className="site-header-action" data-testid="site-header-form-button">{formCtaText}</a>
+        </div>
       </div>
     </header>
   );

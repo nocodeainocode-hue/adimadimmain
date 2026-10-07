@@ -17,6 +17,7 @@ import type * as http from "../http.js";
 import type * as leads from "../leads.js";
 import type * as media from "../media.js";
 import type * as settings from "../settings.js";
+import type * as testimonials from "../testimonials.js";
 
 import type {
   ApiFromModules,
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   leads: typeof leads;
   media: typeof media;
   settings: typeof settings;
+  testimonials: typeof testimonials;
 }>;
 
 /**

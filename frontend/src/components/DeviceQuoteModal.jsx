@@ -80,13 +80,13 @@ export default function DeviceQuoteModal({ device, waNumber, city = "Tekirdağ",
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-md"
+      className="site-modal-backdrop fixed inset-0 z-[60] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label={`${device.name} teklif formu`}
       onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
-      <div className="relative w-full max-w-lg rounded-3xl border border-border bg-background p-6 shadow-2xl sm:p-8">
+      <div className="site-modal relative w-full max-w-lg border border-border bg-background p-6 sm:p-8">
         <button type="button" onClick={onClose} aria-label="Kapat" className="absolute right-4 top-4 rounded-full bg-muted p-2 text-muted-foreground hover:text-foreground">
           <X className="h-5 w-5" />
         </button>

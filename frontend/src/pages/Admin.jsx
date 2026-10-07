@@ -46,6 +46,7 @@ import { useLocalData } from "@/lib/convex";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import ImageUploadField from "@/components/admin/ImageUploadField";
+import TestimonialsAdmin from "@/components/admin/TestimonialsAdmin";
 
 const ENTRY_ICON_OPTIONS = [
   ["ShoppingCart", "Alışveriş Sepeti"],
@@ -563,16 +564,13 @@ export default function AdminPage() {
   // Login Screen
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center p-4 sm:p-6 font-sans relative overflow-hidden">
-        <div className="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-amber-200/40 blur-[90px] pointer-events-none" />
-        <div className="absolute -bottom-32 -right-32 h-80 w-80 rounded-full bg-purple-200/40 blur-[90px] pointer-events-none" />
-
-        <div className="relative max-w-md w-full rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xl space-y-6">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4 sm:p-6 font-sans">
+        <div className="max-w-md w-full border border-slate-200 bg-white p-6 sm:p-8 space-y-6">
           <div className="text-center">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] font-black text-2xl mb-3 shadow-md">
+            <div className="inline-flex h-14 w-14 items-center justify-center bg-[hsl(var(--brand-plum))] text-white mb-3">
               <Lock className="h-7 w-7" />
             </div>
-            <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-slate-900 tracking-tight">
+            <h2 className="font-display font-semibold text-2xl sm:text-3xl text-slate-900 tracking-tight">
               Lotus Yönetici Girişi
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 mt-1.5 leading-relaxed">
@@ -589,7 +587,7 @@ export default function AdminPage() {
                 placeholder="E-posta adresiniz"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] text-sm font-medium transition-all"
+                className="w-full rounded-sm border border-slate-200 bg-slate-50 px-3.5 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[hsl(var(--brand-plum))] text-sm font-medium transition-all"
               />
             </div>
 
@@ -610,14 +608,14 @@ export default function AdminPage() {
                 placeholder="••••••••"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[hsl(var(--brand-champagne))] text-sm font-mono transition-all"
+                className="w-full rounded-sm border border-slate-200 bg-slate-50 px-3.5 py-3 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[hsl(var(--brand-plum))] text-sm font-mono transition-all"
               />
             </div>
 
             <button
               type="submit"
               disabled={loginLoading || !passwordInput}
-              className="btn-champagne w-full rounded-xl h-12 text-sm font-bold flex items-center justify-center gap-2 shadow-md hover:scale-[1.01] transition-all disabled:opacity-50"
+              className="btn-champagne w-full h-12 text-sm font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
             >
               <KeyRound className="h-4 w-4" />
               {loginLoading ? "Giriş Yapılıyor..." : "Yönetim Paneline Giriş Yap"}
@@ -741,6 +739,7 @@ export default function AdminPage() {
               { key: "filterSets", icon: Droplets, label: "4. Filtre Paketleri", count: (localData.filterSets || []).length },
               { key: "faults", icon: Wrench, label: "5. Arıza Rehberi", count: (localData.faultGuides || []).length },
               { key: "texts", icon: FileText, label: "Metin & İçerikler" },
+              { key: "testimonials", icon: MessageSquare, label: "Müşteri Yorumları" },
             ].map(({ key, icon: Icon, label, count }) => (
               <button
                 key={key}
@@ -809,6 +808,7 @@ export default function AdminPage() {
                 {activeTab === "faults" && "Arıza Rehberi"}
                 {activeTab === "leads" && "Talepler & Satışlar"}
                 {activeTab === "texts" && "Metin & İçerikler"}
+                {activeTab === "testimonials" && "Müşteri Yorumları"}
                 {activeTab === "settings" && "Genel Ayarlar"}
               </span>
             </div>
@@ -1880,6 +1880,8 @@ export default function AdminPage() {
 
 
         {/* TAB 8: METİN & İÇERİKLER */}
+        {activeTab === "testimonials" && <TestimonialsAdmin />}
+
         {activeTab === "texts" && (
           <form
             onSubmit={async (e) => {

@@ -5,6 +5,7 @@ import {
   Check,
   ExternalLink,
   Info,
+  ImageOff,
   MessageCircle,
   PackageCheck,
   PlayCircle,
@@ -47,6 +48,7 @@ function DeviceMediaGallery({ device }) {
   const images = useMemo(() => getDeviceImages(device), [device]);
   const video = useMemo(() => getVideoSource(device?.videoUrl), [device?.videoUrl]);
   const [activeMedia, setActiveMedia] = useState(images[0] || (video ? "video" : ""));
+  const [failedImage, setFailedImage] = useState("");
 
   useEffect(() => {
     setActiveMedia(images[0] || (video ? "video" : ""));
@@ -54,7 +56,7 @@ function DeviceMediaGallery({ device }) {
 
   return (
     <div>
-      <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-neutral-950 shadow-inner">
+      <div className="device-detail-media relative aspect-[4/3] overflow-hidden">
         {activeMedia === "video" && video ? (
           video.type === "embed" ? (
             <iframe
@@ -67,10 +69,10 @@ function DeviceMediaGallery({ device }) {
           ) : (
             <video src={video.url} controls preload="metadata" className="h-full w-full object-contain" />
           )
-        ) : activeMedia ? (
-          <img src={activeMedia} alt={device.name} className="h-full w-full object-cover" />
+        ) : activeMedia && failedImage !== activeMedia ? (
+          <img src={activeMedia} alt={device.name} className="h-full w-full object-contain p-6" onError={() => setFailedImage(activeMedia)} />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-neutral-400">Görsel hazırlanıyor</div>
+          <div className="flex h-full flex-col items-center justify-center gap-3 bg-secondary text-xs text-muted-foreground"><ImageOff size={30} strokeWidth={1.3} aria-hidden="true" />Ürün görseli güncelleniyor</div>
         )}
       </div>
 
@@ -82,11 +84,11 @@ function DeviceMediaGallery({ device }) {
               type="button"
               onClick={() => setActiveMedia(image)}
               aria-label={`${device.name} görsel ${index + 1}`}
-              className={`h-16 w-20 shrink-0 overflow-hidden rounded-xl border-2 bg-neutral-900 transition-all ${
-                activeMedia === image ? "border-[hsl(var(--brand-champagne))]" : "border-border"
+              className={`h-16 w-20 shrink-0 overflow-hidden border-2 bg-white transition-all ${
+                activeMedia === image ? "border-primary" : "border-border"
               }`}
             >
-              <img src={image} alt="" className="h-full w-full object-cover" />
+              <img src={image} alt="" className="h-full w-full object-contain p-1" />
             </button>
           ))}
           {video && (
@@ -113,7 +115,7 @@ export function DeviceDetailContent({ device, waNumber, matchReason, showFullPag
   if (!device) return null;
 
   return (
-    <div className="space-y-7">
+    <div className="device-detail-content space-y-7">
       <div className="grid gap-7 lg:grid-cols-[1.08fr_0.92fr]">
         <DeviceMediaGallery device={device} />
 
@@ -134,7 +136,7 @@ export function DeviceDetailContent({ device, waNumber, matchReason, showFullPag
           {(matchReason || device.recommendationReason) && (
             <div className="mt-5 rounded-2xl border border-[hsl(var(--brand-champagne)/0.45)] bg-[hsl(var(--brand-champagne)/0.1)] p-4">
               <div className="flex items-start gap-3">
-                <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
                 <div>
                   <h2 className="text-sm font-bold text-foreground">Sizin için neden uygun?</h2>
                   <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
@@ -261,7 +263,7 @@ export function DeviceDetailModal({ device, waNumber, matchReason, onClose, onRe
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-3 backdrop-blur-md sm:p-6"
+      className="site-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-label={`${device.name} detayları`}
@@ -269,7 +271,7 @@ export function DeviceDetailModal({ device, waNumber, matchReason, onClose, onRe
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="relative max-h-[94vh] w-full max-w-5xl overflow-y-auto rounded-3xl border border-border bg-background p-5 shadow-2xl sm:p-8">
+      <div className="site-modal relative max-h-[94vh] w-full max-w-5xl overflow-y-auto border border-border bg-background p-5 sm:p-8">
         <button
           type="button"
           onClick={onClose}

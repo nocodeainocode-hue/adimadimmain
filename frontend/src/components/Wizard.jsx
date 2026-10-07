@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   ShoppingCart,
   Replace,
@@ -132,7 +132,7 @@ function ProductImage({ src, alt, className = "" }) {
     return (
       <div className={`flex flex-col items-center justify-center gap-2 bg-muted/50 p-4 text-center text-muted-foreground ${className}`}>
         <ImageOff className="h-7 w-7" aria-hidden="true" />
-        <span className="text-xs font-semibold">Ürün görseli güncelleniyor</span>
+        <span className="text-xs font-semibold">Ürün görseli yakında</span>
       </div>
     );
   }
@@ -145,12 +145,13 @@ function BuilderDetailModal({ item, onClose, onSelect, isSelected }) {
   if (!item) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/65 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-card border border-border shadow-2xl p-6 sm:p-8 text-left">
+    <div className="site-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-label={`${item.name} bileşen detayları`}>
+      <div className="site-modal relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-card border border-border p-6 sm:p-8 text-left">
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
+          aria-label="Bileşen detaylarını kapat"
           className="absolute right-4 top-4 sm:right-6 sm:top-6 inline-flex h-9 w-9 items-center justify-center rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all"
         >
           <X className="h-5 w-5" />
@@ -293,37 +294,27 @@ function BuilderOptionCard({
 }) {
   return (
     <div
-      onClick={onClick}
-      className={`group relative overflow-hidden rounded-2xl border transition-all duration-200 shadow-sm cursor-pointer ${
-        selected
-          ? "border-[hsl(var(--brand-champagne))] ring-2 ring-[hsl(var(--brand-champagne)/0.5)] bg-[hsl(var(--brand-champagne)/0.12)] -translate-y-0.5"
-          : "border-border bg-card/90 hover:bg-muted/60 hover:border-neutral-300"
-      }`}
+      className={`site-builder-option ${selected ? "is-selected" : ""}`}
     >
-      <div className="flex flex-col items-stretch gap-4 p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
+      <div className="builder-option-layout">
         {/* Left Thumbnail with Click to Zoom */}
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onOpenDetails) onOpenDetails();
-          }}
-          className="group/img relative h-44 w-full shrink-0 overflow-hidden rounded-2xl border border-border bg-white shadow-sm sm:h-36 sm:w-48"
-          title="Büyük görseli ve detayları incelemek için tıklayın"
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          className="builder-option-image"
+          aria-label={`${title} görselini ve detaylarını incele`}
         >
           <ProductImage
             src={img}
             alt={title}
-            className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover/img:scale-105"
+            className="h-full w-full object-contain p-2"
           />
-          <div className="absolute inset-x-0 bottom-0 flex h-16 items-end justify-end bg-gradient-to-t from-black/60 via-black/10 to-transparent p-2.5">
-            <span className="inline-flex items-center gap-1 rounded-lg bg-black/75 px-2.5 py-1.5 text-[11px] font-bold text-white shadow backdrop-blur-sm transition-transform group-hover/img:scale-105">
-              <Eye className="h-3 w-3" /> İncele
-            </span>
-          </div>
-        </div>
+          <span className="builder-image-action"><Eye size={12} aria-hidden="true" /> İncele</span>
+        </button>
 
         {/* Middle Info */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0">
+          <button type="button" onClick={onClick} aria-pressed={selected} className="w-full text-left" aria-label={`${title} seç${selected ? " — seçildi" : ""}`}>
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className="font-bold text-base sm:text-lg text-foreground group-hover:text-foreground">
               {title}
@@ -348,7 +339,11 @@ function BuilderOptionCard({
           <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
             {desc}
           </p>
-
+          <span className="builder-option-select">
+            <span><span className="block text-[10px] text-muted-foreground">Fiyat farkı</span><strong className="font-display text-xl font-semibold text-primary">{price === 0 ? "Dahil" : `+${price.toLocaleString("tr-TR")} ₺`}</strong></span>
+            <span className="option-check"><Check size={13} aria-hidden="true" />{selected ? "Seçildi" : "Seç"}</span>
+          </span>
+          </button>
           <button
             type="button"
             onClick={(e) => {
@@ -358,29 +353,10 @@ function BuilderOptionCard({
             className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[hsl(var(--brand-plum))] hover:underline"
           >
             <Info className="h-3.5 w-3.5" />
-            <span>🔎 Büyük Görsel & Detaylı Özellikler</span>
+          <span>Görsel ve özellikleri incele</span>
           </button>
         </div>
 
-        {/* Right Price & Select Circle */}
-        <div className="flex items-center justify-between sm:flex-col sm:items-end gap-3 shrink-0 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/60">
-          <div className="text-left sm:text-right">
-            <span className="block text-[11px] font-medium text-muted-foreground">Fiyat Farkı</span>
-            <span className="font-display font-extrabold text-lg sm:text-xl text-[hsl(var(--brand-plum))] font-mono">
-              {price === 0 ? "Dahil (0 ₺)" : `+${price.toLocaleString("tr-TR")} ₺`}
-            </span>
-          </div>
-
-          <span
-            className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
-              selected
-                ? "bg-[hsl(var(--brand-champagne))] border-[hsl(var(--brand-champagne))] text-neutral-900 shadow-md scale-110"
-                : "border-border text-transparent group-hover:border-neutral-400"
-            }`}
-          >
-            <Check className="h-4 w-4 stroke-[3]" />
-          </span>
-        </div>
       </div>
     </div>
   );
@@ -438,7 +414,7 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, produ
       }
     } catch {
       if (whatsappWindow) whatsappWindow.close();
-      setSubmitError("Talebiniz kaydedilemedi. Lütfen bağlantınızı kontrol edip tekrar deneyin.");
+      setSubmitError("Talebiniz gönderilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.");
     } finally {
       setLoading(false);
     }
@@ -450,16 +426,16 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, produ
         <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white mb-2 shadow-md">
           <Check className="h-6 w-6 stroke-[3]" />
         </div>
-        <h4 className="font-display font-bold text-lg text-foreground">Talebiniz Başarıyla Alındı!</h4>
+        <h4 className="font-display font-bold text-lg text-foreground">Talebiniz bize ulaştı</h4>
         <p className="text-xs sm:text-sm text-muted-foreground mt-1.5 max-w-md mx-auto">
           {productionOrder ? (
-            <>Üretim talebiniz kaydedildi. Uzmanımız konfigürasyonu sizinle teyit ettikten sonra üretim başlayacaktır.</>
+            <>Üretim talebiniz kaydedildi. Uzmanımız konfigürasyonu sizinle teyit ettikten sonra üretime başlıyoruz.</>
           ) : whatsappUrl ? (
-            <>Siparişiniz kaydedildi ve WhatsApp görüşmeniz açıldı. Mesajı göndererek montaj talebinizi tamamlayabilirsiniz.</>
+            <>Siparişiniz kaydedildi, WhatsApp görüşmeniz açıldı. Mesajı göndermeniz yeterli; gerisini biz planlarız.</>
           ) : (
             <>
-              {discountOffer ? "🎁 %20 İndirim hakkınız numaranıza tanımlandı! " : ""}
-              Su uzmanımız 10-15 dakika içinde <strong className="text-foreground font-semibold">{phone}</strong> numaranızdan sizi arayarak montaj ve fiyat detaylarını aktaracaktır.
+              {discountOffer ? "%20 indirim hakkınız numaranıza tanımlandı. " : ""}
+              Uzmanımız 10–15 dakika içinde <strong className="text-foreground font-semibold">{phone}</strong> numaralı telefonunuzu arayıp montaj ve fiyat detaylarını anlatacak.
             </>
           )}
         </p>
@@ -468,11 +444,7 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, produ
   }
 
   return (
-    <div className={`mt-8 rounded-2xl border p-5 sm:p-7 backdrop-blur-sm ${
-      discountOffer || productionOrder
-        ? "border-emerald-500/40 bg-gradient-to-r from-emerald-500/5 via-transparent to-amber-500/5" 
-        : "border-border/90 bg-muted/40"
-    }`}>
+    <div className="site-callback">
       <div className="flex items-center gap-3 mb-2">
         <span className={`inline-flex h-9 w-9 items-center justify-center rounded-xl shadow-sm ${
           discountOffer || productionOrder
@@ -484,21 +456,21 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, produ
         <div>
           <h4 className="font-display font-bold text-base sm:text-lg text-foreground">
             {productionOrder
-              ? "Üretim Emrini Oluşturun"
+              ? "Üretim talebinizi gönderin"
               : whatsappUrl
-              ? "WhatsApp Siparişinizi Oluşturun"
+              ? "Siparişinizi WhatsApp'tan tamamlayın"
               : discountOffer
-                ? "🎁 %20 İndirim Fırsatını Numaranıza Tanımlayın"
-                : "WhatsApp Kullanmıyor musunuz?"}
+                ? "%20 indirimli teklifinizi alın"
+                : "WhatsApp kullanmıyor musunuz?"}
           </h4>
           <p className="text-xs sm:text-sm text-muted-foreground">
             {productionOrder
-              ? "Seçiminiz kaydedilir. Uzmanımız konfigürasyonu sizinle teyit ettikten sonra üretim başlar."
+              ? "Seçiminiz kaydedilir. Uzmanımız sizinle teyit ettikten sonra üretime başlarız."
               : whatsappUrl
-              ? "Adınızı ve telefonunuzu girin; siparişiniz kaydedildikten sonra seçiminizle birlikte WhatsApp açılır."
+              ? "Adınızı ve telefonunuzu yazın. Siparişiniz kaydedilir, seçiminizle birlikte WhatsApp açılır."
               : discountOffer
-                ? "Numaranızı bırakın, teknik uzmanımız %20 indirimli teklifinizle sizi 10-15 dk içinde arasın."
-                : "Numaranızı bırakın, teknik uzmanımız sizi hemen arasın."}
+                ? "Numaranızı bırakın, uzmanımız %20 indirimli teklifinizle sizi 10–15 dakika içinde arasın."
+                : "Numaranızı bırakın, uzmanımız sizi arasın."}
           </p>
         </div>
       </div>
@@ -535,7 +507,7 @@ function CallbackForm({ flowType, itemName, city, district, discountOffer, produ
           className={`${whatsappUrl ? "btn-whatsapp ring-2 ring-emerald-700/20 shadow-[0_8px_24px_rgba(18,140,126,0.32)]" : "btn-champagne"} rounded-xl h-12 px-5 text-sm font-extrabold flex items-center justify-center gap-2 disabled:opacity-80 disabled:brightness-75 disabled:cursor-not-allowed transition-all`}
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : productionOrder ? <Layers className="h-4 w-4" /> : whatsappUrl ? <MessageCircle className="h-4 w-4" /> : discountOffer ? <Sparkles className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-          {productionOrder ? "Cihazımı Üretime Gönder" : whatsappUrl ? "Siparişi Kaydet ve WhatsApp'ı Aç" : discountOffer ? "%20 İndirimle Ara" : "Beni Arayın"}
+          {productionOrder ? "Cihazımı üretime gönder" : whatsappUrl ? "Siparişi kaydet, WhatsApp'ı aç" : discountOffer ? "%20 indirimle beni arayın" : "Beni arayın"}
         </button>
       </form>
       {submitError && <p role="alert" className="mt-3 text-xs font-semibold text-rose-600">{submitError}</p>}
@@ -551,24 +523,16 @@ function OptionCard({ selected, onClick, title, hint, icon: Icon, testId }) {
       onClick={onClick}
       data-testid={testId}
       aria-pressed={selected}
-      className={`w-full text-left rounded-2xl border px-5 py-4 transition-all duration-200 shadow-sm flex items-center gap-4 group
-        ${selected
-          ? "border-[hsl(var(--brand-champagne))] ring-2 ring-[hsl(var(--brand-champagne)/0.4)] bg-[hsl(var(--brand-champagne)/0.10)] translate-y-[-1px]"
-          : "border-border bg-card/80 hover:bg-muted/70 hover:border-neutral-300"}`}
+      className={`site-option-card ${selected ? "is-selected" : ""}`}
     >
       {Icon && (
-        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[hsl(var(--brand-plum)/0.12)] text-[hsl(var(--brand-plum))] shadow-sm transition-transform group-hover:scale-105">
-          <Icon className="h-5 w-5" />
-        </span>
+        <Icon className="option-symbol h-6 w-6 shrink-0" strokeWidth={1.5} aria-hidden="true" />
       )}
       <span className="flex-1">
         <span className="block font-bold text-base text-foreground group-hover:text-foreground">{title}</span>
         {hint && <span className="block text-xs sm:text-sm text-muted-foreground mt-0.5">{hint}</span>}
       </span>
-      <span
-        className={`inline-flex h-7 w-7 items-center justify-center rounded-full border transition-all
-          ${selected ? "bg-[hsl(var(--brand-champagne))] border-[hsl(var(--brand-champagne))] text-neutral-900 shadow-sm" : "border-border text-transparent group-hover:border-neutral-400"}`}
-      >
+      <span className="option-check">
         <Check className="h-4 w-4 stroke-[2.5]" />
       </span>
     </button>
@@ -576,31 +540,27 @@ function OptionCard({ selected, onClick, title, hint, icon: Icon, testId }) {
 }
 
 /* ---------- Entry choice big card ---------- */
-function EntryCard({ icon: Icon, title, desc, buttonText, onClick, testId }) {
+function EntryCard({ icon: Icon, title, desc, buttonText, onClick, testId, number, category }) {
   return (
     <button
       type="button"
       onClick={onClick}
       data-testid={testId}
-      className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card p-6 sm:p-7 text-left shadow-sm transition-all duration-300 hover:shadow-xl hover:border-[hsl(var(--brand-champagne)/0.5)] hover:-translate-y-1"
+      className={`site-entry-card entry-${category} group`}
     >
-      <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-[radial-gradient(500px_circle_at_30%_20%,hsl(var(--brand-rose)/0.15),transparent_60%)]" />
-      <span className="relative flex flex-col h-full">
-        <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[hsl(var(--brand-plum))] to-[hsl(var(--brand-plum)/0.85)] text-[hsl(var(--brand-champagne))] shadow-md transition-transform group-hover:scale-110">
-          <Icon className="h-7 w-7" />
+      <span className="entry-topline"><span>0{number}</span><Icon size={30} strokeWidth={1.3} aria-hidden="true" /></span>
+      <span className="entry-title">{title}</span>
+      <span className="entry-description">{desc}</span>
+      <span className="entry-action">
+          {buttonText} <span className="entry-arrow"><ArrowRight size={19} aria-hidden="true" /></span>
         </span>
-        <span className="font-display font-bold text-xl sm:text-2xl mt-5 text-foreground">{title}</span>
-        <span className="mt-2 text-sm text-muted-foreground leading-relaxed flex-1">{desc}</span>
-        <span className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-[hsl(var(--brand-plum))] group-hover:text-[hsl(var(--brand-plum)/0.8)]">
-          {buttonText} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1.5" />
-        </span>
-      </span>
     </button>
   );
 }
 
-export default function Wizard({ config }) {
+export default function Wizard({ config, onFlowChange }) {
   const { localData, trackAnalyticsEvent } = useLocalData();
+  const prefersReducedMotion = useReducedMotion();
   const initialDraft = useMemo(readWizardDraft, []);
   const siteSettings = localData?.settings || {};
   const texts = localData.texts;
@@ -616,6 +576,7 @@ export default function Wizard({ config }) {
   }, [localData]);
 
   const [flow, setFlow] = useState(initialDraft.flow || null); // 'buy' | 'filter' | 'fault' | 'builder'
+  useEffect(() => { onFlowChange?.(Boolean(flow)); }, [flow, onFlowChange]);
   const [step, setStep] = useState(Number(initialDraft.step || 0));
   const [dir, setDir] = useState(1);
   const [draftRestored, setDraftRestored] = useState(Boolean(initialDraft.flow));
@@ -744,7 +705,10 @@ export default function Wizard({ config }) {
   const go = (nextStep, direction = 1) => {
     setDir(direction);
     setStep(nextStep);
+    scrollToForm();
   };
+
+  const scrollToForm = () => document.getElementById("yardim-formu")?.scrollIntoView({ behavior: prefersReducedMotion ? "instant" : "smooth", block: "start" });
 
   const reset = () => {
     setDir(-1);
@@ -763,6 +727,7 @@ export default function Wizard({ config }) {
     setCustomDeviceId(createCustomDeviceId());
     setDraftRestored(false);
     clearWizardDraft();
+    scrollToForm();
   };
 
   const startFlow = (f) => {
@@ -771,6 +736,7 @@ export default function Wizard({ config }) {
     setStep(0);
     setDraftRestored(false);
     trackAnalyticsEvent({ eventType: "wizard_started", flowType: f, step: 0 });
+    scrollToForm();
   };
 
   const back = () => {
@@ -871,31 +837,23 @@ export default function Wizard({ config }) {
   }, [currentStep, allBuilderOptions]);
 
   return (
-    <div className="relative">
-      <div className="text-center max-w-2xl mx-auto mb-10">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--brand-plum)/0.15)] bg-[hsl(var(--brand-plum)/0.06)] px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
-          <span>{texts.entry.badge}</span>
-        </div>
-        <h2 className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-foreground">
-          {texts.entry.title}
-        </h2>
-        <p className="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed">
-          {texts.entry.subtitle}
-        </p>
+    <div className={`site-wizard ${flow ? "is-active" : ""}`}>
+      <div className="wizard-section-heading">
+        <div><p className="site-eyebrow">{texts.entry.badge.replace(/^✨\s*/, "")}</p><h2>{texts.entry.title}</h2></div>
+        <p className="wizard-intro">{texts.entry.subtitle}</p>
       </div>
 
-      <div className="relative overflow-hidden rounded-[28px] border border-border/80 bg-card shadow-lg backdrop-blur-sm">
-        <div className="noise absolute inset-0" />
-        <div className="relative p-5 sm:p-7 md:p-10">
+      <div className="site-wizard-panel">
+        <div className="wizard-panel-inner">
           {/* Stepper header (only within a flow) */}
               {flow && (
-                <div className="mb-8">
+                <div className="wizard-stepper mb-8">
                   {draftRestored && (
                     <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-semibold text-emerald-800">
                       Önceki seçimleriniz geri yüklendi; kaldığınız yerden devam edebilirsiniz.
                     </div>
                   )}
-              <div className="flex items-center justify-between gap-3">
+              <div className="wizard-stepper-controls">
                 <button
                   type="button"
                   onClick={back}
@@ -905,8 +863,8 @@ export default function Wizard({ config }) {
                   <ArrowLeft className="h-4 w-4" /> {texts.navigation.backButton}
                 </button>
 
-                <div aria-live="polite" className="text-xs sm:text-sm font-semibold text-muted-foreground px-3 py-1 rounded-full bg-muted/60">
-                  Adım {step + 1} / {totalSteps} • {stepLabels[flow]?.[step] || "Adım"}
+                <div aria-live="polite" className="wizard-step-label">
+                  <span>ADIM {String(step + 1).padStart(2, "0")} / {String(totalSteps).padStart(2, "0")}</span><strong>{stepLabels[flow]?.[step] || "Adım"}</strong>
                 </div>
 
                 <button
@@ -918,9 +876,9 @@ export default function Wizard({ config }) {
                   <RotateCcw className="h-4 w-4" /> {texts.navigation.restartButton}
                 </button>
               </div>
-              <div className="mt-4 h-2.5 w-full rounded-full bg-muted/80 overflow-hidden" data-testid="wizard-progress">
+              <div className="mt-4 h-1 w-full bg-muted/80 overflow-hidden" data-testid="wizard-progress">
                 <div
-                  className="h-full rounded-full bg-gradient-to-r from-[hsl(var(--brand-champagne))] to-amber-500 transition-all duration-300 shadow-sm"
+                  className="h-full bg-primary transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -932,15 +890,17 @@ export default function Wizard({ config }) {
               key={stepKey}
               custom={dir}
               variants={variants}
-              initial="enter"
+              initial={prefersReducedMotion ? false : "enter"}
               animate="center"
               exit="exit"
-              transition={{ duration: 0.28, ease }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.22, ease }}
             >
               {/* ============ ENTRY ============ */}
               {!flow && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5" data-testid="wizard-entry">
+                <div className="wizard-entry-grid" data-testid="wizard-entry">
                   <EntryCard
+                    number={1}
+                    category="buy"
                     icon={ENTRY_ICONS[texts.entry.cards.buy.icon] || ShoppingCart}
                     title={texts.entry.cards.buy.title}
                     desc={texts.entry.cards.buy.desc}
@@ -949,6 +909,8 @@ export default function Wizard({ config }) {
                     testId="wizard-entry-buy-device"
                   />
                   <EntryCard
+                    number={2}
+                    category="filter"
                     icon={ENTRY_ICONS[texts.entry.cards.filter.icon] || Replace}
                     title={texts.entry.cards.filter.title}
                     desc={texts.entry.cards.filter.desc}
@@ -957,6 +919,8 @@ export default function Wizard({ config }) {
                     testId="wizard-entry-change-filter"
                   />
                   <EntryCard
+                    number={3}
+                    category="fault"
                     icon={ENTRY_ICONS[texts.entry.cards.fault.icon] || Wrench}
                     title={texts.entry.cards.fault.title}
                     desc={texts.entry.cards.fault.desc}
@@ -966,31 +930,16 @@ export default function Wizard({ config }) {
                   />
 
                   {/* 4. Özel Konfigüratör Seçeneği */}
-                  <div className="md:col-span-3 mt-1">
+                  <div className="builder-entry-wrapper">
                     <button
                       type="button"
                       onClick={() => startFlow("builder")}
-                      className="w-full text-left rounded-2xl border-2 border-dashed border-amber-400/50 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent p-5 sm:p-6 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row items-center justify-between gap-4 group"
+                      className="site-builder-entry"
+                      data-testid="wizard-entry-builder"
                     >
-                      <div className="flex items-center gap-4">
-                        <span className="inline-flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] shadow-md group-hover:scale-105 transition-transform">
-                          <SlidersHorizontal className="h-6 w-6" />
-                        </span>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-display font-bold text-lg sm:text-xl text-foreground">{texts.entry.configurator.title}</span>
-                            <Badge className="bg-emerald-600 text-white font-bold text-[10px] border-0">
-                              {campaignBadgeText}
-                            </Badge>
-                          </div>
-                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            {texts.entry.configurator.desc}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="btn-champagne shrink-0 inline-flex items-center gap-2 rounded-xl h-11 px-5 text-sm font-bold shadow-sm">
-                        {texts.entry.configurator.buttonText} <ArrowRight className="h-4 w-4" />
-                      </span>
+                      <span className="builder-wordmark" aria-hidden="true"><SlidersHorizontal size={26} strokeWidth={1.4} />LOTUS<br /><strong>CUSTOM</strong></span>
+                      <span className="builder-entry-copy"><strong>{texts.entry.configurator.title}</strong><span>{texts.entry.configurator.desc}</span><small>{campaignBadgeText}</small></span>
+                      <span className="builder-entry-action">{texts.entry.configurator.buttonText} <ArrowRight size={18} aria-hidden="true" /></span>
                     </button>
                   </div>
                 </div>
@@ -1150,7 +1099,7 @@ export default function Wizard({ config }) {
                 <div data-testid="wizard-buy-results" className="max-w-4xl mx-auto">
                   <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--brand-champagne)/0.15)] text-[hsl(var(--brand-plum))] px-3.5 py-1 text-xs font-bold mb-2">
-                      <Sparkles className="h-3.5 w-3.5" />
+                      <CheckCircle2 className="h-3.5 w-3.5" />
                       <span>{locationText} İçin Özel Eşleşme</span>
                     </div>
                     <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">{texts.buy.results.title}</h3>
@@ -1160,7 +1109,7 @@ export default function Wizard({ config }) {
                   {devices.length === 0 ? (
                     <div className="text-center py-10 bg-card rounded-2xl border border-border p-6">
                       <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto mb-2" />
-                      <p className="text-sm font-semibold text-foreground">Bu kriterlere uygun model bulunamadı.</p>
+                      <p className="text-sm font-semibold text-foreground">Bu seçimlere uyan cihaz bulunamadı.</p>
                       <button onClick={reset} className="btn-champagne mt-4 inline-flex items-center gap-2 rounded-xl h-10 px-4 text-xs font-bold">
                         <RotateCcw className="h-3.5 w-3.5" /> Seçimleri Değiştir
                       </button>
@@ -1173,8 +1122,8 @@ export default function Wizard({ config }) {
                           className="group rounded-2xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
                         >
                           <div>
-                            <div className="relative h-48 w-full overflow-hidden bg-neutral-900">
-                              <img src={d.img} alt={d.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            <div className="device-result-media relative w-full overflow-hidden">
+                              <ProductImage src={d.img} alt={d.name} className="h-full w-full object-contain p-5" />
                               <div className="absolute top-3 right-3">
                                 <Badge className="bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] font-bold shadow-md">
                                   {d.warranty}
@@ -1199,7 +1148,7 @@ export default function Wizard({ config }) {
                           <div className="p-5 sm:p-6 pt-0 border-t border-border/60 mt-4">
                             <div className="flex items-baseline justify-between pt-3">
                               <div>
-                                <span className="block text-[11px] font-medium text-muted-foreground">Tavsiye Edilen Fiyat</span>
+                                <span className="block text-[11px] font-medium text-muted-foreground">Fiyat</span>
                                 <span className="font-display font-bold text-2xl text-[hsl(var(--brand-plum))]">{d.price}</span>
                               </div>
                             </div>
@@ -1224,14 +1173,14 @@ export default function Wizard({ config }) {
                   )}
 
                   {/* Kendi Cihazını Topla Banner */}
-                  <div className="mt-8 rounded-2xl border-2 border-dashed border-[hsl(var(--brand-champagne)/0.7)] bg-[hsl(var(--brand-champagne)/0.06)] p-5 sm:p-6 text-center">
+                  <div className="mt-8 rounded-2xl border border-border bg-secondary p-5 sm:p-6 text-center">
                     <div className="inline-flex items-center gap-2 rounded-full bg-[hsl(var(--brand-plum))] text-[hsl(var(--brand-champagne))] px-3 py-1 text-xs font-bold mb-2">
                       <Hammer className="h-3.5 w-3.5" />
-                      <span>Özel Konfigüratör</span>
+                      <span>Lotus Custom</span>
                     </div>
-                    <h4 className="font-display font-bold text-xl text-foreground">Aradığınızı tam olarak bulamadınız mı?</h4>
+                    <h4 className="font-display font-bold text-xl text-foreground">Aradığınızı bulamadınız mı?</h4>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-lg mx-auto">
-                      Kasa, filtre, beyin, pompa, tank ve musluğu bütçenize göre kendiniz seçin; %20 lansman indirimiyle anında özel fiyatınızı hesaplayın.
+                      Kasa, filtre, pompa, tank ve musluğu kendiniz seçin. %20 lansman indirimiyle özel fiyatınızı anında görün.
                     </p>
                     <button
                       type="button"
@@ -1239,7 +1188,7 @@ export default function Wizard({ config }) {
                       className="btn-champagne mt-4 inline-flex items-center gap-2 rounded-xl h-11 px-6 text-sm font-bold shadow-md transition-all"
                     >
                       <SlidersHorizontal className="h-4 w-4" />
-                      Kendi Cihazımı Kendim Oluşturayım
+                      Cihazımı kendim tasarlayayım
                     </button>
                   </div>
 
@@ -1278,7 +1227,7 @@ export default function Wizard({ config }) {
               {flow === "filter" && step === 1 && recommendedSet && (
                 <div className="max-w-2xl mx-auto text-center">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/25 px-3.5 py-1 text-xs font-bold mb-3 shadow-xs">
-                    ✨ Cihazınıza %100 Uyumlu Orijinal Filtre Paketi
+                    Size önerilen orijinal filtre paketi
                   </span>
                   <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground mb-2">
                     {recommendedSet.name}
@@ -1420,7 +1369,7 @@ export default function Wizard({ config }) {
                     <Wrench className="h-7 w-7" />
                   </div>
                   <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-2">
-                    <span>Teknik Teşhis & İlk Müdahale Rehberi</span>
+                    <span>İlk kontroller</span>
                   </div>
                   <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">
                     {selectedFault.title || selectedFault.label}
@@ -1486,8 +1435,8 @@ export default function Wizard({ config }) {
               {/* ============ BUILDER FLOW (DİNAMİK ADIM MOTORU) ============ */}
               {flow === "builder" && currentStep && step < activeBuilderSteps.length && (
                 <div data-testid={`wizard-builder-step-${step}`} className="max-w-2xl mx-auto">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1 text-xs font-semibold text-[hsl(var(--brand-plum))] mb-3">
-                    <Layers className="h-3.5 w-3.5 text-amber-500" />
+                  <div className="site-eyebrow mb-3 inline-flex items-center gap-2">
+                    <Layers className="h-3.5 w-3.5" />
                     <span>{currentStep.badge}</span>
                   </div>
                   <h3 className="font-display font-bold text-2xl sm:text-3xl mb-1 text-foreground">
@@ -1498,13 +1447,13 @@ export default function Wizard({ config }) {
                   </p>
 
                   {(currentStep.guideText || currentStep.key === "tank") && (
-                    <div className="mb-5 rounded-2xl bg-amber-500/10 border-2 border-amber-400/40 p-4 sm:p-4.5 text-xs sm:text-sm text-amber-950 dark:text-amber-100 shadow-sm flex items-start gap-3">
-                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white font-bold text-base shadow-xs">
-                        💡
+                    <div className="mb-5 flex items-start gap-3 border-l-2 border-primary bg-secondary p-4 text-xs text-foreground sm:text-sm">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-primary">
+                        <Info className="h-5 w-5" strokeWidth={1.6} aria-hidden="true" />
                       </span>
                       <div>
-                        <strong className="font-bold text-amber-900 dark:text-amber-200 block mb-0.5">Uzman Tavsiyesi:</strong>
-                        <span className="leading-relaxed text-amber-950/90 dark:text-amber-100">
+                        <strong className="mb-0.5 block font-semibold text-foreground">Uzman notu</strong>
+                        <span className="leading-relaxed text-muted-foreground">
                           {currentStep.key === "tank"
                             ? "Standart tank 8–10 L kullanım kapasitesi sunar. Daha dayanıklı gövde, yüksek kalite diyafram ve uzun servis ömrü isteyenler için PAE veya eşdeğer komponentli Premium Tank uygundur."
                             : currentStep.guideText}
@@ -1589,7 +1538,7 @@ export default function Wizard({ config }) {
                       onClick={() => go(step + 1, 1)}
                       className="btn-champagne inline-flex items-center gap-2 rounded-xl h-12 px-6 text-sm sm:text-base font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      {step + 1 < activeBuilderSteps.length ? "Sonraki Adıma İlerle" : "Üretim Özetini Gör"} <ArrowRight className="h-4 w-4" />
+                      {step + 1 < activeBuilderSteps.length ? "Sonraki adım" : "Özeti göster"} <ArrowRight className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
@@ -1601,9 +1550,9 @@ export default function Wizard({ config }) {
                   <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 text-emerald-600 px-3.5 py-1 text-xs font-bold mb-2">
                       <Sparkles className="h-3.5 w-3.5" />
-                      <span>Siparişinize Özel Lotus Custom</span>
+                      <span>Size özel Lotus Custom</span>
                     </div>
-                    <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">Üretim Konfigürasyonu</h3>
+                    <h3 className="font-display font-bold text-2xl sm:text-3xl text-foreground">Cihazınızın özeti</h3>
                     <p className="text-muted-foreground text-sm sm:text-base mt-1">
                       Tekirdağ / {district} için hazırlanan cihazınızın üretim bileşenleri aşağıdadır.
                     </p>

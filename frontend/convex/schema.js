@@ -92,6 +92,18 @@ export default defineSchema({
     isActive: v.boolean(),
   }).index("by_order", ["order"]),
 
+  // Ana sayfadaki müşteri yorumları (fotoğraflı, akan bölüm)
+  testimonials: defineTable({
+    name: v.string(),
+    district: v.optional(v.string()),
+    service: v.optional(v.string()),
+    text: v.string(),
+    rating: v.number(),
+    photo: v.optional(v.string()),
+    order: v.number(),
+    isActive: v.boolean(),
+  }).index("by_order", ["order"]),
+
   // Gelen Müşteri Talepleri ve Siparişler
   leads: defineTable({
     fullName: v.string(),

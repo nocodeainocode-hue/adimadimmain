@@ -49,7 +49,7 @@ export default function DevicePage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="site-public min-h-screen bg-background text-foreground">
       <Header brand={SITE_CONFIG.brand} waNumber={waNumber} />
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
         <Link to="/#yardim-formu" className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground">
@@ -72,7 +72,7 @@ export default function DevicePage() {
           </div>
         )}
       </main>
-      <Footer brand={SITE_CONFIG.brand} waDisplay={localData.settings?.whatsappDisplay || SITE_CONFIG.whatsapp.display} />
+      <Footer brand={SITE_CONFIG.brand} waDisplay={localData.settings?.whatsappDisplay || SITE_CONFIG.whatsapp.display} waNumber={waNumber} />
       <DeviceQuoteModal device={quoteDevice} waNumber={waNumber} onClose={() => setQuoteDevice(null)} />
     </div>
   );

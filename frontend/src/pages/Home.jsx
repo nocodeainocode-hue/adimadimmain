@@ -1,13 +1,17 @@
-import Header from "@/components/Header";
+import { useState } from "react";
+import Header, { telHref } from "@/components/Header";
+import { buildWaLink } from "@/lib/whatsapp";
 import Hero from "@/components/Hero";
 import Wizard from "@/components/Wizard";
 import Footer from "@/components/Footer";
-import HomeSupport from "@/components/HomeSupport";
+import HomeSupport, { HomeTrust } from "@/components/HomeSupport";
+import Testimonials from "@/components/Testimonials";
 import { SITE_CONFIG } from "@/data/siteConfig";
 import { useLocalData } from "@/lib/convex";
-import { Sparkles } from "lucide-react";
+import { MessageCircle, Phone } from "lucide-react";
 
 export default function Home() {
+  const [formActive, setFormActive] = useState(false);
   const config = SITE_CONFIG;
   const { localData } = useLocalData();
   const settings = localData.settings || {};
@@ -17,31 +21,31 @@ export default function Home() {
   const supportContent = localData.texts.homeSupport;
 
   return (
-    <div className="min-h-screen bg-background pb-16 text-foreground md:pb-0" data-testid="home-page">
-      <Header brand={brand} waNumber={waNumber} formFirst formCtaText={supportContent.formCtaText} />
-      <Hero brand={brand} waNumber={waNumber} />
+    <div className="site-public min-h-screen bg-background pb-16 text-foreground md:pb-0" data-testid="home-page">
+      <Header brand={brand} waNumber={waNumber} waDisplay={waDisplay} formFirst formCtaText={supportContent.formCtaText} />
+      <Hero brand={brand} waNumber={waNumber} waDisplay={waDisplay} />
+      <HomeTrust content={supportContent} />
 
       <section
         id="yardim-formu"
-        className="relative scroll-mt-20 py-14 sm:py-20"
+        className="site-form-section relative scroll-mt-24"
         data-testid="wizard-section"
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <Wizard config={config} />
+        <div className="site-container">
+          <Wizard config={config} onFlowChange={setFormActive} />
         </div>
       </section>
 
-      <HomeSupport content={supportContent} />
-      <Footer brand={brand} waDisplay={waDisplay} />
+      <Testimonials />
 
-      <a
-        href="#yardim-formu"
-        className="btn-champagne fixed inset-x-3 bottom-3 z-50 flex h-12 items-center justify-center gap-2 rounded-xl px-5 text-sm font-extrabold shadow-xl md:hidden"
-        data-testid="mobile-form-cta"
-      >
-        <Sparkles className="h-4 w-4" aria-hidden="true" />
-        {supportContent.mobileCtaText}
-      </a>
+      <HomeSupport content={supportContent} />
+      <Footer brand={brand} waDisplay={waDisplay} waNumber={waNumber} />
+
+      {!formActive && <div className="mobile-form-action md:hidden">
+        <a href={telHref(waNumber)} className="mobile-bar-call" aria-label="Bizi arayın"><Phone size={20} aria-hidden="true" />Ara</a>
+        <a href={buildWaLink(waNumber, "Merhaba, Lotus Su Arıtma hakkında bilgi almak istiyorum.")} target="_blank" rel="noopener noreferrer" className="mobile-bar-wa" aria-label="WhatsApp'tan yazın"><MessageCircle size={20} aria-hidden="true" />WhatsApp</a>
+        <a href="#yardim-formu" className="mobile-bar-form" data-testid="mobile-form-cta">{supportContent.mobileCtaText}</a>
+      </div>}
     </div>
   );
 }

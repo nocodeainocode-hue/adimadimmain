@@ -191,7 +191,7 @@ const DEFAULT_LOCAL_STATE = {
       badge: "Fiyat/Performans",
       desc: "İthal NSF onaylı membran + doğal mineral zenginleştirici",
       img: "https://images.unsplash.com/photo-1563170351-be82bc888aa4?auto=format&fit=crop&w=800&q=80",
-      longDesc: "İthal NSF onaylı yüksek verimli membran ile mikroskobik ağır metalleri ve bakterileri %99.2 oranında süzer.",
+      longDesc: "İthal NSF onaylı yüksek verimli membran ile mikroskobik ağır metalleri ve bakterileri süzmeye yardımcı olur.",
       specs: ["Membran: 80 GPD İthal NSF Membran", "Mineral: Kalsiyum, Magnezyum Kartuşu"],
       highlights: ["NSF Uluslararası Sertifikalı", "Doğal mineral takviyesiyle tatlı memba lezzeti"],
       order: 2,
@@ -376,104 +376,104 @@ const DEFAULT_LOCAL_STATE = {
   ],
   texts: {
     entry: {
-      badge: "✨ 60 Saniyelik Akıllı Çözüm Rehberi",
-      title: "Nasıl yardımcı olabiliriz?",
-      subtitle: "İhtiyacınıza en uygun modeli, filtreyi veya teknik servis çözümünü birkaç saniyede belirleyelim.",
-      cardButtonText: "Seç ve İlerle",
+      badge: "60 saniyelik rehber",
+      title: "Ne yapmak istiyorsunuz?",
+      subtitle: "Birkaç kısa soruyla size uygun cihazı, filtreyi veya servisi bulalım. Fiyatı baştan görürsünüz.",
+      cardButtonText: "Başlayın",
       cards: {
-        buy: { icon: "ShoppingCart", title: "Cihaz Satın Almak İstiyorum", desc: "Bölgenize, bütçenize ve kullanım alışkanlığınıza en uygun yeni nesil su arıtma cihazını keşfedin." },
-        filter: { icon: "Replace", title: "Filtre Değiştirmek İstiyorum", desc: "Son değişim tarihinize göre tam uyumlu orijinal filtre setini hemen belirleyin." },
-        fault: { icon: "Wrench", title: "Cihazımda Arıza Var", desc: "Damlatma, sızıntı veya düşük debi gibi sorunlara hızlı çözüm ve yetkili servis desteği alın." },
+        buy: { icon: "ShoppingCart", title: "Yeni arıtma cihazı almak istiyorum", desc: "İlçenizi, evdeki kişi sayısını ve bütçenizi seçin; size uyan cihazları fiyatlarıyla görün." },
+        filter: { icon: "Replace", title: "Filtremi değiştirmek istiyorum", desc: "Son değişimin ne zaman olduğunu seçin; doğru orijinal filtre setini ve fiyatını gösterelim." },
+        fault: { icon: "Wrench", title: "Cihazım arızalı", desc: "Damlatma, sızıntı, düşük debi… Sorunu seçin, ilk kontrolleri görün ve servis talebi oluşturun." },
       },
       configurator: {
-        title: "Kendi Cihazını Kendin Oluştur",
-        desc: "Kasa, filtre paketi, beyin, pompa, tank ve musluğu ihtiyacınıza göre parça parça kendiniz seçin; canlı fiyatınızı hesaplayın.",
-        buttonText: "Konfigüratörü Başlat",
+        title: "Kendi cihazınızı kendiniz tasarlayın",
+        desc: "Kasa, filtre, pompa, tank ve musluğu tek tek seçin. Toplam fiyat siz seçtikçe canlı güncellenir.",
+        buttonText: "Tasarlamaya başla",
       },
     },
-    navigation: { backButton: "Geri", restartButton: "Başa Dön" },
+    navigation: { backButton: "Geri", restartButton: "Baştan başla" },
     homeSupport: {
-      formCtaText: "Çözümünü Bul",
-      mobileCtaText: "60 Sn'de Çözümünü Bul",
-      serviceNote: "Tekirdağ merkez ve tüm ilçelerde cihaz, filtre ve teknik servis desteği.",
+      formCtaText: "Hemen başlayın",
+      mobileCtaText: "60 sn'de çözüm bul",
+      serviceNote: "Tekirdağ merkez ve tüm ilçelerde cihaz, filtre ve teknik servis.",
       trust: {
         items: {
           netPrice: "Montaj dahil net fiyat",
-          serviceArea: "Tekirdağ ve tüm ilçeler",
+          serviceArea: "Tekirdağ'ın tüm ilçelerinde",
           originalParts: "Orijinal filtre ve parça",
-          expertConfirmation: "İşlem öncesi uzman teyidi",
+          expertConfirmation: "Başlamadan önce uzman onayı",
         },
       },
       why: {
-        badge: "Karar vermeyi kolaylaştırır",
-        title: "Bu form size ne kazandırır?",
+        badge: "",
+        title: "Gereksiz bir şey önermeyiz; yalnızca size uyanı gösteririz.",
         items: {
-          fairRecommendation: "İhtiyacınızdan pahalı veya gereksiz özellikli bir cihaz önermek yerine kullanımınıza uygun seçenekleri ayırır.",
-          localConditions: "İlçenizi, evdeki kişi sayısını ve su kullanımınızı birlikte değerlendirir.",
-          transparentResult: "Sonucu, seçilen parçaları ve tahmini fiyatı işlem başlamadan önce açıkça gösterir.",
+          fairRecommendation: "Gereğinden pahalı ya da fazla özellikli cihaz önermeyiz. Kullanımınıza yeten seçenekleri gösteririz.",
+          localConditions: "İlçenizi, evdeki kişi sayısını ve su kullanımınızı birlikte değerlendiririz.",
+          transparentResult: "Seçtiğiniz parçaları ve tahmini fiyatı, siz karar vermeden önce açıkça görürsünüz.",
         },
       },
       faq: {
-        title: "Kısa cevaplar",
+        title: "Kısa ve net cevaplar",
         items: {
-          free: { question: "Formu doldurmak ücretli mi?", answer: "Hayır. Form ücretsizdir ve sizi ödeme ya da satın alma yükümlülüğü altına sokmaz." },
-          order: { question: "Sonucu görmek sipariş oluşturur mu?", answer: "Hayır. Sipariş veya üretim talebi yalnızca bilgilerinizi girip ilgili onay butonuna bastığınızda kaydedilir." },
-          installation: { question: "Gösterilen fiyata montaj dahil mi?", answer: "Konfigüratörde gösterilen Lotus Custom fiyatına montaj ve KDV dahildir; işlem öncesinde uzmanımız son teyidi verir." },
-          afterForm: { question: "Bilgilerimi girdikten sonra ne olur?", answer: "Talebiniz yönetim paneline kaydolur. Uzmanımız seçiminizi sizinle teyit eder ve uygun servis veya montaj zamanını planlar." },
+          free: { question: "Formu doldurmak ücretli mi?", answer: "Hayır, tamamen ücretsiz. Ödeme almıyoruz ve satın alma zorunluluğu yok." },
+          order: { question: "Sonucu görmek sipariş oluşturur mu?", answer: "Hayır. Bilgilerinizi girip onay düğmesine basmadan hiçbir talep kaydedilmez." },
+          installation: { question: "Gösterilen fiyata montaj dahil mi?", answer: "Konfigüratörde gördüğünüz Lotus Custom fiyatına montaj ve KDV dahildir. Uzmanımız işlemden önce fiyatı sizinle son kez teyit eder." },
+          afterForm: { question: "Bilgilerimi girince ne olur?", answer: "Talebiniz ekibimize ulaşır. Uzmanımız sizi arayıp seçiminizi teyit eder, ardından montaj veya servis için size uygun bir zaman planlar." },
         },
       },
     },
     buy: {
       district: {
-        badge: "Tekirdağ Bölgesel Su & Kireç Analizi",
-        title: "Hangi ilçede ikamet ediyorsunuz?",
-        subtitle: "Tekirdağ genelinde şebeke sularının yüksek kireç, klor ve sertlik yapısına tam uyumlu, en uzun ömürlü filtre ve membran teknolojisini seçelim.",
-        label: "Tekirdağ İlçenizi Seçin",
-        buttonText: "Devam Et",
+        badge: "Bölgenizi seçin",
+        title: "Hangi ilçede oturuyorsunuz?",
+        subtitle: "Şebeke suyunun kireç ve klor yapısı bölgeye göre değişebilir. Doğru filtreyi seçebilmek için soruyoruz.",
+        label: "İlçeniz",
+        buttonText: "Devam",
       },
       consumption: {
-        title: "Günlük su tüketiminiz ne kadar?",
-        subtitle: "Ailenizin kişi sayısına ve içme/yemek kullanım sıklığına en uygun tank kapasitesini belirleyelim.",
-        buttonText: "Bütçe Seçimine İlerle",
+        title: "Evde kaç kişi su içiyor?",
+        subtitle: "Kişi sayısına göre doğru tank kapasitesini seçelim.",
+        buttonText: "Devam: bütçe",
         options: {
-          low: { title: "1 - 2 Kişilik Hane (Düşük Tüketim)", hint: "Günde 4-8 litre içme suyu, dar dolaplar için kompakt tank" },
-          medium: { title: "3 - 4 Kişilik Aile (Standart Tüketim)", hint: "Günde 10-18 litre, içme + çay/kahve ve yemek pişirme için ideal" },
-          high: { title: "5+ Kişi / Kalabalık Aile veya Küçük Ofis (Yüksek Tüketim)", hint: "Günde 20+ litre, yüksek kapasiteli çelik basınç tankı ve hızlı dolum" },
+          low: { title: "1–2 kişi", hint: "Günde yaklaşık 4–8 litre. Kompakt bir tank yeterli." },
+          medium: { title: "3–4 kişi", hint: "Günde yaklaşık 10–18 litre. İçme, çay ve yemek için." },
+          high: { title: "5 kişi ve üzeri veya küçük ofis", hint: "Günde 20 litreden fazla. Büyük tank ve hızlı dolum gerekir." },
         },
       },
       budget: {
-        title: "Bütçe aralığınız nedir?",
-        subtitle: "Yalnızca seçtiğiniz fiyat bandındaki en yüksek verimli modeller filtrelenecektir.",
-        buttonText: "Cihazları İncele",
-        loadingText: "Modeller Hazırlanıyor...",
+        title: "Bütçeniz ne kadar?",
+        subtitle: "Yalnızca bu aralıktaki cihazları gösteririz.",
+        buttonText: "Cihazları göster",
+        loadingText: "Cihazlar getiriliyor…",
         options: {
-          economy: { title: "Ekonomik Çözüm (0 - 10.000 ₺)", hint: "Temel 5 aşamalı ters ozmoz, standart tatlandırıcı ve güvenilir filtrasyon" },
-          medium: { title: "Orta Segment (10.000 ₺ - 20.000 ₺)", hint: "İthal NSF onaylı membran, mineral zenginleştirici ve şık kapalı kasa" },
-          premium: { title: "Premium & Akıllı (20.000 ₺ ve Üzeri)", hint: "pH 9+ alkali mineralize, dijital TDS saflık göstergesi ve akıllı su kaçağı emniyeti" },
+          economy: { title: "0 – 10.000 ₺", hint: "Temel 5 aşamalı ters ozmoz. Sade ve güvenilir." },
+          medium: { title: "10.000 – 20.000 ₺", hint: "Mineral ekleme, NSF onaylı membran ve kapalı kasa." },
+          premium: { title: "20.000 ₺ ve üzeri", hint: "Alkali mineral, dijital TDS göstergesi ve su kaçağı emniyeti." },
         },
       },
       results: {
-        title: "Sizin İçin En İdeal Cihazlar",
-        subtitle: "Bölgeniz, tüketiminiz ve bütçenize göre öne çıkan cihazları sizin için eşleştirdik.",
+        title: "Size uyan cihazlar",
+        subtitle: "İlçenize, evdeki kişi sayısına ve bütçenize göre ayırdık.",
       },
     },
     filter: {
       question: {
         title: "Filtrelerinizi en son ne zaman değiştirdiniz?",
-        subtitle: "Düzenli filtre değişimi suyunuzun saflığını ve membran ömrünü korur.",
-        buttonText: "Uyumlu Filtre Setini Gör",
+        subtitle: "Zamanında değişen filtre, suyun tadını da membranın ömrünü de korur.",
+        buttonText: "Filtre setimi göster",
         options: {
-          sixMonths: { title: "6 Ay Önce (Ön Filtre Bakımı)", hint: "Tortu, granül karbon ve blok karbon ön filtre seti değişimi" },
-          oneYear: { title: "1 Yıl veya Daha Uzun (Komple Değişim)", hint: "Ana membran + mineral ve tatlandırıcı dahil 5'li tam set" },
-          unknown: { title: "Tam Hatırlamıyorum / Yeni Taşındım", hint: "Ücretsiz TDS saflık ölçümü ve tam 5'li hijyen bakım seti" },
+          sixMonths: { title: "Yaklaşık 6 ay önce", hint: "Ön filtre seti yenilenir: tortu, granül karbon ve blok karbon." },
+          oneYear: { title: "1 yıl veya daha uzun", hint: "Membran, mineral ve tatlandırıcı dahil 5'li tam set." },
+          unknown: { title: "Hatırlamıyorum / yeni taşındım", hint: "Ücretsiz TDS ölçümüyle birlikte 5'li tam hijyen bakım seti." },
         },
       },
     },
     fault: {
       question: {
-        title: "Cihazınızda hangi sorun yaşanıyor?",
-        subtitle: "Hızlı arıza tespiti ve yerinde teknik servis yönlendirmesi.",
-        buttonText: "Çözüm & Servis Çağır",
+        title: "Cihazınızda ne oluyor?",
+        subtitle: "Sorunu seçin; ilk kontrolleri gösterelim, gerekirse servis kaydı açalım.",
+        buttonText: "Servis talebi oluştur",
       },
     },
   },
@@ -734,8 +734,8 @@ const DEFAULT_LOCAL_STATE = {
       ],
       benefits: [
         "İlk 3 kademe ön arıtma tamamen yenilenir",
-        "Klor ve kötü koku %99 oranında giderilir",
-        "Ana RO membranın ömrünü 2 kat uzatır",
+        "Klor ve kötü kokunun giderilmesine yardımcı olur",
+        "Ana membranı korur ve ömrünü uzatır",
       ],
       order: 1,
       isActive: true,
@@ -763,7 +763,7 @@ const DEFAULT_LOCAL_STATE = {
       ],
       benefits: [
         "Tüm filtrasyon kademeleri fabrika çıkışı gibi yenilenir",
-        "Mikroskobik virüs, kireç ve ağır metaller %99.2 arıtılır",
+        "Kireç ve ağır metallerin azaltılmasına yardımcı olur",
         "Doğal mineral takviyesiyle tatlı memba suyu lezzeti",
       ],
       order: 2,
@@ -810,41 +810,15 @@ function LegacyLocalDataProvider({ children }) {
   });
 
   // Authentication State
-  const [adminUser, setAdminUser] = useState(() => {
-    try {
-      const authSaved = sessionStorage.getItem("lotus_admin_auth");
-      return authSaved ? JSON.parse(authSaved) : null;
-    } catch {
-      return null;
-    }
-  });
+  // Yerel (sunucusuz) sağlayıcıda yönetici girişi bilerek kapalı; yalnızca Convex Auth kullanılır.
+  const [adminUser, setAdminUser] = useState(null);
 
   const isAuthenticated = Boolean(adminUser);
 
-  const loginAdmin = (email, password) => {
-    // Default admin credential verification
-    if (
-      (email === "admin@lotussuaritma.com" || email === "admin" || email === "lotus") &&
-      (password === "lotus2026" || password === "admin123" || password === "123456")
-    ) {
-      const user = { email: email.includes("@") ? email : `${email}@lotussuaritma.com`, name: "Lotus Yönetici" };
-      setAdminUser(user);
-      sessionStorage.setItem("lotus_admin_auth", JSON.stringify(user));
-      return { success: true };
-    }
-    // Accept custom password if set
-    if (password === "lotus2026" || password === "admin123") {
-      const user = { email: email || "admin@lotussuaritma.com", name: "Lotus Yönetici" };
-      setAdminUser(user);
-      sessionStorage.setItem("lotus_admin_auth", JSON.stringify(user));
-      return { success: true };
-    }
-    return { success: false, error: "Hatalı e-posta veya şifre girdiniz." };
-  };
+  const loginAdmin = () => ({ success: false, error: "Bu modda yönetici girişi kapalı." });
 
   const logoutAdmin = () => {
     setAdminUser(null);
-    sessionStorage.removeItem("lotus_admin_auth");
   };
 
   useEffect(() => {
