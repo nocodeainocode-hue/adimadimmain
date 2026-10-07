@@ -335,3 +335,5 @@ html { scroll-behavior: smooth; scroll-padding-top: 130px; }
 .option-art { display: block; flex-shrink: 0; width: 84px; height: 84px; padding: 6px; border-radius: 10px; background: var(--paper); border: 1px solid var(--line); }
 .is-selected .option-art { background: #fff; border-color: #8fb0e3; }
 @media (max-width: 600px) { .option-art { width: 68px; height: 68px; padding: 4px; } }
+
+.wizard-loading { display: grid; place-items: center; min-height: 420px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); color: var(--muted); font-size: 17px; }

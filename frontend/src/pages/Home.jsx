@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import Header, { telHref } from "@/components/Header";
 import { buildWaLink } from "@/lib/whatsapp";
 import Hero from "@/components/Hero";
-import Wizard from "@/components/Wizard";
+// Sihirbaz (ve animasyon kütüphanesi) ayrı pakette; sayfa ilk boyandıktan hemen sonra arka planda indirilir.
+const loadWizard = () => import("@/components/Wizard");
+const Wizard = lazy(loadWizard);
 import Footer from "@/components/Footer";
 import HomeSupport, { HomeTrust } from "@/components/HomeSupport";
 import Testimonials from "@/components/Testimonials";
@@ -12,6 +14,15 @@ import { MessageCircle, Phone } from "lucide-react";
 
 export default function Home() {
   const [formActive, setFormActive] = useState(false);
+  useEffect(() => {
+    const warm = () => { loadWizard(); };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(warm, { timeout: 1500 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const id = setTimeout(warm, 300);
+    return () => clearTimeout(id);
+  }, []);
   const config = SITE_CONFIG;
   const { localData } = useLocalData();
   const settings = localData.settings || {};
@@ -32,7 +43,9 @@ export default function Home() {
         data-testid="wizard-section"
       >
         <div className="site-container">
-          <Wizard config={config} onFlowChange={setFormActive} />
+          <Suspense fallback={<div className="wizard-loading" role="status" aria-live="polite">Form yükleniyor…</div>}>
+            <Wizard config={config} onFlowChange={setFormActive} />
+          </Suspense>
         </div>
       </section>
 
